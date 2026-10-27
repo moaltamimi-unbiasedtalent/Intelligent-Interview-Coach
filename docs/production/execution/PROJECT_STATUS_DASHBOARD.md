@@ -1,6 +1,13 @@
 # Whole-Project Status Dashboard
 
-## Task 07 reconciliation — 27 October 2026
+## Task 07 offline requalification — 27 October 2026
+
+Normal merge `939b7f02` reconciles original PR #273 with reviewed main `ef2e97ef`; merged PRs #274–276 are retained. **29 PASS / 0 FAIL / 0 SKIP / 6 owner/hosted NOT RUN** in the real disposable full stack; both original APIs recover checkpoint reads without restart/replay, connected browser 3/3, accounting/outage/encrypted recovery checks PASS. All eight source-bound CI workflows PASS, including primary Browser **672 passed / 14 skipped** and 50 History repeats at zero retries. Backend 8,726/181; frontend 1,561; fresh images/manifests verified. [Full source-bound report](WAVE4_TASK07_INTEGRATION.md). Historical 27/2/6 and failed diagnostics remain unchanged; image-stall root cause stays inconclusive.
+
+**40/45 integrated**; PR #273 remains unmerged and awaits final evidence-head checks/review. 00A/00B/07B/07C/08A, hosted/human qualification, all owner decisions and PG/LG approval states remain unchanged. Only existing PG-11 PASS; zero hosted-qualified languages. No Task 08, deployment, paid call or original database change. Earlier dated blocks below are historical and superseded for current engineering/qualification state.
+
+
+## Historical reconciliation preparation — 27 October 2026
 
 Verified main `ef2e97ef88b4f4b67640c4c677f3ef3247594cd2` includes merged PRs #274, #275 and #276; all seven mandatory main-push workflows passed. The History, CSP and checkpoint repairs are integrated engineering changes. Existing PR #273 is being reconciled by a normal merge retaining both histories. New exact-source connected qualification is PENDING; historical **27 PASS / 2 FAIL / 6 NOT RUN** remains unchanged. Earlier dated status blocks below describe historical states and do not reopen the merged repairs.
 

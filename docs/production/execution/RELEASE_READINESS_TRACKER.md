@@ -1,6 +1,13 @@
 # Release Readiness Tracker (R1.0)
 
-## Task 07 reconciliation — 27 October 2026
+## Task 07 offline requalification — 27 October 2026
+
+Normal merge `939b7f02` reconciles original PR #273 with reviewed main `ef2e97ef`; merged PRs #274–276 are retained. **29 PASS / 0 FAIL / 0 SKIP / 6 owner/hosted NOT RUN** in the real disposable full stack; both original APIs recover checkpoint reads without restart/replay, connected browser 3/3, accounting/outage/encrypted recovery checks PASS. All eight source-bound CI workflows PASS, including primary Browser **672 passed / 14 skipped** and 50 History repeats at zero retries. Backend 8,726/181; frontend 1,561; fresh images/manifests verified. [Full source-bound report](WAVE4_TASK07_INTEGRATION.md). Historical 27/2/6 and failed diagnostics remain unchanged; image-stall root cause stays inconclusive.
+
+**40/45 integrated**; PR #273 remains unmerged and awaits final evidence-head checks/review. 00A/00B/07B/07C/08A, hosted/human qualification, all owner decisions and PG/LG approval states remain unchanged. Only existing PG-11 PASS; zero hosted-qualified languages. No Task 08, deployment, paid call or original database change. Earlier dated blocks below are historical and superseded for current engineering/qualification state.
+
+
+## Historical reconciliation preparation — 27 October 2026
 
 Verified main `ef2e97ef88b4f4b67640c4c677f3ef3247594cd2` includes merged PRs #274, #275 and #276; all seven mandatory main-push workflows passed. The History, CSP and checkpoint repairs are integrated engineering changes. Existing PR #273 is being reconciled by a normal merge retaining both histories. New exact-source connected qualification is PENDING; historical **27 PASS / 2 FAIL / 6 NOT RUN** remains unchanged. Earlier dated status blocks below describe historical states and do not reopen the merged repairs.
 
@@ -61,7 +68,7 @@ States below are acceptance-workflow states carried unchanged from the ledger. N
 | PG-06 | Candidate end-to-end reliability | 04C, 04D | Product lead (candidate) | NOT STARTED | 04C PR #265 and 04D PRs #242/#253 merged; mocked Browser E2E success; safety review recorded | POST265-02 repaired in PR #268; real-stack qualified-language journeys and hosted proxy/Stop/usage drills remain |
 | PG-07 | Independent human AI evaluation | 06G | Quality and human-review lead | BLOCKED | none | No reviewers named (00A, OD-BUDGET) |
 | PG-08 | Admin 2.0 functionality | 03A, 03B, 03C, 03D1, 03D2 | Product lead (operations) | IN PROGRESS | 03A/03B/03C/03D1/03D2 merged, including bulk operations and Command Center views | Hosted walkthrough; OD-BULK-ACTIONS and OD-PLAN-LIMITS decisions remain open |
-| PG-09 | Observability, resilience, backup, restore, rollback | 05B, 05C | Platform and operations lead | NOT STARTED | 05B #257 and 05C #241/#246/#271 merged; Task 06 recovery PR #272 merged with green recovery/image CI; Task 07 connected campaign pending; hosted/custody unapproved | POST272-03/04 remediation and Task 07 exact-head qualification; hosted off-host/alert/recovery proof, key/ledger custody, approved RTO/RPO/retention and fresh budget authority |
+| PG-09 | Observability, resilience, backup, restore, rollback | 05B, 05C | Platform and operations lead | NOT STARTED | 05B #257 and 05C #241/#246/#271 merged; Task 06 recovery PR #272 merged with green recovery/image CI; Task 07 offline connected campaign 29/0/6 passed at 939b7f02; final PR review pending; hosted/custody unapproved | POST272-03/04 repaired in merged PRs #274/#275; Task 07 offline qualification passed at the recorded source, final PR review/checks pending; hosted off-host/alert/recovery proof, key/ledger custody, approved RTO/RPO/retention and fresh budget authority |
 | PG-10 | Deferred and paid features disabled | 07A, 06A, 06H | Engineering lead | IN PROGRESS | 07A PRs #243/#264 and 06A/06H merged; deferred feature suites and hosted language refusal implemented | Named acceptance evidence at release SHA; preserve disabled features and zero unqualified hosted locales |
 | PG-11 | Complete issue reconciliation | all | Product Owner | PASS (machine-checked) | `reconcile_issues.py check` (452 items, 0 unmapped); `tests/test_production_reconciliation.py` | Re-run on every change |
 | PG-12 | Prompt versioning, provenance, registry parity | 01B0, 01B, 01D, 01C | AI platform lead | IN PROGRESS | 01B0/01B/01D and 01C PR #265 merged; immutable prompt v1.1.0, exact 11-tool parity, unchanged policies | Named acceptance still open; verify prompt rollback/provenance in the built release image |

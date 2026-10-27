@@ -1,4 +1,62 @@
-# Task 07 — measured disposable integration and staging blockers
+# Task 07 — reconciled disposable qualification and external release gates
+
+## Reconciled connected qualification — 27 October 2026
+
+Implementation merge `939b7f020609850a56cf5b15cbcefb6ec328c284` retains original PR #273 `bc75b4c772e5468934d033fe565eac5b921e4927` and reviewed main `ef2e97ef88b4f4b67640c4c677f3ef3247594cd2` as its parents. PRs #274–276 are merged; all seven main-push baseline workflows succeeded. Two semantic conflicts were resolved: the immutable workflow runs **both** CSP and full connected campaigns with separate safe uploads; the release tracker retains dated historical blocks under a current-state header. All reviewed CSP/checkpoint/History application changes remain identical to main. Existing Task 07 startup repairs, probes and evidence remain present. No new application permission or migration was introduced.
+
+**Mandatory offline qualification PASS:** **29 PASS / 0 FAIL / 0 SKIP / 6 NOT RUN**, 268.381 seconds. The machine result remains `PARTIAL_EXTERNAL_DEPENDENCIES` to preserve the external qualification boundary. The historical **27 PASS / 2 FAIL / 6 NOT RUN** snapshot below is unchanged. Its two confirmed application defects are repaired by merged PRs #274/#275 and verified here; PR #276's History repair is retained. The historical image-optimizer stall's root cause remains **inconclusive**.
+
+| Measured artifact at `939b7f02` | Identity |
+|---|---|
+| API / API B / both workers / one-shot migration | `sha256:3236a8afe03ae1adb9620d27f65ac0d2da5bf332f215df67db3f5b1b003a8410` |
+| Production Next.js | `sha256:ee56b434f465b1c5b8d555dc65a373060c4ebe5ec691b58ca8f279d58bec6e9b` |
+| Recovery operator | `sha256:f08d227feb4f4b373f8b0bcb721c6b3c1c0cec4a919952542c4ffe8bb3899b2d` |
+| Release manifest canonical SHA-256 | `10437c97faf47f48889000c3aadb593a1406ea7d25393a6bdb092946bac9c0d1` |
+| Operator manifest canonical SHA-256 | `e52931c3fade04cbb49680c33f27ea1b72bb2e790d2b99fbfcc926692c1c8329` |
+| Build started | `2026-10-27T11:10:52Z` |
+| Sole Alembic head | `0048_agent_run_controls` |
+| Prompt-assets hash | `a00e7b3ab6b17d9c058dc9da69d5f8923ecadb8f2fa938fdc7bac89d04b3ad97` |
+| Language activation hash (unchanged) | `05a0f9f5d182d0614d03006cf23d0e559fa2e3684db0ad6f18fff60a333aa4c1` |
+
+Canonical anchors use the existing release helper's normalized JSON, not pretty-printed file-byte hashes. Manifests include dependency/OS/runtime metadata, source hashes and local immutable image IDs; registry publication was not performed. [Image, CSP, connected and operator evidence](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494036211) records fresh builds; historical images were not reused. A following evidence-only commit has its own exact-head CI/images at [PR #273 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/273/checks); the measured identities above belong specifically to `939b7f02`.
+
+The real topology used PostgreSQL 16.15, Redis 8.2.9, Caddy 2.11.7, ClamAV 1.4.6, two APIs, two workers and a separate recovery operator/restore destination. All networks were internal and no host ports were published. Non-root UID 10001, shared backend image/private named volumes, migration helper and successful one-shot 0048 migration were observed. Failed migration exited 1 and left API/worker dependents stopped. Inaccessible private storage stayed unhealthy. Owned cleanup passed without pruning unrelated resources.
+
+Both existing APIs returned checkpoint HTTP 200 **before and after** the real database outage. Container/start/restart identities remained unchanged, explicit restart was false and model calls remained zero. The restart workaround has been removed from the current campaign. SSE reconnect did not execute the model; HITL duplicate resume returned 409; cancellation settled execution with incomplete usage preserved. API SIGKILL retained unsettled/unknown usage and refused takeover with 409. Budget ceilings/unknown reservations/kill state, Redis outage/refusal/recovery, scanner refusal/clean/EICAR, worker lease retry, owner isolation, trusted proxy/CORS and private-storage refusal all passed.
+
+Connected Playwright **3/3 passed**: edge, real cross-origin auth and hydrated UI sign-in, authenticated History/Opportunities reads, actual images, nonce-less injection refusal, UI logout and revoked session. The intentional injection produced one expected CSP refusal; bootstrap refusals were zero. Separate CSP qualification also passed two negative injections, nonce rotation/spoof refusal and secure session/logout. Primary Browser evidence and full suite totals are listed in the CI record below; assertions and timeouts were not relaxed.
+
+Encrypted transfer/restore used independent disposable local storage: backup 1.434 s, restore 1.312 s, 690,410 bytes. Erasure ledger reapplied (one account/file, six checkpoints); surviving owner checkpoint/control and unknown monetary state remained. Persistent hold returned API 503 and worker zero claims. These observations do not approve production RTO/RPO, off-host custody or hold release.
+
+### Source-bound CI results
+
+- [Encrypted recovery qualification — 40494049889](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494049889): SUCCESS on `939b7f02`.
+- [Redis shared limiter regression — 40494047663](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494047663): SUCCESS on `939b7f02`.
+- [AI budget governor qualification — 40494044906](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494044906): SUCCESS on `939b7f02`.
+- [Agent durable admission regression — 40494041253](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494041253): SUCCESS on `939b7f02`.
+- [Staging migration image regression — 40494038630](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494038630): SUCCESS on `939b7f02`.
+- [Immutable local release regression — 40494036211](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494036211): SUCCESS on `939b7f02`.
+- [Browser E2E — 40494033223](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494033223): SUCCESS on `939b7f02`.
+- [CI — 40494014328](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40494014328): SUCCESS on `939b7f02`.
+
+Backend **8,726 passed / 181 skipped**, 8,907 reconciled executions; all deterministic security/privacy evaluators and extra guards passed. Frontend **1,561 passed**, types/lint/build PASS. Browser: **672 passed / 14 skipped** primary suite, plus **50 repeated History cases passed** at zero retries; legacy smoke PASS. Release image tests **16 passed**, operator **19 passed**; migration image **3 passed**; durable admission **50 passed** plus **17 PostgreSQL outage scenarios**; AI budget **126 passed**; Redis **17 passed**; recovery **105 passed / 1 image-only skip**, covered separately by actual operator/image and connected runs. Local checks are separate overlapping selections: 114/33 and 141/16, with service/image skips not counted as passes.
+
+### Six historical NOT RUN scenarios, reassessed individually
+
+- `new_hosted_language_registration_and_interviews` — NOT RUN: no hosted language is approved or active; strict registration/activity refusal remains enforced.
+- `positive_language_interview_and_career_journeys` — NOT RUN: positive language-bearing production journeys require qualified activation and separate authorization; existing synthetic agent fixtures do not qualify them.
+- `live_ai_quality_and_embeddings` — NOT RUN: no paid/provider/embedding authority; only deterministic local model responses and empty unactivated knowledge collection were used.
+- `real_email_oidc` — NOT RUN: email was memory capture; no external delivery or live OIDC/IdP activation authorized.
+- `hosted_tls_and_signature_freshness` — NOT RUN: private internal CA and offline EICAR-only signatures prove local controls, not public TLS/network or signature currency/coverage.
+- `release_recovery_hold` — NOT RUN: restore hold intentionally persists; named operational authority and custody/go-no-go decisions are absent.
+
+### Preservation, release gates and review boundary
+
+Audit: 48 original worktrees (31 dirty), 316 original branch tips and 200 protected/untracked files recorded; all protected hashes, original statuses and branch tips were unchanged before promotion. Original PR head has a backup ref. Original SQLite remains untouched (last observed 0027; no new database inspection). [Preservation/merge audit](WAVE4_TASK07_INTEGRATION_AUDIT.md) and structured evidence retain the private-inventory hash, not secrets or database contents.
+
+**40/45 engineering packages integrated.** 00A/00B/07B/07C/08A remain open/incomplete. PG-01/PG-07 BLOCKED; PG-04/PG-06/PG-09/PG-15 NOT STARTED; PG-02/PG-03/PG-05/PG-08/PG-10/PG-12/PG-13/PG-14 IN PROGRESS; existing PG-11 alone PASS. LG-01–LG-14 have zero human-approved gates per language; zero languages are hosted-active. These are retained acceptance states, not derived from this campaign. Owner decisions remain open for hosting/region/secrets, budget authority, Redis policy, knowledge/licensing/approved embeddings/markets, reviewers/native/legal qualification, backup/erasure-key custody/off-host storage/retention/RTO/RPO, monitoring/alerts and release authority.
+
+Next: owner review of existing PR #273 and its final exact-head green checks, followed by owner-controlled merge and verification of new main. Any Task 08 staging scope requires a separate explicit instruction. No deployment, paid provider call, real email/OIDC, registry publication, real/original database migration, production/language acceptance or automatic PR merge is authorized or performed.
 
 This branch reuses the existing immutable release and recovery image workflow.
 It creates a fresh internal Compose project, synthetic PostgreSQL database, two
