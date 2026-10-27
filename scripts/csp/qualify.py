@@ -31,6 +31,12 @@ CADDY = (
 )
 
 
+def safe_runner_value(value):
+    import re
+
+    return value if re.fullmatch(r"(?:ubuntu\d{2}|\d{8}\.\d{1,6}\.\d{1,3})", value) else "unavailable"
+
+
 def require(ok, code):
     if not ok:
         raise ValueError(code)
@@ -71,6 +77,12 @@ class Check:
             "baseline_sha": BASE,
             "result": "FAIL",
             "production_or_language_approval": False,
+            "diagnostic_environment": {
+                "python": ".".join(str(v) for v in sys.version_info[:3]),
+                # Project only known runner metadata; never serialize os.environ.
+                "runner_image": safe_runner_value(os.environ.get("ImageOS", "")),
+                "runner_image_version": safe_runner_value(os.environ.get("ImageVersion", "")),
+            },
         }
 
     def compose(self, *args, **kw):

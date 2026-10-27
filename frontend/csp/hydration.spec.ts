@@ -1,33 +1,47 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync, writeFileSync } from "node:fs";
+import { version as playwrightVersion } from "@playwright/test/package.json";
+import { BrowserDiagnostics } from "./diagnostics";
 const account = JSON.parse(readFileSync(process.env.CSP_CREDENTIALS!, "utf8"));
 const api = "https://api.staging.example.com/api/v1";
 const before = process.env.CSP_PHASE === "before";
 
 test("CSP real edge: baseline refusal or secure hydrated synthetic journey", async ({ page, context }) => {
   const result: Record<string, unknown> = { phase: before ? "before" : "after", passed: false };
-  const external: string[] = [], pageErrors: string[] = [], consoleErrors: string[] = [];
+  const external = { length: 0 }, pageErrors = { length: 0 }, consoleErrors = { length: 0 };
+  const diagnostics = new BrowserDiagnostics();
+  result.tooling = { node: process.version, playwright: playwrightVersion, browser: context.browser()?.version() ?? "unavailable" };
   let inlineRefusals = 0, loginRequests = 0, expectedUnauthenticatedErrors = 0;
   await context.route("**/*", route => {
     const url = new URL(route.request().url());
     if (!["https://app.staging.example.com", "https://api.staging.example.com"].includes(url.origin)) {
-      external.push(url.origin); return route.abort();
+      external.length++;
+      diagnostics.request("external_request", { url: route.request().url(), method: route.request().method(), resourceType: route.request().resourceType() }, result.stage);
+      return route.abort();
     }
     return route.continue(); // Real API and every image request remain untouched.
   });
   page.on("request", request => { if (request.url() === api + "/auth/login") loginRequests++; });
-  page.on("pageerror", () => pageErrors.push("page_error"));
+  page.on("pageerror", () => { pageErrors.length++; diagnostics.pageError(result.stage); });
+  page.on("requestfailed", request => diagnostics.request("request_failed", { url: request.url(), method: request.method(), resourceType: request.resourceType(), error: request.failure()?.errorText }, result.stage));
+  page.on("response", response => {
+    if (response.status() >= 400) diagnostics.request("http_error", { url: response.url(), method: response.request().method(), resourceType: response.request().resourceType(), status: response.status() }, result.stage);
+  });
   page.on("console", message => {
     if (message.type() !== "error") return;
     const text = message.text();
-    if (/inline script/i.test(text) && /violat|refus/i.test(text)) inlineRefusals++;
-    else if (/^Failed to load resource: the server responded with a status of 401(?: \(|$)/.test(text)) expectedUnauthenticatedErrors++;
-    else consoleErrors.push("unexpected_console_error");
+    let bucket: "inline_refusal" | "expected_401" | "unexpected";
+    if (/inline script/i.test(text) && /violat|refus/i.test(text)) { inlineRefusals++; bucket = "inline_refusal"; }
+    else if (/^Failed to load resource: the server responded with a status of 401(?: \(|$)/.test(text)) { expectedUnauthenticatedErrors++; bucket = "expected_401"; }
+    else { consoleErrors.length++; bucket = "unexpected"; }
+    diagnostics.console(text, message.location(), result.stage, bucket);
   });
   await page.addInitScript(() => {
     (window as unknown as {cspEvents: string[]}).cspEvents = [];
     document.addEventListener("securitypolicyviolation", event => {
-      (window as unknown as {cspEvents: string[]}).cspEvents.push(event.effectiveDirective + ":" + event.blockedURI);
+      const directive = ["script-src", "script-src-elem", "script-src-attr", "connect-src", "img-src", "style-src", "font-src", "media-src", "default-src"].includes(event.effectiveDirective) ? event.effectiveDirective : "other";
+      const blocked = ["inline", "eval"].includes(event.blockedURI) ? event.blockedURI : "redacted";
+      (window as unknown as {cspEvents: string[]}).cspEvents.push(directive + ":" + blocked);
     });
   });
   try {
@@ -153,6 +167,9 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     result.page_error_count = pageErrors.length;
     result.passed = true;
   } finally {
+    result.diagnostics = diagnostics.snapshot();
+    result.observed_external_attempts = external.length;
+    result.observed_expected_unauthenticated_http_errors = expectedUnauthenticatedErrors;
     result.observed_inline_refusals = inlineRefusals;
     result.observed_login_requests = loginRequests;
     result.unexpected_console_errors = consoleErrors.length;

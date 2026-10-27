@@ -6,6 +6,7 @@ from pathlib import Path
 import runpy
 from types import SimpleNamespace
 import pytest
+import hashlib
 from scripts.csp import qualify as Q
 
 
@@ -134,3 +135,63 @@ def test_browser_process_output_cannot_persist_form_credentials(
     assert c.summary["after_browser_exit"] == process_exit
     assert not list(c.out.rglob("*.log"))
     assert not any(b"canary" in p.read_bytes() for p in c.out.rglob("*") if p.is_file())
+
+
+def test_all_existing_browser_security_assertions_are_preserved():
+    source = (Q.ROOT / "frontend/csp/hydration.spec.ts").read_text()
+    assertions = "\n".join(
+        line.strip()
+        for line in source.splitlines()
+        if "expect(" in line or "expect.poll(" in line
+    )
+    # Reviewed baseline 291eb523: CSP, auth/cookies, nonce/spoof, negative payloads,
+    # zero browser errors, external-call refusal and complete logout/revocation.
+    assert hashlib.sha256(assertions.encode()).hexdigest() == (
+        "74b14cef28c83c9020830613dcff7766beb4689f8b6a7b1fb05fb90a5517ae98"
+    )
+    assert 'retries: 0' in (Q.ROOT / "frontend/csp/playwright.config.ts").read_text()
+
+
+def test_failure_finally_retains_bounded_evidence_and_unbounded_error_counts():
+    source = (Q.ROOT / "frontend/csp/hydration.spec.ts").read_text()
+    final = source.split("} finally {", 1)[1]
+    assert "result.diagnostics = diagnostics.snapshot()" in final
+    assert "result.unexpected_console_errors = consoleErrors.length" in final
+    assert "result.observed_external_attempts = external.length" in final
+    assert 'writeFileSync(process.env.CSP_BROWSER_SUMMARY!' in final
+    assert 'consoleErrors.length++' in source
+    assert 'consoleErrors.push' not in source
+    config = (Q.ROOT / "frontend/csp/playwright.config.ts").read_text()
+    for field in ('trace: "off"', 'screenshot: "off"', 'video: "off"'):
+        assert field in config
+
+
+@pytest.mark.parametrize("value", ["private-canary", "ubuntu24 private-canary", "20261025.353.1\nprivate", ""])
+def test_runner_metadata_is_not_an_environment_dump(value):
+    assert Q.safe_runner_value(value) == "unavailable"
+
+
+@pytest.mark.parametrize("value", ["ubuntu24", "20261025.353.1"])
+def test_allowlisted_runner_metadata(value):
+    assert Q.safe_runner_value(value) == value
+
+
+def test_failure_summary_can_carry_safe_browser_diagnostics_without_process_output(monkeypatch, tmp_path):
+    c = Q.Check(args(tmp_path))
+    (c.out / "private").mkdir(parents=True)
+    safe = {"passed": False, "stage": "nonce_rotation_and_spoof_refusal", "unexpected_console_errors": 13,
+            "diagnostics": {"total_events": 13, "events": [{"text": "[redacted console error]"}]}}
+    (c.out / "browser-after.json").write_text(json.dumps(safe))
+    c.compose = lambda *a, **k: SimpleNamespace(stdout=b"owned-container")
+
+    def command(command, **kwargs):
+        if command[:2] == ["docker", "inspect"]:
+            return SimpleNamespace(stdout=json.dumps([{"NetworkSettings": {"Networks": {"owned": {"IPAddress": "172.30.0.2"}}}}]).encode())
+        return SimpleNamespace(stdout=b"password-canary", stderr=b"cookie-token-candidate-canary", returncode=1)
+
+    monkeypatch.setattr(Q, "run", command)
+    assert c.browser("after") is False
+    assert c.summary["after"] == safe
+    assert c.summary["after_browser_exit"] == 1
+    assert "canary" not in json.dumps(c.summary)
+    assert not list(c.out.rglob("*.log"))
