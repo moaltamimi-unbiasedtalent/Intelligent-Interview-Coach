@@ -1,5 +1,12 @@
 # Release Readiness Tracker (R1.0)
 
+## History browser remediation — 27 October 2026
+
+Authoritative main `90391b8c` includes merged PRs #274/#275; all seven post-merge workflows passed. POST272-03 and POST272-04 are qualified at merged engineering level. A separate `test/history-readiness-image-qualification` branch repairs reproduced false-readiness/invalid fixtures and independently qualifies real History image success/failure. Local: **50 repeated browser cases passed**, plus two stricter failure/navigation checks; **1,547 unit tests** and lint/type checks passed. Exact-head CI/full Browser results belong to the focused PR. The historical image stall was **not reproduced** in ten unchanged-test runs; its underlying cause remains **inconclusive**, not a harmless-flake claim. [Diagnosis, limits and evidence](HISTORY_BROWSER_REMEDIATION.md).
+
+**40/45 integrated**; 00A/00B/07B/07C/08A remain open/incomplete. PR #273 is open at its original commit, historical 27/2/6 failed evidence retained; Task 07 remains OPEN, Task 08 blocked. Hosted staging NOT RUN; human qualification and PG-01–PG-15 / LG-01–LG-14 approvals unchanged (only historical PG-11 PASS; zero hosted-qualified languages). No production code/security policy, activation record, original database, owner approval or user asset is changed. Earlier dated blocks below retain their original historical status; this header supersedes them for current merge state.
+
+
 ## POST272-04 checkpoint recovery update — 27 October 2026
 
 PR #274 is merged at `45f4e0bbf9214b56033be405a332880619dd0273`; all seven mandatory main workflows are green. POST272-03 is closed at merged engineering level. The focused `fix/postgres-checkpoint-recovery` branch qualifies the same official saver/compiled graphs across real PostgreSQL outages without an API restart or execution replay. Local disposable PG16: **193 passed / 0 skipped**, including 17 recovery and 176 unchanged admission/budget cases; existing focused regressions: **191 passed / 74 skipped**, plus one public-error redaction test. Exact-head CI and Browser qualification are recorded in the focused PR; local results do not substitute for them. [Design, preservation and evidence](POST272_04_CHECKPOINT_RECOVERY.md).

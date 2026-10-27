@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { candidateReady, historyReady, observeHistory, qualifyHistoryImage, SECURITY_OBSERVATION_MS } from "./fixtures/historyReadiness";
+
 import table from "../tests/fixtures/deferral-table-07a.json";
 
 // 07A (PG-10, REQ-DEFER-01): browser evidence that every DEFERRED or GATED family is unreachable for a Candidate and for an Admin while its gate is off. The family table comes
@@ -48,12 +52,25 @@ async function mock(page: Page, role: string, perms: string[]): Promise<Log> {
     const json = (body: unknown, status = 200) => route.fulfill({ status, contentType: "application/json", headers: { "x-request-id": "r" }, body: JSON.stringify(body) });
     if (path.endsWith("/auth/me")) return json(account(role, perms));
     if (path.endsWith("/capabilities")) return json(CAPS_OFF);
-    if (path.endsWith("/auth/plan")) return json({ plan_code: "basic", plan_version: 1, entitlements: {} });
+    if (path.endsWith("/auth/plan")) return json({ plan: { plan_code: "basic", plan_name: "Basic", version: 1 }, entitlements: {} });
     if (path.endsWith("/billing/checkout/availability")) return json({ plan: "premium", available: false, reason: "not_enabled" });
     if (path.endsWith("/billing/checkout/status")) return json(NONE);
     if (path.endsWith("/speech/capabilities")) return json(SPEECH_CAPS);
     if (path.endsWith("/voice/realtime/status")) return json({ enabled: false, configured: false, available: false, provider: "openai_realtime", supported_locales: ["en"], max_session_seconds: 300, max_concurrent_per_user: 1, fallback: "turn_based_voice" });
     if (path.endsWith("/model-profiles")) return json({ selector_active: false, default: "balanced", profiles: [] });
+    // Valid, empty read contracts: {} used to crash Opportunities and Practice
+    // while the old global-idle wait still reported those pages as ready.
+    if (path.endsWith("/opportunities")) return json({ opportunities: [] });
+    if (path.endsWith("/interviews/options")) return json({ career_levels: ["junior", "mid", "senior"], interview_types: ["behavioural"], deep_dive_modes: [] });
+    if (path.endsWith("/interviews")) return json({ sessions: [] });
+    if (path.endsWith("/history/interviews")) return json({ interviews: [] });
+    if (path.endsWith("/memory")) return json({ memories: [] });
+    if (path.endsWith("/progress")) return json({ interviews_completed: 0, answers_evaluated: 0, recent_interviews: [], recent_scores: [], improvement_areas: [] });
+    if (path.endsWith("/documents")) return json({ documents: [] });
+    if (path.endsWith("/workspaces")) return json({ workspaces: [], invited: [] });
+    if (path.endsWith("/shares/mine") || path.endsWith("/shares/with-me")) return json({ shares: [] });
+    if (path.endsWith("/ownership-transfers/mine")) return json({ transfers: [] });
+    if (path.endsWith("/agent/runs")) return json({ runs: [] });
     return json({});
   });
   return log;
@@ -70,27 +87,43 @@ function hits(text: string) {
 
 const CANDIDATE_PAGES = ["/opportunities", "/prepare", "/practice", "/progress", "/history", "/settings", "/account", "/pricing", "/documents", "/workspaces"];
 
-test("Candidate: no page requests a gated endpoint or contacts an external host, and the More menu exposes nothing deferred", async ({ page }) => {
+test("Candidate: no page requests a gated endpoint or contacts an external host, and the More menu exposes nothing deferred", async ({ page }, info) => {
+  const observation = observeHistory(page);
   const log = await mock(page, "user", []);
-  for (const path of CANDIDATE_PAGES) {
-    await page.goto(path);
-    await page.waitForLoadState("networkidle");
-  }
-  await page.goto("/opportunities");
-  await page.getByRole("button", { name: /more/i }).first().click();
-  const items = page.getByRole("menuitem");
-  const count = await items.count();
-  expect(count).toBeGreaterThanOrEqual(4);
-  for (let i = 0; i < count; i++) {
-    const text = (await items.nth(i).textContent()) ?? "";
-    const href = (await items.nth(i).getAttribute("href")) ?? "/";
-    expect(hits(text), text).toEqual([]);
-    expect(ABSENT_PATHS.find((p) => href === p || href.startsWith(p + "/")), href).toBeUndefined();
-  }
-  // The primary navigation (desktop) carries only the five product destinations.
-  const primary = await page.getByRole("navigation").first().getByRole("link").allTextContents();
-  expect(hits(primary.join(" | "))).toEqual([]);
-  assertClean(log);
+  try {
+    for (const path of CANDIDATE_PAGES) {
+      const response = await page.goto(path, { waitUntil: "domcontentloaded" });
+      expect(response?.status(), path).toBe(200);
+      await candidateReady(page, path);
+      await observation.ready(path);
+      if (path === "/history") {
+        await historyReady(page);
+        await qualifyHistoryImage(page.locator("#main img"), observation);
+      }
+      // An observation window AFTER readiness preserves deferred initialization
+      // coverage. It is not the readiness condition and does not require idleness.
+      await page.waitForTimeout(SECURITY_OBSERVATION_MS);
+      assertClean(log);
+      expect(observation.consoleErrors, path).toEqual([]);
+      expect(observation.pageErrors, path).toEqual([]);
+      expect(observation.transportFailures, path).toEqual([]);
+    }
+    await page.goto("/opportunities");
+    await page.getByRole("button", { name: /more/i }).first().click();
+    const items = page.getByRole("menuitem");
+    const count = await items.count();
+    expect(count).toBeGreaterThanOrEqual(4);
+    for (let i = 0; i < count; i++) {
+      const text = (await items.nth(i).textContent()) ?? "";
+      const href = (await items.nth(i).getAttribute("href")) ?? "/";
+      expect(hits(text), text).toEqual([]);
+      expect(ABSENT_PATHS.find((p) => href === p || href.startsWith(p + "/")), href).toBeUndefined();
+    }
+    // The primary navigation (desktop) carries only the five product destinations.
+    const primary = await page.getByRole("navigation").first().getByRole("link").allTextContents();
+    expect(hits(primary.join(" | "))).toEqual([]);
+    assertClean(log);
+  } finally { await observation.attach(info, "candidate-readiness-diagnostics"); }
 });
 
 test("Candidate: the account page offers no checkout, only the truthful 'not enabled' state, and starts no checkout", async ({ page }) => {
@@ -178,4 +211,91 @@ test("Admin: direct navigation to deferred Admin paths answers the not-found pag
     expect(response?.status(), path).toBe(404);
   }
   assertClean(log);
+});
+
+for (const scale of [1, 2]) {
+  test(`History image: real production optimizer, loaded pixels and enforced CSP at DPR ${scale}`, async ({ browser }, info) => {
+    const context = await browser.newContext({ deviceScaleFactor: scale, baseURL: process.env.BASE_URL || `http://localhost:${process.env.E2E_PORT || "3000"}` });
+    const page = await context.newPage();
+    const observation = observeHistory(page);
+    const log = await mock(page, "user", []);
+    try {
+      const asset = readFileSync(resolve(__dirname, "../public/images/ask4mo/ask4mo-empty-history-ink.png"));
+      expect(asset.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+      expect(asset.readUInt32BE(16)).toBeGreaterThan(0);
+      expect(asset.readUInt32BE(20)).toBeGreaterThan(0);
+      const response = (await page.goto("/history", { waitUntil: "domcontentloaded" }))!;
+      const csp = response.headers()["content-security-policy"];
+      expect(csp).toContain("img-src 'self' data: blob:");
+      expect(csp).toMatch(/script-src 'self' 'nonce-[^']+'/);
+      await historyReady(page);
+      await candidateReady(page, "/history");
+      await observation.ready("/history");
+      const image = await qualifyHistoryImage(page.locator("#main img"), observation);
+      expect(image.origin).toBe(new URL(page.url()).origin);
+      await page.waitForTimeout(SECURITY_OBSERVATION_MS);
+      expect(observation.imageResponses).toHaveLength(1);
+      expect(observation.imageResponses[0].status).toBe(200);
+      expect(observation.snapshot().outstanding.filter(url => url.endsWith("/_next/image"))).toEqual([]);
+      expect(observation.consoleErrors).toEqual([]);
+      expect(observation.pageErrors).toEqual([]);
+      expect(observation.transportFailures).toEqual([]);
+      assertClean(log);
+      const imagePath = info.outputPath("history-image-loaded-state.json");
+      writeFileSync(imagePath, JSON.stringify({ ...image, sourceBytes: asset.length, sourceWidth: asset.readUInt32BE(16), sourceHeight: asset.readUInt32BE(20) }));
+      await info.attach("history-image-loaded-state", { path: imagePath, contentType: "application/json" });
+    } finally { await observation.attach(info, "history-image-diagnostics"); await context.close(); }
+  });
+}
+
+test("History image: real missing optimizer asset is a distinct failure while navigation stays usable", async ({ page }, info) => {
+  const observation = observeHistory(page);
+  const log = await mock(page, "user", []);
+  try {
+    await page.goto("/history", { waitUntil: "domcontentloaded" });
+    await historyReady(page);
+    await qualifyHistoryImage(page.locator("#main img"), observation);
+    // Fault injection only: request a REAL missing local asset through the real
+    // optimizer. Nothing is intercepted, hidden, removed or changed in the app.
+    const failed = page.waitForResponse(response => response.url().includes("missing-history-qualification.png"));
+    await page.locator("#main img").evaluate(node => {
+      const image = node as HTMLImageElement;
+      image.srcset = "";
+      image.src = "/_next/image?url=%2Fimages%2Fask4mo%2Fmissing-history-qualification.png&w=384&q=75";
+    });
+    expect((await failed).status()).toBe(400);
+    await expect(qualifyHistoryImage(page.locator("#main img"), observation)).rejects.toThrow("history_image_http_400");
+    await historyReady(page);
+    await candidateReady(page, "/history");
+    await page.waitForTimeout(SECURITY_OBSERVATION_MS);
+    expect(observation.imageResponses.filter(response => response.status === 400)).toHaveLength(1);
+    expect(observation.snapshot().outstanding.filter(url => url.endsWith("/_next/image"))).toEqual([]);
+    await page.getByRole("link", { name: "Start Practice", exact: true }).click();
+    await expect(page).toHaveURL(/\/practice$/);
+    await candidateReady(page, "/practice");
+    await observation.ready("/practice");
+    expect(observation.consoleErrors).toEqual(["http_400"]);
+    expect(observation.pageErrors).toEqual([]);
+      expect(observation.transportFailures).toEqual([]);
+    assertClean(log);
+  } finally { await observation.attach(info, "history-expected-image-failure"); }
+});
+
+test("Candidate readiness observer: a delayed gated request still fails security after the UI is ready", async ({ page }, info) => {
+  const observation = observeHistory(page);
+  const log = await mock(page, "user", []);
+  try {
+    await page.goto("/history", { waitUntil: "domcontentloaded" });
+    await historyReady(page);
+    await qualifyHistoryImage(page.locator("#main img"), observation);
+    // Synthetic detector control only. This remains in the API route mock and
+    // reaches no backend/provider. It proves the post-readiness window is active.
+    await page.evaluate(() => { setTimeout(() => { void fetch("http://localhost:8000/api/v1/compensation"); }, 250); });
+    await page.waitForTimeout(SECURITY_OBSERVATION_MS);
+    expect(log.api).toContain("GET /api/v1/compensation");
+    expect(() => assertClean(log)).toThrow(/a gated endpoint was requested/);
+    expect(log.external).toEqual([]);
+    expect(observation.consoleErrors).toEqual([]);
+    expect(observation.pageErrors).toEqual([]);
+  } finally { await observation.attach(info, "history-security-observer-control"); }
 });

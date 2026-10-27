@@ -20,6 +20,8 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -27,6 +29,19 @@ jobs:
         run: |
           npm ci
           npx playwright install --with-deps chromium
+      - name: Type-check the focused browser qualification
+        run: npx tsc --noEmit -p e2e/tsconfig.history.json
+      - name: Repeat history readiness, actual images and security observation (zero retries)
+        env:
+          CI: "true"
+        run: npm run e2e -- --grep 'Candidate: no page requests|History image:|Candidate readiness observer:' --repeat-each=10 --retries=0 --reporter=line --output="$RUNNER_TEMP/history-qualification"
+      - name: Retain sanitized history qualification diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: history-readiness-evidence
+          path: ${{ runner.temp }}/history-qualification/**/*.json
+          if-no-files-found: error
       - name: Run Playwright (Playwright builds + starts Next.js)
         env:
           CI: "true"
