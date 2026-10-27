@@ -1,5 +1,12 @@
 # Release Readiness Tracker (R1.0)
 
+## POST272-04 checkpoint recovery update — 27 October 2026
+
+PR #274 is merged at `45f4e0bbf9214b56033be405a332880619dd0273`; all seven mandatory main workflows are green. POST272-03 is closed at merged engineering level. The focused `fix/postgres-checkpoint-recovery` branch qualifies the same official saver/compiled graphs across real PostgreSQL outages without an API restart or execution replay. Local disposable PG16: **193 passed / 0 skipped**, including 17 recovery and 176 unchanged admission/budget cases; existing focused regressions: **191 passed / 74 skipped**, plus one public-error redaction test. Exact-head CI and Browser qualification are recorded in the focused PR; local results do not substitute for them. [Design, preservation and evidence](POST272_04_CHECKPOINT_RECOVERY.md).
+
+POST272-04 remains OPEN pending green CI, review and merge. PR #273 remains unmerged with historical 27/2/6 failed evidence preserved; Task 07 and the separate `/history` issue remain OPEN. **40/45 integrated**, 00A/00B/07B/07C/08A open/incomplete. Hosted staging NOT RUN; human qualification OPEN; PG-01–PG-15 and LG-01–LG-14 unchanged, only historical PG-11 PASS and zero hosted-qualified languages. No owner approval, deployment, real database migration, paid call or activation occurred. Earlier dated status blocks below are historical snapshots, superseded by this update for current merge state.
+
+
 
 > POST272-03 focused remediation: branch `fix/nextjs-csp-hydration` from main
 > `992682c3`, under normal review only after qualification. Current [PR #274 checks](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/274/checks) and its
