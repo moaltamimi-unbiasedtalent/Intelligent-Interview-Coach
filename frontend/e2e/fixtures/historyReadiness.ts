@@ -12,6 +12,8 @@ export function observeHistory(page: Page) {
   const start = Date.now();
   const events: Array<Record<string, unknown>> = [];
   const pending = new Map<Request, string>();
+  let sequence = 0;
+  const requests = new Map<Request, { id: number; rsc: boolean; prefetch: boolean; status?: number; contentType?: string }>();
   const consoleErrors: string[] = [], pageErrors: string[] = [], transportFailures: string[] = [];
   const imageResponses: Array<{ status: number; elapsedMs: number; cache: string | null; source: string | null }> = [];
   const safeUrl = (raw: string) => {
@@ -21,22 +23,29 @@ export function observeHistory(page: Page) {
   const record = (kind: string, detail: Record<string, unknown>) => events.push({ kind, elapsedMs: Date.now() - start, ...detail });
   page.on("request", request => {
     const url = safeUrl(request.url()); pending.set(request, url);
-    record("request", { url, resource: request.resourceType() });
+    const headers = request.headers();
+    const metadata = { id: ++sequence, rsc: headers.rsc === "1", prefetch: headers["next-router-prefetch"] === "1" || Boolean(headers["next-router-segment-prefetch"]) };
+    requests.set(request, metadata);
+    record("request", { ...metadata, url, resource: request.resourceType() });
   });
   page.on("response", response => {
     const url = new URL(response.url());
-    record("response", { url: safeUrl(response.url()), status: response.status() });
+    const metadata = requests.get(response.request());
+    if (metadata) { metadata.status = response.status(); metadata.contentType = response.headers()["content-type"]?.split(";")[0]; }
+    record("response", { ...metadata, url: safeUrl(response.url()), status: response.status() });
     if (url.pathname === "/_next/image" && [ASSET, "/images/ask4mo/missing-history-qualification.png"].includes(url.searchParams.get("url") ?? "")) {
       imageResponses.push({ status: response.status(), elapsedMs: Date.now() - start, cache: response.headers()["x-nextjs-cache"] ?? null, source: url.searchParams.get("url") });
     }
   });
-  page.on("requestfinished", request => { record("finished", { url: safeUrl(request.url()) }); pending.delete(request); });
+  page.on("requestfinished", request => { record("finished", { id: requests.get(request)?.id, url: safeUrl(request.url()) }); pending.delete(request); });
   page.on("requestfailed", request => {
     const headers = request.headers();
     const prefetch = headers["next-router-prefetch"] === "1" || Boolean(headers["next-router-segment-prefetch"]);
     const expectedAbort = request.failure()?.errorText === "net::ERR_ABORTED" && prefetch;
     const category = expectedAbort ? "next_prefetch_cancelled_by_navigation" : "unexpected_request_failure";
-    record("failed", { url: safeUrl(request.url()), resource: request.resourceType(), category });
+    const rawCode = request.failure()?.errorText ?? "";
+    const code = /^net::ERR_[A-Z_]+$/.test(rawCode) ? rawCode : "other_transport_code";
+    record("failed", { ...requests.get(request), url: safeUrl(request.url()), resource: request.resourceType(), category, code });
     if (!expectedAbort) transportFailures.push(safeUrl(request.url()));
     pending.delete(request);
   });

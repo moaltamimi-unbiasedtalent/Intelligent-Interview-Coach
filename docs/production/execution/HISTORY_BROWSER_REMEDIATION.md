@@ -119,6 +119,24 @@ claim. They cannot establish that an unreproduced historical optimizer stall wil
 never recur. The explicit image checks prevent semantic readiness from concealing
 such a recurrence. The complete PR #273 connected campaign remains NOT RUN here.
 
+## CI diagnostic follow-up (not final qualification)
+
+The first Linux repetition run at `e9f1f980` recorded **46 passed / four failed**.
+All candidate sweeps, positive images and delayed-detector controls passed. Four
+missing-image cases failed the new strict transport assertion after the real
+Practice link was clicked: `/practice` returned HTTP 200, then a fetch body was
+cancelled, while the destination rendered and its menu worked. This is distinct
+from the historical pending image request. All ten expected missing-image responses
+were HTTP 400; successful image cache outcomes included two MISS, 44 HIT and four
+STALE. The full primary suite was NOT RUN after that prerequisite failure.
+The failed workflow/artifact is retained:
+[CI diagnostic run](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40461671496).
+Additional request IDs, derived RSC/prefetch flags, content type/status and safe
+transport codes are being qualified to identify the cancellation precisely; no
+broad abort exemption or production change is justified by the first record.
+Local diagnostic CPU throttling did not reproduce the Linux cancellation. Final
+qualification must be recorded separately; the 46/4 result is not rewritten PASS.
+
 ## Preservation and release position
 
 Pre-task inventory: **47 existing worktrees, 315 original branch tips and 49
