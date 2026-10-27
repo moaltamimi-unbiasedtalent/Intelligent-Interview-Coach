@@ -137,11 +137,13 @@ def _digest(env):
     return hashlib.sha256("\n".join(rows).encode()).hexdigest()
 
 
-def _restart():
+def _restart(env, *, held=False):
     from scripts.checkpoint_recovery.disposable import control
 
     control("stop")
     control("start")
+    if not held:
+        _ready(env)
 
 
 def _interrupt(env):
@@ -168,7 +170,26 @@ def _client(env, service, owner=1):
 
     app.dependency_overrides[D.get_current_user_id] = identity
     with TestClient(app, raise_server_exceptions=False) as client:
+        app.state.resources["repository"] = InterviewRepository(env.sf)
         yield client
+
+
+def _wait_ready(client):
+    # Poll the real shared PostgreSQL readiness probe, as specified in the
+    # reproduction. Its first failed idle checkout invalidates the old SQLAlchemy
+    # pool; the next health probe establishes readiness. Never retry agent work.
+    for _ in range(2):
+        response = client.get("/api/v1/ready")
+        if response.status_code == 200:
+            assert response.json()["checks"]["database"] is True
+            return
+        assert response.status_code == 503
+    pytest.fail("real_shared_postgresql_readiness_did_not_recover")
+
+
+def _ready(env):
+    with _client(env, None) as client:
+        _wait_ready(client)
 
 
 def test_original_single_connection_retains_failure_and_records_survive(env):
@@ -192,7 +213,7 @@ def test_original_single_connection_retains_failure_and_records_survive(env):
         with _client(env, old) as client:
             assert client.get("/api/v1/agent/runs/" + result.run_id).status_code == 200
             _interrupt(env)
-            assert client.get("/api/v1/ready").status_code == 200
+            _wait_ready(client)
             assert client.get("/api/v1/agent/runs/" + result.run_id).status_code == 500
         assert env.build().get_run(result.run_id, "1").status == "completed"
         assert len(env.calls) == 1 and _digest(env) == before
@@ -206,9 +227,10 @@ def test_original_service_recovers_read_without_replay_or_record_changes(env, fa
     result = _run(a)
     identity = (id(a._graph), id(a._checkpointer), id(a._checkpoint_resource))
     before = _digest(env)
-    _interrupt(env) if fault == "terminate" else _restart()
     with _client(env, a) as client:
-        assert client.get("/api/v1/ready").status_code == 200
+        assert client.get("/api/v1/agent/runs/" + result.run_id).status_code == 200
+        _interrupt(env) if fault == "terminate" else _restart(env)
+        _wait_ready(client)
         assert client.get("/api/v1/agent/runs/" + result.run_id).status_code == 200
         assert (
             client.get(
@@ -230,6 +252,7 @@ def test_long_outage_refuses_with_finite_bound_and_recovers_same_service(env):
     before = _digest(env)
     control("stop")
     with _client(env, service) as client:
+        assert client.get("/api/v1/ready").status_code == 503
         for _ in range(2):
             start = time.monotonic()
             response = client.get("/api/v1/agent/runs/" + result.run_id)
@@ -241,6 +264,7 @@ def test_long_outage_refuses_with_finite_bound_and_recovers_same_service(env):
                 for word in ("synthetic-test-only", "127.0.0.1", "postgresql://")
             )
     control("start")
+    _ready(env)
     assert service.get_run(result.run_id, "1").status == "completed"
     assert before == _digest(env) and len(env.calls) == 1
 
@@ -250,7 +274,7 @@ def test_repeated_disconnects_remain_bounded_and_do_not_mutate_state(env):
     result = _run(service)
     before = _digest(env)
     for _ in range(3):
-        _restart()
+        _restart(env)
         assert service.get_run(result.run_id, "1").status == "completed"
     assert _digest(env) == before and len(env.calls) == 1
 
@@ -260,7 +284,7 @@ def test_two_services_and_concurrent_readers_recover_without_replacement(env):
     result = _run(a)
     before = _digest(env)
     ids = [id(x._checkpointer) for x in (a, b)]
-    _restart()
+    _restart(env)
     with ThreadPoolExecutor(max_workers=8) as executor:
         statuses = list(
             executor.map(
@@ -305,6 +329,7 @@ def test_running_producer_survives_recovery_without_resource_replacement(
             with pytest.raises(AgentCheckpointUnavailable):
                 b.get_run(rid, "1")
             control("start")
+            _ready(env)
             with pytest.raises(RunNotResumableError):
                 b.continue_run(rid, "1", "Synthetic competing continuation")
             assert a._graph is graph and a._checkpointer is saver and not close
@@ -404,7 +429,7 @@ def test_hitl_authorization_and_duplicate_resume_survive_restart(env):
     result = _run(service)
     action = result.pending_action.copy()
     before = _digest(env)
-    _restart()
+    _restart(env)
     read = service.get_run(result.run_id, "1")
     assert read.pending_action == action and _digest(env) == before
     with pytest.raises(RunNotFoundError):
@@ -433,7 +458,7 @@ def test_database_quarantine_still_blocks_existing_service_after_physical_recove
                 sql.Identifier(env.name)
             )
         )
-    _restart()
+    _restart(env, held=True)
     assert _sql(env, "SELECT 1") == [(1,)]
     with pytest.raises(AgentCheckpointUnavailable):
         service.get_run(result.run_id, "1")
@@ -451,7 +476,7 @@ def test_sse_readonly_reconnection_preserves_usage_after_database_restart(env):
     manager = service.streaming()
     before = _digest(env)
     graph = manager.graph
-    _restart()
+    _restart(env)
 
     async def read():
         return [event async for event in manager.events(result.run_id, "1")]
@@ -467,7 +492,7 @@ def test_privacy_official_thread_deletion_works_after_recovery(env):
     service = env.build()
     result = _run(service)
     adapter = CheckpointAdapter(service._checkpointer)
-    _restart()
+    _restart(env)
     assert adapter.owner_of(result.run_id) == "1"
     assert adapter.purge_run(result.run_id)
     assert service._checkpointer.get_tuple(service._config(result.run_id)) is None
@@ -498,7 +523,7 @@ def test_unknown_usage_reservations_and_kill_switch_are_unchanged(env):
         ]
 
     budget_before, run_before = rows(), _digest(env)
-    _restart()
+    _restart(env)
     visible = service.get_run(result.run_id, "1")
     assert (
         not visible.usage["usage_complete"]
@@ -570,7 +595,7 @@ def test_independent_process_competition_after_recovery(env, unsettled):
     if unsettled:
         RunControlStore(env.sf).claim(result.run_id, "1", required=True)
     before = _digest(env)
-    _restart()
+    _restart(env)
     ctx = multiprocessing.get_context("spawn")
     ready, output = ctx.Queue(), ctx.Queue()
     start, entered, release = ctx.Event(), ctx.Event(), ctx.Event()

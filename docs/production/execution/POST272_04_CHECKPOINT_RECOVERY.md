@@ -23,12 +23,15 @@ This repair does not import that campaign or resolve its separate `/history` iss
 
 The baseline factory entered `PostgresSaver.from_conn_string()` once and retained
 its single psycopg connection for the entire cached service/compiled graph lifetime.
-A terminated PostgreSQL backend made that connection permanently unusable. A healthy
-SQLAlchemy readiness probe did not replace the independent checkpoint connection.
+A terminated PostgreSQL backend made that connection permanently unusable. The shared PostgreSQL readiness probe recovered after invalidating its dead
+SQLAlchemy checkout, but did not replace the independent checkpoint connection.
 
 A real PostgreSQL 16.15 server, real migrations and original AgentApplicationService
 reproduced: owner read HTTP 200, actual idle backend termination, general readiness
 HTTP 200, original service checkpoint read HTTP 500, new service read completed.
+A strengthened replay of the original factory loaded directly from baseline Git
+confirmed the readiness sequence 503 → 200 against that SAME disposable PostgreSQL
+session factory, followed by checkpoint HTTP 500.
 Exactly one synthetic model invocation occurred; fingerprints of checkpoints,
 blobs, writes, run controls, ownership index and canonical usage were unchanged.
 The [local evidence](evidence/POST272_04_CHECKPOINT_LOCAL.json) retains this before-fix
@@ -57,10 +60,15 @@ threads without a 0048 control row. A rejected new session is closed before it c
 be lent. Resource shutdown remains owned by CheckpointerInfo; recovery does not
 close a connection used by an active producer.
 
-SQLAlchemy's PostgreSQL engine now checks an idle connection before lending it to
-run-control/usage operations (`pool_pre_ping`). This addresses the second stale
-session path observed in the real outage tests. It does not replay a transaction
-that failed after checkout. SQLite engine behavior is unchanged.
+The shared application/budget SQLAlchemy engine is unchanged. A health probe can
+first return 503 while invalidating its terminated idle connection, then 200 using
+a fresh connection. Tests require the actual shared PostgreSQL readiness probe to
+recover before accessing checkpoint/run-control state. Only checkpoint connections
+use the new pool. An initial candidate enabling shared-engine `pool_pre_ping` was
+rejected: the unchanged budget qualification correctly detected that it altered
+its established fail-closed behavior (175 passed / one failed). That shared-engine
+change was removed; no budget assertion or policy was weakened. This repair does
+not promise that an unrelated application transaction survives a lost connection.
 
 Transport/unavailable failures have a typed safe HTTP 503 projection. The handler
 uses a fixed public message even if an internal exception contains unsafe text.
@@ -108,7 +116,9 @@ Seventeen parameterized cases cover the twenty requested scenarios:
 | SSE read-only reconnection | Stable async graph, repeated result reads, unchanged records, no additional model calls |
 | Official privacy deletion | Recovered saver owner check and official thread-delete API work |
 
-Local full outage qualification: **17 passed, 0 failed, 0 skipped**. Existing local
+Final narrowed local PostgreSQL selection: **193 passed, 0 failed, 0 skipped**
+(17 recovery cases plus 176 unchanged admission/budget cases). Local full outage
+qualification: **17 passed, 0 failed, 0 skipped**. Existing local
 checkpoint/HITL/streaming/admission/budget/recovery/privacy/migration selection:
 **191 passed, 74 skipped**. A separate public error-redaction regression passed.
 Skips are not PostgreSQL/image success. The original behavior is retained in the
