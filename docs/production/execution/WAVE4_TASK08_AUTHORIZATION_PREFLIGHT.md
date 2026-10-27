@@ -1,8 +1,14 @@
 # Wave 4 Task 08 — hosted staging authorization and readiness preflight
 
-**READY FOR OWNER DECISION — NOT READY TO DEPLOY.** Status date: 27 October 2026. This documentation task authorizes preparation only. No cloud provisioning, hosted deployment, registry publication, paid AI, real email/OIDC, real/original database migration, language activation, approval marker, PG/LG acceptance or automatic merge is performed or authorized. Wave 4 Task 08 is not roadmap package 08A (final release freeze/go-no-go). Full owner-approved S1 scope and the seven R1.0 languages remain unchanged; an unmet mandatory gate moves the date, not the scope.
+**H01/H02 APPROVED FOR S1 DOCUMENTATION ONLY — NOT READY TO PROVISION OR DEPLOY.** Status date: 27 October 2026. This documentation task authorizes preparation only. No cloud provisioning, hosted deployment, registry publication, paid AI, real email/OIDC, real/original database migration, language activation, approval marker, PG/LG acceptance or automatic merge is performed or authorized. Wave 4 Task 08 is not roadmap package 08A (final release freeze/go-no-go). Full owner-approved S1 scope and the seven R1.0 languages remain unchanged; an unmet mandatory gate moves the date, not the scope.
 
-## 1. VERIFIED baseline and Task 07 closure
+## Current S1 documentation decision — 27 October 2026
+
+H01/H02 owner terms are **APPROVED FOR S1 DOCUMENTATION ONLY**: [owner-approved S1 documentation record](WAVE4_S1_H01_H02_OWNER_AUTHORIZATION.md) and [S2 security/deployment-entry checklist](WAVE4_S2_SECURITY_ENTRY_CHECKLIST.md). Main bf579aa5 includes PR #277 with all seven mandatory post-merge workflows SUCCESS. Named owner/operator Mo Al-Tamimi approves one CPX42 nbg1, Germany-only primary processing, EUR150 inclusive of applicable VAT, fixed 28 October 09:00 CET to 27 November 09:00 CET exclusive. **No provisioning/deployment is authorized.** Overall OD-HOSTED remains PARTIAL / OPEN and S1 deployment-entry BLOCKED on actual quote/stock/capacity and independent controls. S2 preparation checklist acceptances remain OPEN; OD-BUDGET/Redis/custody/retention/language decisions and all PG/LG states are unchanged; 40/45 integrated.
+
+The original preparation state, options, role vacancies and next-action recommendations below are dated historical snapshots. They are superseded only for the exact H01/H02 owner terms, not for execution, legal/operational acceptance or any other decision. The original evidence JSON and every historical test result remain untouched.
+
+## 1. Historical VERIFIED baseline and Task 07 closure
 
 Main `b463cf9b92b44a600c7b0e842574e1eb32e5e713` merges PR #273; reviewed PR source `a7fbec43fb2e2e54331655f44cac51065a43ae50`. All seven required **post-merge main push** workflows completed SUCCESS; S0 is VERIFIED. Task 07: **OFFLINE QUALIFIED — MERGED**. Tasks 01–07 completed their intended PR-head offline engineering; this is not hosted/human/production acceptance.
 
