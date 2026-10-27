@@ -45,9 +45,25 @@ that expose an image failure distinctly. A recurrent stall must still fail.
 
 The source PNG is byte-identical to PR #273's image (Git blob comparison), has a
 valid PNG signature/dimensions, and is actually decoded by Next.js and Chromium.
-No image asset, production component, caching configuration, middleware or CSP
-policy is changed. [Measured local evidence](evidence/HISTORY_BROWSER_LOCAL.json)
+No image asset, caching configuration, middleware or CSP policy is changed.
+A subsequently reproduced History action-link navigation failure is repaired as
+described below; other ButtonLink callers retain their existing behavior. [Measured local evidence](evidence/HISTORY_BROWSER_LOCAL.json)
 keeps the original failure separate from passing repetitions and their limits.
+
+## Reproduced History action-link defect
+
+Additional local CPU-throttled diagnostics produced **18 passed / two failed**
+missing-image cases: the actual Start Practice click left the URL on `/history`
+for the existing 10-second assertion window. This reproduces the already documented
+plain-Next-Link navigation-loss class in `lib/navigation/verified.ts`; it does not
+establish why Next.js failed to commit the transition. The existing verified
+navigation guard is now opted into **only the two History empty-state actions**.
+ButtonLink gains an opt-in parameter defaulting false; all styles and other callers
+are unchanged. The canonical guard retains its existing 500 ms verification, one
+idempotent soft-navigation retry and hard-navigation fallback. No model operation,
+API write or tool call is replayed. A component regression proves the History action
+uses that guard and stops after arrival. The same twenty CPU-stress repetitions
+then passed. No diagnostic CPU flag is retained in the delivered test source.
 
 ## Focused change
 
@@ -89,7 +105,14 @@ menu hydration, console/page error categories, Node/browser versions, source SHA
 and dirty-tree flag. No headers, cookies, bodies, raw console text or arbitrary
 query strings are stored. Every failed request is recorded. Only ERR_ABORTED on
 identified Next.js prefetches is classified as an expected navigation cancellation;
-other failures, including image aborts, fail qualification.
+other failures, including image aborts, fail qualification. A second narrowly
+qualified case records ERR_ABORTED on a same-origin `/practice` RSC fetch only after
+HTTP 200 / `text/x-component`, actual destination/menu hydration, visible target-role
+and career-level fields, and a further 500 ms observation. It remains a recorded
+failed request with an explicit classification and original category, not a deleted
+event. No such exception exists for images, APIs, other destinations, foreign hosts,
+failed HTTP responses, non-abort transport errors or unconfirmed navigation. Thirteen
+classifier boundary tests and the existing gate/external monitors enforce that limit.
 
 ## Qualification and limits
 
@@ -98,9 +121,10 @@ ten full candidate sweeps, twenty positive image cases, ten actual missing-image
 cases and ten delayed gated-detector controls. Positive cases had zero console,
 page or unexpected transport errors and zero outstanding image requests. Local
 cache observations were 26 HIT / four STALE; the separate original baseline run
-included a real MISS. The stricter prefetch classification and actual post-failure
-Practice navigation then passed both affected cases. Frontend unit suite:
-**1,547 passed**; lint and focused browser TypeScript checks passed. Production
+included a real MISS. The final scoped link repair and conditional protocol classification also passed
+all fifty cases with zero skips/retries; prior local measurements remain historical. Frontend unit suite:
+**1,561 passed** after the scoped link repair/classifier regressions; lint and both
+application/browser TypeScript checks passed. Production
 builds were executed by the CI-mode Playwright-owned server on isolated port 3137;
 no unrelated server was reused. Local Node **24.15.0** / Chromium **153.0.8010.12**
 is reported as local evidence, not an assertion that macOS equals the Linux runner.
@@ -131,11 +155,17 @@ were HTTP 400; successful image cache outcomes included two MISS, 44 HIT and fou
 STALE. The full primary suite was NOT RUN after that prerequisite failure.
 The failed workflow/artifact is retained:
 [CI diagnostic run](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40461671496).
-Additional request IDs, derived RSC/prefetch flags, content type/status and safe
-transport codes are being qualified to identify the cancellation precisely; no
-broad abort exemption or production change is justified by the first record.
-Local diagnostic CPU throttling did not reproduce the Linux cancellation. Final
-qualification must be recorded separately; the 46/4 result is not rewritten PASS.
+The subsequent protocol run at `28d3d720` recorded **41 passed / nine failed**,
+again only in the strict post-navigation stream assertion. Its artifact proves
+these were same-origin `/practice`, `resource=fetch`, `rsc=true`, HTTP 200,
+`contentType=text/x-component`, `code=net::ERR_ABORTED`, followed by confirmed
+interactive Practice state and no page errors (only the expected image HTTP-400
+console entry). Those facts support the narrowly conditioned classification above;
+they do not support ignoring arbitrary cancellations or claiming a broken image.
+[Protocol diagnostic run](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40485879589).
+Both failed results remain retained; full primary qualification was NOT RUN in
+those attempts. The original source's YAML quoting failure is also retained.
+Final exact-head qualification must be recorded separately from these diagnostics.
 
 ## Preservation and release position
 

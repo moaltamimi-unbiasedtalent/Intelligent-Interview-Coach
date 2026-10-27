@@ -272,11 +272,11 @@ test("History image: real missing optimizer asset is a distinct failure while na
     expect(observation.snapshot().outstanding.filter(url => url.endsWith("/_next/image"))).toEqual([]);
     await page.getByRole("link", { name: "Start Practice", exact: true }).click();
     await expect(page).toHaveURL(/\/practice$/);
-    await candidateReady(page, "/practice");
+    await observation.confirmPracticeNavigation();
     await observation.ready("/practice");
     expect(observation.consoleErrors).toEqual(["http_400"]);
     expect(observation.pageErrors).toEqual([]);
-      expect(observation.transportFailures).toEqual([]);
+    expect(observation.transportFailures).toEqual([]);
     assertClean(log);
   } finally { await observation.attach(info, "history-expected-image-failure"); }
 });

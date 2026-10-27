@@ -164,7 +164,19 @@
     ],
     "conclusion": "Historical 60s timeout NOT REPRODUCED in 10 runs; malformed mock page errors observed; not classified as harmless flake"
   },
-  "after": {
+  "other_local_checks": {
+    "frontend_unit_passed": 1547,
+    "lint": "PASS",
+    "focused_browser_types": "PASS"
+  },
+  "classification": "Reproduced harness false-readiness/malformed-fixture defect; historical optimizer stall NOT REPRODUCED in ten baseline repetitions. No unsupported application root cause or harmless-flake claim.",
+  "preservation": {
+    "protected_files": 49,
+    "original_worktrees": 47,
+    "original_branch_tips": 315,
+    "changes_to_original_inventory": 0
+  },
+  "superseded_local_harness_only": {
     "stats": {
       "startTime": "2026-10-27T06:21:59.042Z",
       "duration": 120515.584,
@@ -195,16 +207,76 @@
     "node_version": "v24.15.0",
     "chromium_version": "153.0.8010.12"
   },
-  "other_local_checks": {
-    "frontend_unit_passed": 1547,
+  "after": {
+    "scope": "uncommitted scoped link repair + conditional protocol classification on base 28d3d720",
+    "stats": {
+      "startTime": "2026-10-27T10:14:19.201Z",
+      "duration": 133259.728,
+      "expected": 50,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "frontend_unit_passed": 1561,
+    "navigation_cpu_stress_before": {
+      "passed": 18,
+      "failed": 2,
+      "failure": "actual History-to-Practice URL did not change"
+    },
+    "navigation_cpu_stress_after": {
+      "passed": 20,
+      "failed": 0
+    },
+    "navigation_and_classifier_unit_cases": 19,
     "lint": "PASS",
-    "focused_browser_types": "PASS"
+    "application_types": "PASS",
+    "browser_types": "PASS"
   },
-  "classification": "Reproduced harness false-readiness/malformed-fixture defect; historical optimizer stall NOT REPRODUCED in ten baseline repetitions. No unsupported application root cause or harmless-flake claim.",
-  "preservation": {
-    "protected_files": 49,
-    "original_worktrees": 47,
-    "original_branch_tips": 315,
-    "changes_to_original_inventory": 0
-  }
+  "superseded_ci": [
+    {
+      "sha": "e9f1f980c6f212451246509a2fb404f7c328bd36",
+      "run": 40461671496,
+      "passed": 46,
+      "failed": 4,
+      "primary_suite": "NOT RUN"
+    },
+    {
+      "sha": "28d3d7202e86aa48f12e6e3240ca378a7d56c998",
+      "run": 40485879589,
+      "passed": 41,
+      "failed": 9,
+      "primary_suite": "NOT RUN",
+      "protocol_evidence": {
+        "case": "deferral-inaccessibility-0-6161c-ile-navigation-stays-usable-chromium/history-expected-image-failure.json",
+        "failed": [
+          {
+            "kind": "failed",
+            "elapsedMs": 1055,
+            "id": 29,
+            "rsc": true,
+            "prefetch": false,
+            "status": 200,
+            "contentType": "text/x-component",
+            "url": "http://localhost:3000/practice",
+            "resource": "fetch",
+            "category": "unexpected_request_failure",
+            "code": "net::ERR_ABORTED"
+          }
+        ],
+        "ready": [
+          {
+            "kind": "ui_ready",
+            "elapsedMs": 1300,
+            "path": "/practice",
+            "documentState": "complete",
+            "hydration": "controlled_menu_interaction"
+          }
+        ],
+        "console": [
+          "http_400"
+        ],
+        "page": []
+      }
+    }
+  ]
 }

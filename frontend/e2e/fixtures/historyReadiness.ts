@@ -2,6 +2,8 @@ import { writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { expect, type Locator, type Page, type Request, type TestInfo } from "@playwright/test";
 
+import { completedPracticeRscAbort } from "./navigationEvidence";
+
 const SOURCE_SHA = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 const SOURCE_DIRTY = Boolean(execFileSync("git", ["status", "--porcelain"], { encoding: "utf8" }).trim());
 const ASSET = "/images/ask4mo/ask4mo-empty-history-ink.png";
@@ -14,7 +16,8 @@ export function observeHistory(page: Page) {
   const pending = new Map<Request, string>();
   let sequence = 0;
   const requests = new Map<Request, { id: number; rsc: boolean; prefetch: boolean; status?: number; contentType?: string }>();
-  const consoleErrors: string[] = [], pageErrors: string[] = [], transportFailures: string[] = [];
+  const consoleErrors: string[] = [], pageErrors: string[] = [];
+  let confirmedPracticeUrl: string | null = null;
   const imageResponses: Array<{ status: number; elapsedMs: number; cache: string | null; source: string | null }> = [];
   const safeUrl = (raw: string) => {
     const url = new URL(raw);
@@ -46,7 +49,6 @@ export function observeHistory(page: Page) {
     const rawCode = request.failure()?.errorText ?? "";
     const code = /^net::ERR_[A-Z_]+$/.test(rawCode) ? rawCode : "other_transport_code";
     record("failed", { ...requests.get(request), url: safeUrl(request.url()), resource: request.resourceType(), category, code });
-    if (!expectedAbort) transportFailures.push(safeUrl(request.url()));
     pending.delete(request);
   });
   page.on("console", message => {
@@ -57,12 +59,25 @@ export function observeHistory(page: Page) {
     }
   });
   page.on("pageerror", error => { pageErrors.push(error.name); record("page_error", { category: error.name }); });
+  const classifiedEvents = () => events.map(event => event.kind === "failed" && completedPracticeRscAbort(event, confirmedPracticeUrl)
+    ? { ...event, originalCategory: event.category, category: "aborted_RSC_after_verified_Practice_navigation" } : event);
+  const transportFailures = () => classifiedEvents().filter(event => event.kind === "failed" && event.category === "unexpected_request_failure").map(event => event.url);
   return {
-    imageResponses, consoleErrors, pageErrors, transportFailures,
+    imageResponses, consoleErrors, pageErrors,
+    get transportFailures() { return transportFailures(); },
+    async confirmPracticeNavigation() {
+      await expect(page).toHaveURL(/\/practice$/);
+      await candidateReady(page, "/practice");
+      await expect(page.getByLabel(/target role/i)).toBeVisible();
+      await expect(page.getByLabel(/career level/i)).toBeVisible();
+      await page.waitForTimeout(SECURITY_OBSERVATION_MS);
+      confirmedPracticeUrl = page.url();
+      record("verified_navigation", { path: "/practice", formReady: true, observationMs: SECURITY_OBSERVATION_MS });
+    },
     async ready(path: string) {
       record("ui_ready", { path, documentState: await page.evaluate(() => document.readyState), hydration: path === "/pricing" ? "static_navigation" : "controlled_menu_interaction" });
     },
-    snapshot: () => ({ sourceSha: SOURCE_SHA, workingTreeDirty: SOURCE_DIRTY, nodeVersion: process.version, browserVersion: page.context().browser()?.version(), scope: "synthetic mocked API; real production Next.js and image requests", events, outstanding: [...pending.values()], imageResponses, consoleErrors, pageErrors, transportFailures }),
+    snapshot: () => ({ confirmedPracticeNavigation: confirmedPracticeUrl !== null, sourceSha: SOURCE_SHA, workingTreeDirty: SOURCE_DIRTY, nodeVersion: process.version, browserVersion: page.context().browser()?.version(), scope: "synthetic mocked API; real production Next.js and image requests", events: classifiedEvents(), outstanding: [...pending.values()], imageResponses, consoleErrors, pageErrors, transportFailures: transportFailures() }),
     async attach(info: TestInfo, name: string) {
       const path = info.outputPath(name + ".json");
       writeFileSync(path, JSON.stringify(this.snapshot(), null, 2));
