@@ -8,6 +8,7 @@ __all__ = [
     "AgentError",
     "AgentConfigurationError",
     "AgentToolError",
+    "AgentCheckpointUnavailable",
     "TOOL_FAILURE_MISSING_PREREQUISITE",
     "TOOL_FAILURE_INVALID_ARGUMENTS",
     "TOOL_FAILURE_EXECUTION_FAILED",
@@ -41,3 +42,7 @@ class AgentToolError(AgentError):
                  category: str | None = None) -> None:
         super().__init__(user_message, detail=detail)
         self.category = category
+
+
+class AgentCheckpointUnavailable(AgentError):
+    """Saved state cannot be accessed safely; transport failure is not execution authority."""

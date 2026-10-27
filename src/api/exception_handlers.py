@@ -27,6 +27,7 @@ from src.application.errors import (
     UnavailableServiceError,
     ValidationError,
 )
+from src.agent.errors import AgentCheckpointUnavailable
 from src.ai_protection import AiUsageLimitError
 from src.api.rate_limit import RateLimitConfigurationError
 from src.application.usage_quota import QuotaExhausted, QuotaNotConfigured, QuotaUnavailable
@@ -100,6 +101,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(RateLimitConfigurationError)
     async def _rate_limit_configuration(request: Request, exc: RateLimitConfigurationError):
         return _envelope(503, "protection_unavailable", "Request protection is temporarily unavailable. Please try again.", _request_id(request))
+
+    @app.exception_handler(AgentCheckpointUnavailable)
+    async def _checkpoint_unavailable(request: Request, exc: AgentCheckpointUnavailable):
+        return _envelope(503, "agent_checkpoint_unavailable", "The assistant's saved state is temporarily unavailable. Please try again.", _request_id(request))
 
     @app.exception_handler(UnavailableServiceError)
     async def _unavailable(request: Request, exc: UnavailableServiceError):

@@ -122,17 +122,23 @@ def build_checkpointer(
             from langgraph.checkpoint.postgres import PostgresSaver
 
             libpq = "postgresql://" + url.split("://", 1)[1]  # drop any +driver
-            cm = PostgresSaver.from_conn_string(libpq)  # keep the CM; do not discard it
-            saver = cm.__enter__()
-            saver.setup()
+            from src.agent.postgres_checkpoint import open_pool
+
+            pool = open_pool(libpq)
+            try:
+                saver = PostgresSaver(pool)
+                saver.setup()
+            except BaseException:
+                pool.close()
+                raise
             return CheckpointerInfo(saver=saver, kind="postgres", durable=True,
-                                    detail="postgres saver", _resource=cm)
+                                    detail="postgres saver", _resource=pool)
         except AgentConfigurationError:
             raise
-        except Exception as exc:  # noqa: BLE001 - fail closed; never leak the URL
+        except Exception:  # noqa: BLE001 - fail closed; never leak the URL
             raise AgentConfigurationError(
                 "Durable agent checkpointing (PostgreSQL) is configured but unavailable."
-            ) from exc
+            ) from None
 
     # SQLite file — official saver on a dedicated file (not :memory:).
     if sqlite_path:

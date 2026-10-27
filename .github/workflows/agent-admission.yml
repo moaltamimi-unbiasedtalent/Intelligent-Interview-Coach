@@ -34,5 +34,16 @@ jobs:
         env:
           P5B_PG_ADMIN_URL: postgresql+psycopg://disposable:synthetic-test-only@127.0.0.1:5432/p5b_test
         run: python -m pytest -q -o addopts='' -p no:cacheprovider tests/test_agent_durable_admission.py
+      - name: Cache-independent disposable PostgreSQL 16 outage server
+        run: docker pull postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+      - name: Same-service checkpoint recovery, no replay and recovery quarantine
+        run: python -m scripts.checkpoint_recovery.qualify --disposable --output "$RUNNER_TEMP/checkpoint-recovery"
+      - name: Upload redacted checkpoint recovery evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkpoint-recovery-evidence
+          path: ${{ runner.temp }}/checkpoint-recovery/checkpoint-recovery.json
+          if-no-files-found: error
       - name: Working tree must remain clean
         run: test -z "$(git status --porcelain)"

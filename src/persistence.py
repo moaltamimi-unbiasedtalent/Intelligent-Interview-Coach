@@ -3092,7 +3092,10 @@ def make_engine(database_url: str) -> Engine:
     connect_args = {}
     if database_url.startswith("sqlite"):
         connect_args = {"check_same_thread": False}
-    return create_engine(database_url, future=True, connect_args=connect_args)
+    # Check idle PostgreSQL sessions before lending them to admission/usage reads.
+    # This never retries a transaction or replays a producer after a lost write.
+    return create_engine(database_url, future=True, connect_args=connect_args,
+                         pool_pre_ping=database_url.startswith("postgresql"))
 
 
 def make_session_factory(engine: Engine) -> sessionmaker:
