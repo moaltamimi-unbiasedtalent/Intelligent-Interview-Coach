@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { BrowserDiagnostics, consoleClassification, DIAGNOSTIC_LIMIT, safeSource } from "../csp/diagnostics";
 
 const privateText = "candidate-canary@example.invalid password-canary cookie-canary token-canary private-candidate-answer";
 const privateUrl = `https://user:password-canary@app.staging.example.com/private-candidate-answer?token=token-canary#cookie-canary`;
 
 describe("CSP evidence privacy boundary", () => {
+  it("retains every authored journey stage, including pre-fix bootstrap refusal", () => {
+    const source = readFileSync("csp/hydration.spec.ts", "utf8");
+    const authored = [...source.matchAll(/result.stage = "([^"]+)"/g)].map(match => match[1]);
+    authored.push("/history", "/opportunities");
+    const d = new BrowserDiagnostics();
+    for (const stage of authored) d.pageError(stage);
+    expect(d.snapshot().events.map(event => event.stage)).toEqual(authored);
+  });
   it.each([
     privateText,
     `Failed to load resource: the server responded with a status of 503 (${privateText})`,

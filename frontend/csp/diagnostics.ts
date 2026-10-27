@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 
 export const DIAGNOSTIC_LIMIT = 100;
-const stages = new Set(["sign_in_document", "sign_in_form", "authenticated_account", "/history", "/opportunities", "nonce_rotation_and_spoof_refusal", "negative_injection", "logout_request", "logout_redirect_and_revocation", "complete"]);
+const stages = new Set(["sign_in_document", "original_bootstrap_refusal", "sign_in_form", "authenticated_account", "/history", "/opportunities", "nonce_rotation_and_spoof_refusal", "negative_injection", "logout_request", "logout_redirect_and_revocation", "complete"]);
 const routes = new Set(["/sign-in", "/account", "/history", "/opportunities", "/api/v1/auth/login", "/api/v1/auth/me", "/api/v1/auth/logout", "/api/v1/history/interviews", "/api/v1/opportunities", "/api/v1/health"]);
 const resources = new Set(["document", "stylesheet", "image", "media", "font", "script", "xhr", "fetch", "other", "websocket", "manifest", "texttrack", "eventsource"]);
 const networkCodes = new Set(["ERR_ABORTED", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_CERT_AUTHORITY_INVALID", "ERR_FAILED", "ERR_CONNECTION_RESET", "ERR_TIMED_OUT"]);
