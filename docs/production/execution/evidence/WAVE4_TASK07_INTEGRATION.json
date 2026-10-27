@@ -1,0 +1,2342 @@
+{
+  "baseline_sha": "992682c3fa9c891f5710c993e7d595f363b8c811",
+  "campaign_conducted": true,
+  "checkpoint_diagnostic": {
+    "after_connection_loss_http": 500,
+    "after_explicit_process_restart_http": 200,
+    "qualified_application_fix": false,
+    "scope": "owned_ram_backed_single_api_current_code_diagnostic_only"
+  },
+  "ci_attempts": [
+    {
+      "campaign": "b8010433a1f543aa",
+      "counts": {
+        "FAIL": 1,
+        "NOT RUN": 0,
+        "PASS": 0,
+        "SKIP": 0
+      },
+      "docker_available_bytes_before": 82442436608,
+      "duration_seconds": 1.832,
+      "items": [
+        {
+          "code": "loopback_tls_port_occupied",
+          "id": "prerequisites_and_verified_images",
+          "seconds": 1.831,
+          "status": "FAIL"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "production_or_language_approval": false,
+      "result": "FAIL",
+      "source_sha": "f8ab77382558cffe5a6d2e283dd5cb741e3f763d",
+      "started_at": "2026-10-26T00:47:03.125510+00:00",
+      "version": 1
+    },
+    {
+      "campaign": "42d7b76e796241d8",
+      "cleanup": "only this campaign project containers/networks/volumes",
+      "counts": {
+        "FAIL": 1,
+        "NOT RUN": 1,
+        "PASS": 3,
+        "SKIP": 0
+      },
+      "docker_available_bytes_before": 82440544256,
+      "duration_seconds": 21.479,
+      "images": {
+        "application": "sha256:b2d8f223fb1374b901a491adf40b3c433321f91b3b4444264342f9f9cb29d899",
+        "web": "sha256:368d215ae96640297d060f72b498a64936ad2796fde43d1c862c870dae5d5518"
+      },
+      "items": [
+        {
+          "facts": {
+            "available_bytes": 82440544256,
+            "services": 18
+          },
+          "id": "prerequisites_and_verified_images",
+          "seconds": 4.844,
+          "status": "PASS"
+        },
+        {
+          "code": "campaign_command_failed",
+          "id": "connected_startup_and_one_shot_migration",
+          "seconds": 15.046,
+          "status": "FAIL"
+        },
+        {
+          "code": "startup_failed",
+          "id": "connected_scenarios",
+          "status": "NOT RUN"
+        },
+        {
+          "facts": {},
+          "id": "safe_evidence_capture",
+          "seconds": 0.993,
+          "status": "PASS"
+        },
+        {
+          "facts": {},
+          "id": "owned_resource_cleanup",
+          "seconds": 0.594,
+          "status": "PASS"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "operator_image": "sha256:241ef692e401296b7a4a9f3371fdc7cb8e34e27383c8a8204e3779c8f5d62fd2",
+      "operator_manifest_sha256": "6c410617e262885776bf808e7a4c3db9d080543893739f87eeae41e163c44584",
+      "production_or_language_approval": false,
+      "release_manifest_sha256": "5da1e42d478f1c0e75c93ead030df553e1c7ebece95d2ac5847e290d63c6b41e",
+      "result": "FAIL",
+      "source_sha": "ec8335cc43e90c132f06fabcfbeb5c447417ef80",
+      "started_at": "2026-10-26T07:40:19.048652+00:00",
+      "topology": {
+        "network_internal": true,
+        "scanner_definitions": "offline EICAR fixture only; freshness/coverage NOT qualified",
+        "services": [
+          "api",
+          "api_b",
+          "api_denied",
+          "api_failed",
+          "api_held",
+          "caddy",
+          "clamav",
+          "db",
+          "migrate",
+          "migrate_failed",
+          "probe",
+          "redis",
+          "web",
+          "worker",
+          "worker_b",
+          "worker_failed",
+          "worker_fault",
+          "worker_held"
+        ],
+        "tls": "isolated internal CA; no ACME"
+      },
+      "version": 1
+    },
+    {
+      "campaign": "738d11cab0c24b3e",
+      "cleanup": "only this campaign project containers/networks/volumes",
+      "counts": {
+        "FAIL": 1,
+        "NOT RUN": 1,
+        "PASS": 3,
+        "SKIP": 0
+      },
+      "docker_available_bytes_after_cleanup": 82075123712,
+      "docker_available_bytes_before": 82439380992,
+      "duration_seconds": 165.597,
+      "images": {
+        "application": "sha256:63ab83ff2f0b0047f0850cd06e5d92c7d7e0d5f9fa976a0ad5f57bd673846e82",
+        "web": "sha256:d41d0d3f19af0d62f6cdb13b23f26dd6779cb8c623b811d7bdbba039e6d99ea0"
+      },
+      "items": [
+        {
+          "facts": {
+            "available_bytes": 82439380992,
+            "services": 18
+          },
+          "id": "prerequisites_and_verified_images",
+          "seconds": 4.673,
+          "status": "PASS"
+        },
+        {
+          "code": "connected_stack_not_ready",
+          "id": "connected_startup_and_one_shot_migration",
+          "seconds": 157.31,
+          "status": "FAIL"
+        },
+        {
+          "code": "startup_failed",
+          "id": "connected_scenarios",
+          "status": "NOT RUN"
+        },
+        {
+          "facts": {},
+          "id": "safe_evidence_capture",
+          "seconds": 1.231,
+          "status": "PASS"
+        },
+        {
+          "facts": {},
+          "id": "owned_resource_cleanup",
+          "seconds": 2.382,
+          "status": "PASS"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "operator_image": "sha256:92c761f08af6e308ca87613b35f07d5120f0d783e9d1b5f39e44bcefbf8fa167",
+      "operator_manifest_sha256": "53c1fba4a3e3b69646428377b7178f60197812007715267c025d3656fbeb4a68",
+      "production_or_language_approval": false,
+      "release_manifest_sha256": "edc739e1bd2adc6307487d0d97b5a0d60f8447d87935d2fd976c13b452d514c8",
+      "result": "FAIL",
+      "runtime_binary_versions": {
+        "caddy": "2.11.7",
+        "redis": "8.2.9"
+      },
+      "service_evidence": [
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "api",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "api_b",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "caddy",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "clamav",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "db",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "migrate",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "redis",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "web",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "worker",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "worker_b",
+          "State": "running"
+        }
+      ],
+      "source_sha": "f0ea5371fe992db6ec482363ed2190f2612689cb",
+      "started_at": "2026-10-26T08:04:30.325295+00:00",
+      "startup_phase": "applications_worker_web_proxy",
+      "topology": {
+        "network_internal": true,
+        "scanner_definitions": "offline EICAR fixture only; freshness/coverage NOT qualified",
+        "services": [
+          "api",
+          "api_b",
+          "api_denied",
+          "api_failed",
+          "api_held",
+          "caddy",
+          "clamav",
+          "db",
+          "migrate",
+          "migrate_failed",
+          "probe",
+          "redis",
+          "web",
+          "worker",
+          "worker_b",
+          "worker_failed",
+          "worker_fault",
+          "worker_held"
+        ],
+        "tls": "isolated internal CA; no ACME"
+      },
+      "version": 1
+    },
+    {
+      "browser_evidence": {
+        "tests": [
+          {
+            "csp_inline_refusals": 12,
+            "duration_ms": 585,
+            "id": "EDGE-01",
+            "status": "passed"
+          },
+          {
+            "csp_inline_refusals": 12,
+            "duration_ms": 671,
+            "id": "AUTH-01",
+            "status": "passed"
+          },
+          {
+            "csp_inline_refusals": 12,
+            "duration_ms": 45036,
+            "id": "UI-01",
+            "status": "timedOut"
+          }
+        ]
+      },
+      "campaign": "73e2672018324dc6",
+      "cleanup": "only this campaign project containers/networks/volumes",
+      "counts": {
+        "FAIL": 3,
+        "NOT RUN": 6,
+        "PASS": 23,
+        "SKIP": 0
+      },
+      "docker_available_bytes_after_cleanup": 82068942848,
+      "docker_available_bytes_before": 82437554176,
+      "duration_seconds": 314.162,
+      "images": {
+        "application": "sha256:6a323a50cd96e3556013147302c325eb35d82bc6e896ed560a1444ce41eeb34c",
+        "web": "sha256:ee3d23b736460f150b75d821183a30c4f6dee7d6d413e3447e08fe3b3487dd81"
+      },
+      "items": [
+        {
+          "facts": {
+            "available_bytes": 82437554176,
+            "services": 18
+          },
+          "id": "prerequisites_and_verified_images",
+          "seconds": 4.753,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "active_knowledge_chunks": 0,
+            "existing_run_fixture": true,
+            "hash_embedding_policy": "refused",
+            "language_activation_overridden": false,
+            "mail": "memory_capture_only",
+            "ok": true,
+            "synthetic_accounts": 3
+          },
+          "id": "connected_startup_and_one_shot_migration",
+          "seconds": 37.998,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "backend_image_roles": 5,
+            "matching_frontend": true,
+            "migration_helper_present": true,
+            "ok": true,
+            "postgresql_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+            "private_roots_writable": true,
+            "schema": "0048_agent_run_controls",
+            "shared_private_volume_identities": true,
+            "uid": 10001
+          },
+          "id": "private_roots_schema_and_service_identity",
+          "seconds": 2.894,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "admin": "metadata_only",
+            "new_language_activity": "refused",
+            "ok": true,
+            "ownership": true,
+            "scope": "authenticated_accounts_and_owner_scoping",
+            "shared_sessions": true
+          },
+          "id": "sessions_ownership_profiles_documents_admin",
+          "seconds": 4.859,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean_upload": 201,
+            "eicar_upload": 422,
+            "foreign_access": 404,
+            "ok": true,
+            "owner_download": "byte_identical"
+          },
+          "id": "private_documents_upload_download_scanner",
+          "seconds": 1.872,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "attempts": 1,
+            "ok": true,
+            "real_worker_job": "succeeded",
+            "workers": 2
+          },
+          "id": "worker_jobs_and_shared_state",
+          "seconds": 3.736,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "model_calls_on_reconnect": 0,
+            "ok": true,
+            "real_graph_pg_checkpoint": true,
+            "sse_reads": 2,
+            "usage": {
+              "agent_model_calls": 1,
+              "estimated_cost_usd": null,
+              "input_tokens": 11,
+              "missing_usage_sources": [],
+              "model_calls": 1,
+              "output_tokens": 5,
+              "tool_model_calls": 0,
+              "total_tokens": 16,
+              "usage_complete": true
+            }
+          },
+          "id": "agent_sse_reconnect_cancellation_hitl",
+          "seconds": 1.19,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "consent": "explicit_synthetic_approval",
+            "duplicate_resume": 409,
+            "existing_fixture_resume": 200,
+            "ok": true
+          },
+          "id": "existing_hitl_resume",
+          "seconds": 3.487,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "ok": true,
+            "rate_limit": {
+              "status": "failed",
+              "usage_complete": false
+            },
+            "timeout": {
+              "status": "failed",
+              "usage_complete": false
+            }
+          },
+          "id": "scripted_provider_failure_unknown_usage",
+          "seconds": 3.308,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "actual_provider_call": false,
+            "cancel_requested": true,
+            "cancelled": true,
+            "cross_instance_concurrent_refusal": 409,
+            "edge_sse": {
+              "connections": [
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0534,
+                  "heartbeat_comments": 0,
+                  "tls_protocol": "TLSv1.3"
+                },
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0532,
+                  "heartbeat_comments": 1,
+                  "tls_protocol": "TLSv1.3"
+                }
+              ],
+              "local_ca_identity_qualification": false,
+              "model_calls_on_reconnect": 0,
+              "ok": true
+            },
+            "ok": true,
+            "settled": true,
+            "usage_complete": false
+          },
+          "id": "active_cancellation_during_settlement",
+          "seconds": 24.608,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "kill_persisted": true,
+            "ok": true,
+            "owner_approval_created": false,
+            "restart_snapshot_equal": true,
+            "retry_cap_refused": true,
+            "typed_ledger_fixture": true,
+            "unknown_reservation_preserved": true
+          },
+          "id": "monetary_limits_unknown_and_kill",
+          "seconds": 1.95,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean": "clean",
+            "definitions": "offline_eicar_only",
+            "eicar": "infected",
+            "freshness_qualified": false,
+            "ok": true,
+            "scanner": "real_clamd",
+            "version": "ClamAV 1.4.6"
+          },
+          "id": "real_scanner_clean_eicar_and_manifest",
+          "seconds": 1.334,
+          "status": "PASS"
+        },
+        {
+          "code": "connected_browser_journey_failed",
+          "id": "connected_browser_journeys",
+          "seconds": 48.884,
+          "status": "FAIL"
+        },
+        {
+          "facts": {
+            "schema_unchanged": true,
+            "source_revision": "0048_agent_run_controls"
+          },
+          "id": "api_worker_restart_without_migration",
+          "seconds": 12.471,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "active_duplicate_created": false,
+            "attempts": 2,
+            "fixture_lease_seconds": 8,
+            "ok": true,
+            "state": "succeeded"
+          },
+          "id": "worker_crash_lease_retry",
+          "seconds": 20.645,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "injected": "db_down",
+            "ok": true,
+            "refused": true
+          },
+          "id": "fault_db",
+          "seconds": 1.684,
+          "status": "PASS"
+        },
+        {
+          "code": "probe_redis_down_shared_required_outage_not_refused",
+          "id": "fault_redis",
+          "seconds": 1.357,
+          "status": "FAIL"
+        },
+        {
+          "facts": {
+            "injected": "scanner_down",
+            "ok": true,
+            "refused": true
+          },
+          "id": "fault_clamav",
+          "seconds": 1.246,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean": "clean",
+            "definitions": "offline_eicar_only",
+            "eicar": "infected",
+            "freshness_qualified": false,
+            "ok": true,
+            "scanner": "real_clamd",
+            "version": "ClamAV 1.4.6"
+          },
+          "id": "dependencies_recovered",
+          "seconds": 0.925,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "account_enumeration": "uniform_wrong_credentials",
+            "cross_instance_login_statuses": [
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              429
+            ],
+            "ok": true,
+            "retry_after_seconds": 300
+          },
+          "id": "shared_cross_instance_rate_limits",
+          "seconds": 1.492,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "healthy_schema": "0048_agent_run_controls",
+            "observed": {
+              "api_failed": {
+                "exit_code": 0,
+                "running": false
+              },
+              "migrate_failed": {
+                "exit_code": 1,
+                "running": false
+              },
+              "worker_failed": {
+                "exit_code": 0,
+                "running": false
+              }
+            }
+          },
+          "id": "migration_failure_blocks_dependents",
+          "seconds": 4.536,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "health": "unhealthy",
+            "private_root_denied": true,
+            "running": true
+          },
+          "id": "private_volume_inaccessible_refuses",
+          "seconds": 84.478,
+          "status": "PASS"
+        },
+        {
+          "code": "slow_provider_not_entered",
+          "id": "api_process_loss_preserves_unsettled_usage",
+          "seconds": 27.248,
+          "status": "FAIL"
+        },
+        {
+          "facts": {
+            "actual_api_hold": 503,
+            "actual_worker_claims": 0,
+            "backup_seconds": 1.4,
+            "encrypted_transfer": true,
+            "erasure": {
+              "accounts_erased": 1,
+              "accounts_present": 1,
+              "checkpoints_purged": 6,
+              "files_purged": 1,
+              "ledger_accounts": 1,
+              "personal_usage_facts_erased_by_existing_policy": 6
+            },
+            "independent_local_volumes": true,
+            "ok": true,
+            "persistent_hold": true,
+            "production_rto_rpo_approved": false,
+            "recovery_hold_released": false,
+            "restore_seconds": 1.287,
+            "stored_bytes": 686457,
+            "surviving_owner_checkpoint_and_control": true,
+            "unknown_money_preserved": true
+          },
+          "id": "encrypted_recovery_transfer_erasure_hold",
+          "seconds": 14.015,
+          "status": "PASS"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "new_hosted_language_registration_and_interviews",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "positive_language_interview_and_career_journeys",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "live_ai_quality_and_embeddings",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "real_email_oidc",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "hosted_tls_and_signature_freshness",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "release_recovery_hold",
+          "status": "NOT RUN"
+        },
+        {
+          "facts": {},
+          "id": "safe_evidence_capture",
+          "seconds": 1.456,
+          "status": "PASS"
+        },
+        {
+          "facts": {},
+          "id": "owned_resource_cleanup",
+          "seconds": 1.717,
+          "status": "PASS"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "last_edge_probe": {
+        "curl_exit": 0
+      },
+      "operator_image": "sha256:09eb2e0917ff6947a3af005cc389330b87f7ad79931a98b67b47513bd0966f4a",
+      "operator_manifest_sha256": "4e06fed04a85a4dc5bc4a35ce4f23a4a807174575aa25e09550b33497b34ab5c",
+      "production_or_language_approval": false,
+      "release_manifest_sha256": "c2db9823ca208ded9b67acb7f296e2337fb54ab242118bfe88a0500fb5721286",
+      "result": "FAIL",
+      "running_image_identity": {
+        "api": "sha256:6a323a50cd96e3556013147302c325eb35d82bc6e896ed560a1444ce41eeb34c",
+        "api_b": "sha256:6a323a50cd96e3556013147302c325eb35d82bc6e896ed560a1444ce41eeb34c",
+        "migrate": "sha256:6a323a50cd96e3556013147302c325eb35d82bc6e896ed560a1444ce41eeb34c",
+        "web": "sha256:ee3d23b736460f150b75d821183a30c4f6dee7d6d413e3447e08fe3b3487dd81",
+        "worker": "sha256:6a323a50cd96e3556013147302c325eb35d82bc6e896ed560a1444ce41eeb34c",
+        "worker_b": "sha256:6a323a50cd96e3556013147302c325eb35d82bc6e896ed560a1444ce41eeb34c"
+      },
+      "runtime_binary_versions": {
+        "caddy": "2.11.7",
+        "redis": "8.2.9"
+      },
+      "service_evidence": [
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api_b",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api_denied",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api_failed",
+          "State": "created"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "starting",
+          "Service": "api_held",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "caddy",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "clamav",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "db",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "migrate",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 1,
+          "Health": "",
+          "Service": "migrate_failed",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "redis",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "web",
+          "State": "running"
+        },
+        {
+          "ExitCode": 1,
+          "Health": "",
+          "Service": "worker",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 1,
+          "Health": "",
+          "Service": "worker_b",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "worker_failed",
+          "State": "created"
+        },
+        {
+          "ExitCode": 137,
+          "Health": "",
+          "Service": "worker_fault",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "worker_held",
+          "State": "running"
+        }
+      ],
+      "source_sha": "d81447254bd2a85f5a27bc37a3a07bc62cc2e192",
+      "started_at": "2026-10-26T08:46:50.567758+00:00",
+      "startup_phase": "applications_worker_web_proxy",
+      "topology": {
+        "network_internal": true,
+        "scanner_definitions": "offline EICAR fixture only; freshness/coverage NOT qualified",
+        "services": [
+          "api",
+          "api_b",
+          "api_denied",
+          "api_failed",
+          "api_held",
+          "caddy",
+          "clamav",
+          "db",
+          "migrate",
+          "migrate_failed",
+          "probe",
+          "redis",
+          "web",
+          "worker",
+          "worker_b",
+          "worker_failed",
+          "worker_fault",
+          "worker_held"
+        ],
+        "tls": "isolated internal CA; no ACME"
+      },
+      "version": 1
+    },
+    {
+      "browser_evidence": {
+        "tests": [
+          {
+            "csp_inline_refusals": 12,
+            "duration_ms": 709,
+            "id": "EDGE-01",
+            "status": "passed"
+          },
+          {
+            "csp_inline_refusals": 12,
+            "duration_ms": 992,
+            "id": "AUTH-01",
+            "status": "passed"
+          },
+          {
+            "csp_inline_refusals": 12,
+            "duration_ms": 45020,
+            "id": "UI-01",
+            "status": "timedOut"
+          }
+        ]
+      },
+      "campaign": "217f9965736e4375",
+      "cleanup": "only this campaign project containers/networks/volumes",
+      "counts": {
+        "FAIL": 2,
+        "NOT RUN": 6,
+        "PASS": 27,
+        "SKIP": 0
+      },
+      "docker_available_bytes_after_cleanup": 82072326144,
+      "docker_available_bytes_before": 82440867840,
+      "duration_seconds": 313.21,
+      "images": {
+        "application": "sha256:255960f8d901d0daa865b44769581d529cfd5e9a872e9d08cb00fdc72857e0a4",
+        "web": "sha256:caf9d0fb61a1e54f2b024d407a8b51f237ca88da0547c9e40aee383abd174abe"
+      },
+      "items": [
+        {
+          "facts": {
+            "available_bytes": 82440867840,
+            "services": 18
+          },
+          "id": "prerequisites_and_verified_images",
+          "seconds": 4.84,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "active_knowledge_chunks": 0,
+            "existing_run_fixture": true,
+            "hash_embedding_policy": "refused",
+            "language_activation_overridden": false,
+            "mail": "memory_capture_only",
+            "ok": true,
+            "synthetic_accounts": 3
+          },
+          "id": "connected_startup_and_one_shot_migration",
+          "seconds": 37.188,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "backend_image_roles": 5,
+            "matching_frontend": true,
+            "migration_helper_present": true,
+            "ok": true,
+            "postgresql_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+            "private_roots_writable": true,
+            "schema": "0048_agent_run_controls",
+            "shared_private_volume_identities": true,
+            "uid": 10001
+          },
+          "id": "private_roots_schema_and_service_identity",
+          "seconds": 2.797,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "admin": "metadata_only",
+            "new_language_activity": "refused",
+            "ok": true,
+            "ownership": true,
+            "scope": "authenticated_accounts_and_owner_scoping",
+            "shared_sessions": true
+          },
+          "id": "sessions_ownership_profiles_documents_admin",
+          "seconds": 4.594,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean_upload": 201,
+            "eicar_upload": 422,
+            "foreign_access": 404,
+            "ok": true,
+            "owner_download": "byte_identical"
+          },
+          "id": "private_documents_upload_download_scanner",
+          "seconds": 1.744,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "client_identity_stable": true,
+            "cors_allowlist": true,
+            "forged_forwarded_headers_ignored": true,
+            "http_error_status": 404,
+            "internal_endpoint_leak": false,
+            "ok": true
+          },
+          "id": "proxy_forwarded_identity_cors_error_privacy",
+          "seconds": 1.477,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "attempts": 1,
+            "ok": true,
+            "real_worker_job": "succeeded",
+            "workers": 2
+          },
+          "id": "worker_jobs_and_shared_state",
+          "seconds": 2.689,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "model_calls_on_reconnect": 0,
+            "ok": true,
+            "real_graph_pg_checkpoint": true,
+            "sse_reads": 2,
+            "usage": {
+              "agent_model_calls": 1,
+              "estimated_cost_usd": null,
+              "input_tokens": 11,
+              "missing_usage_sources": [],
+              "model_calls": 1,
+              "output_tokens": 5,
+              "tool_model_calls": 0,
+              "total_tokens": 16,
+              "usage_complete": true
+            }
+          },
+          "id": "agent_completed_run_sse_reconnect",
+          "seconds": 1.258,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "consent": "explicit_synthetic_approval",
+            "duplicate_resume": 409,
+            "existing_fixture_resume": 200,
+            "ok": true
+          },
+          "id": "existing_hitl_resume",
+          "seconds": 3.782,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "ok": true,
+            "rate_limit": {
+              "status": "failed",
+              "usage_complete": false
+            },
+            "timeout": {
+              "status": "failed",
+              "usage_complete": false
+            }
+          },
+          "id": "scripted_provider_failure_unknown_usage",
+          "seconds": 3.26,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "actual_provider_call": false,
+            "cancel_requested": true,
+            "cancelled": true,
+            "cross_instance_concurrent_refusal": 409,
+            "edge_sse": {
+              "connections": [
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0592,
+                  "heartbeat_comments": 0,
+                  "tls_protocol": "TLSv1.3"
+                },
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0501,
+                  "heartbeat_comments": 1,
+                  "tls_protocol": "TLSv1.3"
+                }
+              ],
+              "local_ca_identity_qualification": false,
+              "model_calls_on_reconnect": 0,
+              "ok": true
+            },
+            "ok": true,
+            "settled": true,
+            "usage_complete": false
+          },
+          "id": "active_cancellation_during_settlement",
+          "seconds": 23.687,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "kill_persisted": true,
+            "ok": true,
+            "owner_approval_created": false,
+            "restart_snapshot_equal": true,
+            "retry_cap_refused": true,
+            "typed_ledger_fixture": true,
+            "unknown_reservation_preserved": true
+          },
+          "id": "monetary_limits_unknown_and_kill",
+          "seconds": 2.283,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean": "clean",
+            "definitions": "offline_eicar_only",
+            "eicar": "infected",
+            "freshness_qualified": false,
+            "ok": true,
+            "scanner": "real_clamd",
+            "version": "ClamAV 1.4.6"
+          },
+          "id": "real_scanner_clean_eicar_and_manifest",
+          "seconds": 0.93,
+          "status": "PASS"
+        },
+        {
+          "code": "connected_browser_journey_failed",
+          "id": "connected_browser_journeys",
+          "seconds": 50.241,
+          "status": "FAIL"
+        },
+        {
+          "facts": {
+            "schema_unchanged": true,
+            "source_revision": "0048_agent_run_controls"
+          },
+          "id": "api_worker_restart_without_migration",
+          "seconds": 12.271,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "active_duplicate_created": false,
+            "attempts": 2,
+            "fixture_lease_seconds": 8,
+            "ok": true,
+            "state": "succeeded"
+          },
+          "id": "worker_crash_lease_retry",
+          "seconds": 21.064,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "injected": "db_down",
+            "ok": true,
+            "refused": true
+          },
+          "id": "fault_db",
+          "seconds": 1.475,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "initial_readiness_status": 503,
+            "injected": "redis_down",
+            "ok": true,
+            "outage_detection_seconds": 0.019,
+            "rate_limiter_state": "unreachable",
+            "refused": true,
+            "synthetic_local_and_deny_policies": true
+          },
+          "id": "fault_redis",
+          "seconds": 3.62,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "injected": "scanner_down",
+            "ok": true,
+            "refused": true
+          },
+          "id": "fault_clamav",
+          "seconds": 1.221,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean": "clean",
+            "definitions": "offline_eicar_only",
+            "eicar": "infected",
+            "freshness_qualified": false,
+            "ok": true,
+            "scanner": "real_clamd",
+            "version": "ClamAV 1.4.6"
+          },
+          "id": "dependencies_recovered",
+          "seconds": 0.882,
+          "status": "PASS"
+        },
+        {
+          "code": "probe_checkpoint_recovery_agent_checkpoint_unavailable_after_database_restart_http_500",
+          "id": "agent_checkpoint_after_database_restart",
+          "seconds": 1.016,
+          "status": "FAIL"
+        },
+        {
+          "facts": {
+            "agent_read_status": 200,
+            "new_model_calls": 0,
+            "ok": true,
+            "workaround": "explicit_api_process_restart_after_recorded_failure"
+          },
+          "id": "explicit_api_checkpoint_recovery_workaround",
+          "seconds": 7.654,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "account_enumeration": "uniform_wrong_credentials",
+            "cross_instance_login_statuses": [
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              429
+            ],
+            "ok": true,
+            "retry_after_seconds": 300
+          },
+          "id": "shared_cross_instance_rate_limits",
+          "seconds": 1.348,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "healthy_schema": "0048_agent_run_controls",
+            "observed": {
+              "api_failed": {
+                "exit_code": 0,
+                "running": false
+              },
+              "migrate_failed": {
+                "exit_code": 1,
+                "running": false
+              },
+              "worker_failed": {
+                "exit_code": 0,
+                "running": false
+              }
+            }
+          },
+          "id": "migration_failure_blocks_dependents",
+          "seconds": 3.945,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "health": "unhealthy",
+            "private_root_denied": true,
+            "running": true
+          },
+          "id": "private_volume_inaccessible_refuses",
+          "seconds": 84.442,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "durable_unsettled": true,
+            "edge_sse": {
+              "connections": [
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0983,
+                  "heartbeat_comments": 0,
+                  "tls_protocol": "TLSv1.3"
+                }
+              ],
+              "local_ca_identity_qualification": false,
+              "model_calls_on_reconnect": 0,
+              "ok": true
+            },
+            "ok": true,
+            "public_usage_complete": false,
+            "takeover_refused": 409,
+            "unknown_outcome_preserved": true
+          },
+          "id": "api_process_loss_preserves_unsettled_usage",
+          "seconds": 16.786,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "actual_api_hold": 503,
+            "actual_worker_claims": 0,
+            "backup_seconds": 1.343,
+            "encrypted_transfer": true,
+            "erasure": {
+              "accounts_erased": 1,
+              "accounts_present": 1,
+              "checkpoints_purged": 6,
+              "files_purged": 1,
+              "ledger_accounts": 1,
+              "personal_usage_facts_erased_by_existing_policy": 6
+            },
+            "independent_local_volumes": true,
+            "ok": true,
+            "persistent_hold": true,
+            "production_rto_rpo_approved": false,
+            "recovery_hold_released": false,
+            "restore_seconds": 1.251,
+            "stored_bytes": 687212,
+            "surviving_owner_checkpoint_and_control": true,
+            "unknown_money_preserved": true
+          },
+          "id": "encrypted_recovery_transfer_erasure_hold",
+          "seconds": 13.456,
+          "status": "PASS"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "new_hosted_language_registration_and_interviews",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "positive_language_interview_and_career_journeys",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "live_ai_quality_and_embeddings",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "real_email_oidc",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "hosted_tls_and_signature_freshness",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "release_recovery_hold",
+          "status": "NOT RUN"
+        },
+        {
+          "facts": {},
+          "id": "safe_evidence_capture",
+          "seconds": 1.399,
+          "status": "PASS"
+        },
+        {
+          "facts": {},
+          "id": "owned_resource_cleanup",
+          "seconds": 1.839,
+          "status": "PASS"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "last_edge_probe": {
+        "curl_exit": 0
+      },
+      "operator_image": "sha256:8313694fcb61dc147eb3335a74bd6ab077e84431017a33165d2d84b5a22a75cc",
+      "operator_manifest_sha256": "ebb1f66876b5b8c68f486bfeae57df4131f3836882405077599af2290b2b879e",
+      "production_or_language_approval": false,
+      "release_manifest_sha256": "a661d7010df3e07b55331891b5fcc5d2e81d127550c00668ee355e8d9a742dcc",
+      "result": "FAIL",
+      "running_image_identity": {
+        "api": "sha256:255960f8d901d0daa865b44769581d529cfd5e9a872e9d08cb00fdc72857e0a4",
+        "api_b": "sha256:255960f8d901d0daa865b44769581d529cfd5e9a872e9d08cb00fdc72857e0a4",
+        "migrate": "sha256:255960f8d901d0daa865b44769581d529cfd5e9a872e9d08cb00fdc72857e0a4",
+        "web": "sha256:caf9d0fb61a1e54f2b024d407a8b51f237ca88da0547c9e40aee383abd174abe",
+        "worker": "sha256:255960f8d901d0daa865b44769581d529cfd5e9a872e9d08cb00fdc72857e0a4",
+        "worker_b": "sha256:255960f8d901d0daa865b44769581d529cfd5e9a872e9d08cb00fdc72857e0a4"
+      },
+      "runtime_binary_versions": {
+        "caddy": "2.11.7",
+        "redis": "8.2.9"
+      },
+      "service_evidence": [
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api_b",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api_denied",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "api_failed",
+          "State": "created"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "starting",
+          "Service": "api_held",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "caddy",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "clamav",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "db",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "migrate",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 1,
+          "Health": "",
+          "Service": "migrate_failed",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "redis",
+          "State": "running"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "web",
+          "State": "running"
+        },
+        {
+          "ExitCode": 1,
+          "Health": "",
+          "Service": "worker",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 1,
+          "Health": "",
+          "Service": "worker_b",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "",
+          "Service": "worker_failed",
+          "State": "created"
+        },
+        {
+          "ExitCode": 137,
+          "Health": "",
+          "Service": "worker_fault",
+          "State": "exited"
+        },
+        {
+          "ExitCode": 0,
+          "Health": "healthy",
+          "Service": "worker_held",
+          "State": "running"
+        }
+      ],
+      "source_sha": "6680cf3762ee8826164bded72f952c479f820fd7",
+      "started_at": "2026-10-26T16:26:42.371174+00:00",
+      "startup_phase": "applications_worker_web_proxy",
+      "topology": {
+        "network_internal": true,
+        "scanner_definitions": "offline EICAR fixture only; freshness/coverage NOT qualified",
+        "services": [
+          "api",
+          "api_b",
+          "api_denied",
+          "api_failed",
+          "api_held",
+          "caddy",
+          "clamav",
+          "db",
+          "migrate",
+          "migrate_failed",
+          "probe",
+          "redis",
+          "web",
+          "worker",
+          "worker_b",
+          "worker_failed",
+          "worker_fault",
+          "worker_held"
+        ],
+        "tls": "isolated internal CA; no ACME"
+      },
+      "version": 1
+    },
+    {
+      "campaign": "90a8f8d97f994548",
+      "cleanup": "only this campaign project containers/networks/volumes",
+      "counts": {
+        "FAIL": 0,
+        "NOT RUN": 6,
+        "PASS": 29,
+        "SKIP": 0
+      },
+      "docker_available_bytes_after_cleanup": 80356941824,
+      "docker_available_bytes_before": 80656736256,
+      "duration_seconds": 268.381,
+      "images": {
+        "application": "sha256:3236a8afe03ae1adb9620d27f65ac0d2da5bf332f215df67db3f5b1b003a8410",
+        "web": "sha256:ee56b434f465b1c5b8d555dc65a373060c4ebe5ec691b58ca8f279d58bec6e9b"
+      },
+      "items": [
+        {
+          "facts": {
+            "available_bytes": 80656736256,
+            "services": 18
+          },
+          "id": "prerequisites_and_verified_images",
+          "seconds": 3.153,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "active_knowledge_chunks": 0,
+            "existing_run_fixture": true,
+            "hash_embedding_policy": "refused",
+            "language_activation_overridden": false,
+            "mail": "memory_capture_only",
+            "ok": true,
+            "synthetic_accounts": 3
+          },
+          "id": "connected_startup_and_one_shot_migration",
+          "seconds": 37.048,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "backend_image_roles": 5,
+            "matching_frontend": true,
+            "migration_helper_present": true,
+            "ok": true,
+            "postgresql_version": "16.15 (Debian 16.15-1.pgdg13+2)",
+            "private_roots_writable": true,
+            "schema": "0048_agent_run_controls",
+            "shared_private_volume_identities": true,
+            "uid": 10001
+          },
+          "id": "private_roots_schema_and_service_identity",
+          "seconds": 3.052,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "admin": "metadata_only",
+            "new_language_activity": "refused",
+            "ok": true,
+            "ownership": true,
+            "scope": "authenticated_accounts_and_owner_scoping",
+            "shared_sessions": true
+          },
+          "id": "sessions_ownership_profiles_documents_admin",
+          "seconds": 4.638,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean_upload": 201,
+            "eicar_upload": 422,
+            "foreign_access": 404,
+            "ok": true,
+            "owner_download": "byte_identical"
+          },
+          "id": "private_documents_upload_download_scanner",
+          "seconds": 1.93,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "client_identity_stable": true,
+            "cors_allowlist": true,
+            "forged_forwarded_headers_ignored": true,
+            "http_error_status": 404,
+            "internal_endpoint_leak": false,
+            "ok": true
+          },
+          "id": "proxy_forwarded_identity_cors_error_privacy",
+          "seconds": 1.32,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "attempts": 1,
+            "ok": true,
+            "real_worker_job": "succeeded",
+            "workers": 2
+          },
+          "id": "worker_jobs_and_shared_state",
+          "seconds": 2.458,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "model_calls_on_reconnect": 0,
+            "ok": true,
+            "real_graph_pg_checkpoint": true,
+            "sse_reads": 2,
+            "usage": {
+              "agent_model_calls": 1,
+              "estimated_cost_usd": null,
+              "input_tokens": 11,
+              "missing_usage_sources": [],
+              "model_calls": 1,
+              "output_tokens": 5,
+              "tool_model_calls": 0,
+              "total_tokens": 16,
+              "usage_complete": true
+            }
+          },
+          "id": "agent_completed_run_sse_reconnect",
+          "seconds": 1.213,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "consent": "explicit_synthetic_approval",
+            "duplicate_resume": 409,
+            "existing_fixture_resume": 200,
+            "ok": true
+          },
+          "id": "existing_hitl_resume",
+          "seconds": 3.778,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "ok": true,
+            "rate_limit": {
+              "status": "failed",
+              "usage_complete": false
+            },
+            "timeout": {
+              "status": "failed",
+              "usage_complete": false
+            }
+          },
+          "id": "scripted_provider_failure_unknown_usage",
+          "seconds": 3.722,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "actual_provider_call": false,
+            "cancel_requested": true,
+            "cancelled": true,
+            "cross_instance_concurrent_refusal": 409,
+            "edge_sse": {
+              "connections": [
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0555,
+                  "heartbeat_comments": 0,
+                  "tls_protocol": "TLSv1.3"
+                },
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0503,
+                  "heartbeat_comments": 1,
+                  "tls_protocol": "TLSv1.3"
+                }
+              ],
+              "local_ca_identity_qualification": false,
+              "model_calls_on_reconnect": 0,
+              "ok": true
+            },
+            "ok": true,
+            "settled": true,
+            "usage_complete": false
+          },
+          "id": "active_cancellation_during_settlement",
+          "seconds": 24.262,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "kill_persisted": true,
+            "ok": true,
+            "owner_approval_created": false,
+            "restart_snapshot_equal": true,
+            "retry_cap_refused": true,
+            "typed_ledger_fixture": true,
+            "unknown_reservation_preserved": true
+          },
+          "id": "monetary_limits_unknown_and_kill",
+          "seconds": 2.479,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean": "clean",
+            "definitions": "offline_eicar_only",
+            "eicar": "infected",
+            "freshness_qualified": false,
+            "ok": true,
+            "scanner": "real_clamd",
+            "version": "ClamAV 1.4.6"
+          },
+          "id": "real_scanner_clean_eicar_and_manifest",
+          "seconds": 1.019,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "tests": [
+              {
+                "csp_inline_refusals": 0,
+                "duration_ms": 693,
+                "id": "EDGE-01",
+                "status": "passed"
+              },
+              {
+                "csp_inline_refusals": 0,
+                "duration_ms": 797,
+                "id": "AUTH-01",
+                "status": "passed"
+              },
+              {
+                "csp_inline_refusals": 1,
+                "duration_ms": 3082,
+                "id": "UI-01",
+                "status": "passed"
+              }
+            ]
+          },
+          "id": "connected_browser_journeys",
+          "seconds": 6.761,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "schema_unchanged": true,
+            "source_revision": "0048_agent_run_controls"
+          },
+          "id": "api_worker_restart_without_migration",
+          "seconds": 13.25,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "active_duplicate_created": false,
+            "attempts": 2,
+            "fixture_lease_seconds": 8,
+            "ok": true,
+            "state": "succeeded"
+          },
+          "id": "worker_crash_lease_retry",
+          "seconds": 20.849,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "agent_read_statuses": {
+              "api": 200,
+              "api_b": 200
+            },
+            "new_model_calls": 0,
+            "ok": true
+          },
+          "id": "agent_checkpoint_before_database_restart",
+          "seconds": 1.386,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "injected": "db_down",
+            "ok": true,
+            "refused": true
+          },
+          "id": "fault_db",
+          "seconds": 1.971,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "initial_readiness_status": 200,
+            "injected": "redis_down",
+            "ok": true,
+            "outage_detection_seconds": 0.228,
+            "rate_limiter_state": "unreachable",
+            "refused": true,
+            "synthetic_local_and_deny_policies": true
+          },
+          "id": "fault_redis",
+          "seconds": 3.655,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "injected": "scanner_down",
+            "ok": true,
+            "refused": true
+          },
+          "id": "fault_clamav",
+          "seconds": 1.304,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "clean": "clean",
+            "definitions": "offline_eicar_only",
+            "eicar": "infected",
+            "freshness_qualified": false,
+            "ok": true,
+            "scanner": "real_clamd",
+            "version": "ClamAV 1.4.6"
+          },
+          "id": "dependencies_recovered",
+          "seconds": 0.917,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "agent_read_statuses": {
+              "api": 200,
+              "api_b": 200
+            },
+            "execution_replay": false,
+            "explicit_restart": false,
+            "new_model_calls": 0,
+            "ok": true,
+            "same_api_processes": true
+          },
+          "id": "agent_checkpoint_after_database_restart",
+          "seconds": 1.51,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "account_enumeration": "uniform_wrong_credentials",
+            "cross_instance_login_statuses": [
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              401,
+              429
+            ],
+            "ok": true,
+            "retry_after_seconds": 300
+          },
+          "id": "shared_cross_instance_rate_limits",
+          "seconds": 1.277,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "healthy_schema": "0048_agent_run_controls",
+            "observed": {
+              "api_failed": {
+                "exit_code": 0,
+                "running": false
+              },
+              "migrate_failed": {
+                "exit_code": 1,
+                "running": false
+              },
+              "worker_failed": {
+                "exit_code": 0,
+                "running": false
+              }
+            }
+          },
+          "id": "migration_failure_blocks_dependents",
+          "seconds": 4.003,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "health": "unhealthy",
+            "private_root_denied": true,
+            "running": true
+          },
+          "id": "private_volume_inaccessible_refuses",
+          "seconds": 84.487,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "durable_unsettled": true,
+            "edge_sse": {
+              "connections": [
+                {
+                  "events": [
+                    "run",
+                    "progress",
+                    "progress",
+                    "progress",
+                    "progress"
+                  ],
+                  "first_event_seconds": 0.0967,
+                  "heartbeat_comments": 0,
+                  "tls_protocol": "TLSv1.3"
+                }
+              ],
+              "local_ca_identity_qualification": false,
+              "model_calls_on_reconnect": 0,
+              "ok": true
+            },
+            "ok": true,
+            "public_usage_complete": false,
+            "takeover_refused": 409,
+            "unknown_outcome_preserved": true
+          },
+          "id": "api_process_loss_preserves_unsettled_usage",
+          "seconds": 19.04,
+          "status": "PASS"
+        },
+        {
+          "facts": {
+            "actual_api_hold": 503,
+            "actual_worker_claims": 0,
+            "backup_seconds": 1.434,
+            "encrypted_transfer": true,
+            "erasure": {
+              "accounts_erased": 1,
+              "accounts_present": 1,
+              "checkpoints_purged": 6,
+              "files_purged": 1,
+              "ledger_accounts": 1,
+              "personal_usage_facts_erased_by_existing_policy": 6
+            },
+            "independent_local_volumes": true,
+            "ok": true,
+            "persistent_hold": true,
+            "production_rto_rpo_approved": false,
+            "recovery_hold_released": false,
+            "restore_seconds": 1.312,
+            "stored_bytes": 690410,
+            "surviving_owner_checkpoint_and_control": true,
+            "unknown_money_preserved": true
+          },
+          "id": "encrypted_recovery_transfer_erasure_hold",
+          "seconds": 14.484,
+          "status": "PASS"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "new_hosted_language_registration_and_interviews",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "positive_language_interview_and_career_journeys",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "live_ai_quality_and_embeddings",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "real_email_oidc",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "hosted_tls_and_signature_freshness",
+          "status": "NOT RUN"
+        },
+        {
+          "code": "owner_or_hosted_qualification_required",
+          "id": "release_recovery_hold",
+          "status": "NOT RUN"
+        },
+        {
+          "facts": {},
+          "id": "safe_evidence_capture",
+          "seconds": 1.431,
+          "status": "PASS"
+        },
+        {
+          "facts": {},
+          "id": "owned_resource_cleanup",
+          "seconds": 1.737,
+          "status": "PASS"
+        }
+      ],
+      "kind": "disposable_connected_stack",
+      "last_edge_probe": {
+        "curl_exit": 0
+      },
+      "operator_image": "sha256:f08d227feb4f4b373f8b0bcb721c6b3c1c0cec4a919952542c4ffe8bb3899b2d",
+      "operator_manifest_sha256": "e52931c3fade04cbb49680c33f27ea1b72bb2e790d2b99fbfcc926692c1c8329",
+      "production_or_language_approval": false,
+      "release_manifest_sha256": "10437c97faf47f48889000c3aadb593a1406ea7d25393a6bdb092946bac9c0d1",
+      "result": "PARTIAL_EXTERNAL_DEPENDENCIES",
+      "running_image_identity": {
+        "api": "sha256:3236a8afe03ae1adb9620d27f65ac0d2da5bf332f215df67db3f5b1b003a8410",
+        "api_b": "sha256:3236a8afe03ae1adb9620d27f65ac0d2da5bf332f215df67db3f5b1b003a8410",
+        "migrate": "sha256:3236a8afe03ae1adb9620d27f65ac0d2da5bf332f215df67db3f5b1b003a8410",
+        "web": "sha256:ee56b434f465b1c5b8d555dc65a373060c4ebe5ec691b58ca8f279d58bec6e9b",
+        "worker": "sha256:3236a8afe03ae1adb9620d27f65ac0d2da5bf332f215df67db3f5b1b003a8410",
+        "worker_b": "sha256:3236a8afe03ae1adb9620d27f65ac0d2da5bf332f215df67db3f5b1b003a8410"
+      },
+      "runtime_binary_versions": {
+        "caddy": "2.11.7",
+        "redis": "8.2.9"
+      },
+      "source_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+      "started_at": "2026-10-27T11:20:53.167521+00:00",
+      "startup_phase": "applications_worker_web_proxy",
+      "topology": {
+        "network_internal": true,
+        "scanner_definitions": "offline EICAR fixture only; freshness/coverage NOT qualified",
+        "services": [
+          "api",
+          "api_b",
+          "api_denied",
+          "api_failed",
+          "api_held",
+          "caddy",
+          "clamav",
+          "db",
+          "migrate",
+          "migrate_failed",
+          "probe",
+          "redis",
+          "web",
+          "worker",
+          "worker_b",
+          "worker_failed",
+          "worker_fault",
+          "worker_held"
+        ],
+        "tls": "isolated internal CA; no ACME"
+      },
+      "version": 1
+    }
+  ],
+  "ci_workflows_d8144725": {
+    "CI": {
+      "conclusion": "success",
+      "run": 40292438338
+    },
+    "admission": {
+      "conclusion": "success",
+      "run": 40292438399
+    },
+    "browser_e2e": {
+      "conclusion": "success",
+      "run": 40292438332
+    },
+    "budget": {
+      "conclusion": "success",
+      "run": 40292438513
+    },
+    "immutable_connected": {
+      "conclusion": "failure",
+      "run": 40292438392
+    },
+    "migration": {
+      "conclusion": "success",
+      "run": 40292438334
+    },
+    "recovery": {
+      "conclusion": "success",
+      "run": 40292438331
+    },
+    "redis": {
+      "conclusion": "success",
+      "run": 40292438421
+    }
+  },
+  "engineering_integrated_packages": 40,
+  "historical_staging_blockers_pre_reconciliation": [
+    {
+      "finding": "strict edge CSP prevents Next.js hydration and user sign-in UI",
+      "id": "POST272-03",
+      "severity": "P1",
+      "status": "OPEN"
+    },
+    {
+      "finding": "cached PostgreSQL checkpointer does not recover after connection loss; explicit API restart required",
+      "id": "POST272-04",
+      "severity": "P1",
+      "status": "OPEN"
+    }
+  ],
+  "latest_campaign_counts": {
+    "FAIL": 0,
+    "NOT RUN": 6,
+    "PASS": 29,
+    "SKIP": 0
+  },
+  "latest_campaign_result": "PARTIAL_EXTERNAL_DEPENDENCIES",
+  "latest_measured_implementation_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+  "local_diagnostic": {
+    "active_knowledge_chunks": 0,
+    "full_stack_qualification": false,
+    "hosted_hash_embedding": "REFUSED",
+    "http_agent_hitl_model_failure_budget_probes": "PASS",
+    "migration": "PASS",
+    "multi_instance_qualification": false,
+    "owned_resources_removed": true,
+    "scope": "old_image_with_current_code_single_api_tmpfs_only",
+    "seed": "PASS"
+  },
+  "production_or_language_approvals_added": false,
+  "protected_state": {
+    "changed_original_branch_tips": 0,
+    "deleted_original_branches": 0,
+    "file_changes": 0,
+    "files_checked": 49,
+    "original_branches_checked": 312,
+    "other_worktrees_checked": 44,
+    "worktree_changes": 0
+  },
+  "qualification_result": "OFFLINE_QUALIFIED_EXTERNAL_GATES_OPEN",
+  "requalification_2026_10_27": {
+    "baseline_inventory": {
+      "backup_ref": "refs/backup/task07-before-reconciliation-20261027",
+      "branches": 316,
+      "existing_dirty_worktrees": 31,
+      "protected_files": 200,
+      "worktrees": 48
+    },
+    "baseline_main_successful_run_ids": [
+      40491165088,
+      40491165013,
+      40491165018,
+      40491164917,
+      40491165008,
+      40491164990,
+      40491165042
+    ],
+    "build_time": "2026-10-27T11:10:52Z",
+    "campaign": {
+      "artifact_id": 12730513655,
+      "counts": {
+        "FAIL": 0,
+        "NOT RUN": 6,
+        "PASS": 29,
+        "SKIP": 0
+      },
+      "full_record": "ci_attempts[-1]",
+      "source_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+      "workflow_id": 40494036211
+    },
+    "ci": {
+      "backend": {
+        "executed": 8907,
+        "passed": 8726,
+        "skipped": 181
+      },
+      "browser": {
+        "history_repeated": 50,
+        "passed": 672,
+        "skipped": 14
+      },
+      "frontend": {
+        "passed": 1561
+      },
+      "workflows": [
+        {
+          "conclusion": "success",
+          "event": "workflow_dispatch",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494049889,
+          "name": "Encrypted recovery qualification"
+        },
+        {
+          "conclusion": "success",
+          "event": "workflow_dispatch",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494047663,
+          "name": "Redis shared limiter regression"
+        },
+        {
+          "conclusion": "success",
+          "event": "workflow_dispatch",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494044906,
+          "name": "AI budget governor qualification"
+        },
+        {
+          "conclusion": "success",
+          "event": "workflow_dispatch",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494041253,
+          "name": "Agent durable admission regression"
+        },
+        {
+          "conclusion": "success",
+          "event": "workflow_dispatch",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494038630,
+          "name": "Staging migration image regression"
+        },
+        {
+          "conclusion": "success",
+          "event": "workflow_dispatch",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494036211,
+          "name": "Immutable local release regression"
+        },
+        {
+          "conclusion": "success",
+          "event": "workflow_dispatch",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494033223,
+          "name": "Browser E2E"
+        },
+        {
+          "conclusion": "success",
+          "event": "push",
+          "head_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284",
+          "id": 40494014328,
+          "name": "CI"
+        }
+      ]
+    },
+    "connected_offline_verdict": "PASS",
+    "dependency_metadata_sha256": {
+      "application": "fbfd6448510fe2735b7dbcc6869d197a8d6370815ced9a1263d4c42bbc0acf04",
+      "web": "7c2e6143f92fe3f27a7c0f73bf775175b7400e55077bf895d084cfc15a06be27"
+    },
+    "engineering_packages": {
+      "integrated": 40,
+      "open": [
+        "00A",
+        "00B",
+        "07B",
+        "07C",
+        "08A"
+      ],
+      "total": 45
+    },
+    "gate_approvals_added": false,
+    "language_activation_sha256": "05a0f9f5d182d0614d03006cf23d0e559fa2e3684db0ad6f18fff60a333aa4c1",
+    "local_checks": {
+      "additional_overlapping": {
+        "passed": 141,
+        "skipped": 16
+      },
+      "focused": {
+        "passed": 114,
+        "skipped": 33
+      },
+      "frontend_unit": 1561,
+      "ruff_type_lint_evidence_reconciliation": "PASS"
+    },
+    "main_sha": "ef2e97ef88b4f4b67640c4c677f3ef3247594cd2",
+    "merge_parents": [
+      "bc75b4c772e5468934d033fe565eac5b921e4927",
+      "ef2e97ef88b4f4b67640c4c677f3ef3247594cd2"
+    ],
+    "migration_head": "0048_agent_run_controls",
+    "original_pr_head": "bc75b4c772e5468934d033fe565eac5b921e4927",
+    "overall_scope": "OFFLINE QUALIFIED; external/hosted/human/owner gates remain open",
+    "preservation": {
+      "changed_original_branch_tips": 0,
+      "changed_original_worktrees": 0,
+      "changed_protected_files": 0,
+      "inventory_sha256": "fd01c514833dd7ef9432d945a6ecec4cd2a7001f8406e40c945a8b067ab9a6be",
+      "protected_file_count": 200
+    },
+    "prompt_assets_sha256": "a00e7b3ab6b17d9c058dc9da69d5f8923ecadb8f2fa938fdc7bac89d04b3ad97",
+    "six_historical_not_run_reassessment": [
+      {
+        "id": "new_hosted_language_registration_and_interviews",
+        "reason": "NOT RUN: no hosted language is approved or active; strict registration/activity refusal remains enforced.",
+        "status": "NOT RUN"
+      },
+      {
+        "id": "positive_language_interview_and_career_journeys",
+        "reason": "NOT RUN: positive language-bearing production journeys require qualified activation and separate authorization; existing synthetic agent fixtures do not qualify them.",
+        "status": "NOT RUN"
+      },
+      {
+        "id": "live_ai_quality_and_embeddings",
+        "reason": "NOT RUN: no paid/provider/embedding authority; only deterministic local model responses and empty unactivated knowledge collection were used.",
+        "status": "NOT RUN"
+      },
+      {
+        "id": "real_email_oidc",
+        "reason": "NOT RUN: email was memory capture; no external delivery or live OIDC/IdP activation authorized.",
+        "status": "NOT RUN"
+      },
+      {
+        "id": "hosted_tls_and_signature_freshness",
+        "reason": "NOT RUN: private internal CA and offline EICAR-only signatures prove local controls, not public TLS/network or signature currency/coverage.",
+        "status": "NOT RUN"
+      },
+      {
+        "id": "release_recovery_hold",
+        "reason": "NOT RUN: restore hold intentionally persists; named operational authority and custody/go-no-go decisions are absent.",
+        "status": "NOT RUN"
+      }
+    ],
+    "source_sha": "939b7f020609850a56cf5b15cbcefb6ec328c284"
+  },
+  "staging_blockers": [
+    "Hosted infrastructure/secret/Redis/budget decisions and separately authorized live qualification",
+    "Native/legal/independent reviewers and language gates",
+    "Off-host recovery/custody/retention/RTO/RPO/monitoring",
+    "Task 08 freeze/go-no-go remains unauthorized and open"
+  ],
+  "staging_ready": false,
+  "task": "wave4_task07",
+  "total_packages": 45,
+  "version": 1
+}

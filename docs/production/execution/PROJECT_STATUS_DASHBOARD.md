@@ -1,5 +1,19 @@
 # Whole-Project Status Dashboard
 
+## Task 07 offline requalification — 27 October 2026
+
+Normal merge `939b7f02` reconciles original PR #273 with reviewed main `ef2e97ef`; merged PRs #274–276 are retained. **29 PASS / 0 FAIL / 0 SKIP / 6 owner/hosted NOT RUN** in the real disposable full stack; both original APIs recover checkpoint reads without restart/replay, connected browser 3/3, accounting/outage/encrypted recovery checks PASS. All eight source-bound CI workflows PASS, including primary Browser **672 passed / 14 skipped** and 50 History repeats at zero retries. Backend 8,726/181; frontend 1,561; fresh images/manifests verified. [Full source-bound report](WAVE4_TASK07_INTEGRATION.md). Historical 27/2/6 and failed diagnostics remain unchanged; image-stall root cause stays inconclusive.
+
+**40/45 integrated**; PR #273 remains unmerged and awaits final evidence-head checks/review. 00A/00B/07B/07C/08A, hosted/human qualification, all owner decisions and PG/LG approval states remain unchanged. Only existing PG-11 PASS; zero hosted-qualified languages. No Task 08, deployment, paid call or original database change. Earlier dated blocks below are historical and superseded for current engineering/qualification state.
+
+
+## Historical reconciliation preparation — 27 October 2026
+
+Verified main `ef2e97ef88b4f4b67640c4c677f3ef3247594cd2` includes merged PRs #274, #275 and #276; all seven mandatory main-push workflows passed. The History, CSP and checkpoint repairs are integrated engineering changes. Existing PR #273 is being reconciled by a normal merge retaining both histories. New exact-source connected qualification is PENDING; historical **27 PASS / 2 FAIL / 6 NOT RUN** remains unchanged. Earlier dated status blocks below describe historical states and do not reopen the merged repairs.
+
+**40/45 integrated**; 00A/00B/07B/07C/08A remain open/incomplete. Task 07 remains unqualified until its new mandatory connected and CI checks pass; Task 08 has not begun. Hosted/live and human qualification remain NOT RUN/open; only existing PG-11 acceptance remains, and no PG/LG/owner approval is added. Historical image-stall cause remains inconclusive.
+
+
 ## History browser remediation — 27 October 2026
 
 Authoritative main `90391b8c` includes merged PRs #274/#275; all seven post-merge workflows passed. POST272-03 and POST272-04 are qualified at merged engineering level. A separate `test/history-readiness-image-qualification` branch repairs reproduced false-readiness/invalid fixtures and independently qualifies real History image success/failure. Local: **50 repeated browser cases passed**, plus two stricter failure/navigation checks; **1,561 unit tests** and lint/type checks passed. The scoped History action links now opt into the existing verified-navigation guard after a separate dropped-navigation reproduction; protocol cancellation classification requires confirmed destination/form readiness. Superseded Linux 46/4 and 41/9 diagnostics are retained, not final PASS. Exact-head CI/full Browser results belong to the focused PR. The historical image stall was **not reproduced** in ten unchanged-test runs; its underlying cause remains **inconclusive**, not a harmless-flake claim. [Diagnosis, limits and evidence](HISTORY_BROWSER_REMEDIATION.md).
@@ -28,7 +42,15 @@ POST272-04 remains OPEN pending green CI, review and merge. PR #273 remains unme
 
 Historical PR #265 integration snapshot, 23 October 2026. Reviewed baseline: `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`, PR #265 merged. Current reconciliation/review branch: `docs/post-pr265-release-readiness` in the permanent repository. Sources: [merge/CI/review record](evidence/POST_PR265_INTEGRATION_2026_10_23.json), [release report](POST_PR265_RELEASE_STATUS.md), package register, ledger and code.
 
-## Wave 4 Task 06 update — 26 October 2026
+## Wave 4 Task 07 — disposable campaign measured; staging blockers open
+
+Authoritative baseline: PR #272 merged at `992682c3fa9c891f5710c993e7d595f363b8c811`. All seven main workflows completed successfully: CI 40247207939, Redis 40247207906, migration image 40247207971, recovery 40247207860, durable admission 40247207903, budget 40247207914 and immutable images 40247207972. Browser E2E is PR/on-demand; no main-SHA Browser success is inferred.
+
+Task 07 is on `test/disposable-full-stack-integration`, unmerged. Latest measured implementation `6680cf37`: **27 PASS / 2 FAIL / 6 NOT RUN** ([exact-source campaign](https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40357744233)). Redis outage, proxy identity, actual streaming process loss and held recovery pass; the checkpoint failure is recorded before an explicit restart workaround. The two P1 findings remain OPEN. CI on this source: backend 8,711 passed / 164 skipped (8,875 reconciled); frontend 1,534 tests/build pass. Browser E2E completion and final documentation-head checks remain authoritative in PR #273. Previous snapshots below retain their own source SHAs. The actual connected campaign on `d8144725` records **23 PASS / 3 FAIL / 6 NOT RUN**. [Measured full-stack report and failure matrix](WAVE4_TASK07_INTEGRATION.md#measured-connected-campaign--d8144725-26-october-2026). POST272-03 (CSP/hydration) and POST272-04 (checkpoint recovery after PG loss) are P1 staging blockers requiring separate PRs. Redis observation and explicit recovery-workaround qualification remain under the current PR checks; no failure is suppressed. [Pre-change audit and narrow startup defects](WAVE4_TASK07_INTEGRATION_AUDIT.md). Local expanded regression: 263 passed / 46 skipped; skips include explicit disposable PostgreSQL/image requirements. The genuine-image preflight passes 16 image and 19 operator checks; connected qualification has open findings (see [measured attempts](evidence/WAVE4_TASK07_INTEGRATION.json)). Local Docker capacity prevents the connected full-image campaign; the existing immutable-image workflow now drives the fresh isolated stack. Current-head outcomes are authoritative in PR #273 checks and safe artifacts; owner-dependent scenarios remain explicitly NOT RUN. No staging deployment or gate acceptance is claimed.
+
+**40/45 integrated**: 00A/00B/07B/07C/08A remain open. Engineering: Tasks 01–06 merged; Task 07 under qualification. CI: seven baseline main workflows green, feature qualification failed on the measured source; current-head checks remain authoritative. Staging: NOT RUN. Human qualification: OPEN. Only historical PG-11 remains PASS; every other production-gate state is unchanged. LG-01–LG-14 receive no approval; zero hosted-qualified languages. OD-HOSTED, OD-BUDGET, H-REDIS-POLICY, custody, retention/RTO/RPO, native/legal reviewers and 08A release authority remain unresolved. Original SQLite, 45 worktrees, unpublished branches and private assets are protected.
+
+## Wave 4 Task 06 update (historical pre-merge snapshot) — 26 October 2026
 
 PR #271 is merged at `88a5ce4e4d5e92bee75fbec2721ce28e73d9ac6d`. All six baseline main workflows are green: CI 40197262812, durable admission 40197262805, migration image 40197262813, immutable images 40197262795, Redis 40197262818 and AI budget 40197262825. Browser E2E is PR/on-demand; no main-SHA Browser success is inferred.
 

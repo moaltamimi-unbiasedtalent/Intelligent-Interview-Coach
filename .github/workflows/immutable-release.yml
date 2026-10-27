@@ -9,7 +9,7 @@ permissions:
 jobs:
   local-images:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install CSP browser tooling
+      - name: Install connected browser tooling
         working-directory: frontend
         run: |
           npm ci
@@ -79,6 +79,25 @@ jobs:
             ${{ runner.temp }}/ask4mo-csp/summary.json
             ${{ runner.temp }}/ask4mo-csp/browser-before.json
             ${{ runner.temp }}/ask4mo-csp/browser-after.json
+          if-no-files-found: warn
+      - name: Disposable connected full-stack campaign (no hosted activation)
+        run: |
+          python scripts/integration/campaign.py --execute-disposable \
+            --manifest "$RUNNER_TEMP/ask4mo-release/release.json" \
+            --manifest-sha256 "$(cat "$RUNNER_TEMP/ask4mo-release/release.sha256")" \
+            --runner "$RUNNER_TEMP/ask4mo-recovery/recovery.json" \
+            --runner-sha256 "$(cat "$RUNNER_TEMP/ask4mo-recovery/recovery.sha256")" \
+            --expected-sha "$(git rev-parse HEAD)" --out "$RUNNER_TEMP/ask4mo-campaign"
+      - name: Upload safe campaign evidence (never runtime credentials or browser traces)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: disposable-integration-evidence
+          path: |
+            ${{ runner.temp }}/ask4mo-campaign/summary.json
+            ${{ runner.temp }}/ask4mo-campaign/safe-logs.json
+            ${{ runner.temp }}/ask4mo-campaign/browser-summary.json
+            ${{ runner.temp }}/ask4mo-campaign/service-evidence.json
           if-no-files-found: warn
       - name: Upload candidate metadata only (no image publication)
         if: always()
