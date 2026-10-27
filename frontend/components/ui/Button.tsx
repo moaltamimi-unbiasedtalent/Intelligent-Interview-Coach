@@ -1,4 +1,5 @@
 import Link from "next/link";
+import VerifiedLink from "./VerifiedLink";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
@@ -31,20 +32,23 @@ export function Button({
 
 export function ButtonLink({
   href,
+  verifiedNavigation = false,
   variant = "primary",
   size = "md",
   className,
   children,
 }: {
   href: string;
+  verifiedNavigation?: boolean;
   variant?: Variant;
   size?: Size;
   className?: string;
   children: ReactNode;
 }) {
+  const Component = verifiedNavigation ? VerifiedLink : Link;
   return (
-    <Link href={href} className={classes(variant, size, className)}>
+    <Component href={href} className={classes(variant, size, className)}>
       {children}
-    </Link>
+    </Component>
   );
 }
