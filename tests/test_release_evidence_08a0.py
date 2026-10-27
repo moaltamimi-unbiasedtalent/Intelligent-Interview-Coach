@@ -69,9 +69,9 @@ def test_the_committed_ledger_is_schema_valid_and_passes_the_whole_check():
     assert R.run_check(today=TODAY, out=lambda s: None) == 0
 
 
-def test_the_ledger_records_the_real_merged_prs_213_to_265():
+def test_the_ledger_records_historical_prs_213_to_265_and_verified_task07_merge():
     doc = R.load_ledger()
-    assert sorted(p["number"] for p in doc["pull_requests"]) == list(range(213, 266))
+    assert sorted(p["number"] for p in doc["pull_requests"]) == list(range(213, 266)) + [273]
     by = {p["number"]: p for p in doc["pull_requests"]}
     # independent cross-check against the committed Wave 2 dashboard (PR, package, branch, head, merge SHA)
     dash = (R.EXEC / "WAVE2_EXECUTION_DASHBOARD.md").read_text(encoding="utf-8")
@@ -562,7 +562,7 @@ def test_cli_check_and_generate_write_only_the_generated_files(tmp_path, monkeyp
 def test_post265_integration_records_do_not_close_unverified_packages_or_gates():
     doc = R.load_ledger()
     pr = next(p for p in doc["pull_requests"] if p["number"] == 265)
-    assert pr["merge_sha"] == doc["main_sha"] == "aedbef3dee28a68b72bc526a1fca537a3da7bd8d"
+    assert pr["merge_sha"] == "aedbef3dee28a68b72bc526a1fca537a3da7bd8d"
     assert pr["head_sha"] == "7a837278b0fd0cefd9a142e63cf825bb0176a202"
     assert pr["ci"]["result"] == "success" and pr["ci"]["source"]
     integrated = [p["id"] for p in R.E.PACKAGES if R.package_pr_facts(p["id"])]
@@ -577,8 +577,32 @@ def test_post265_integration_records_do_not_close_unverified_packages_or_gates()
 
 def test_post265_ci_snapshot_keeps_main_and_pr_browser_attribution_separate():
     snapshot = json.loads((R.EXEC / "evidence/POST_PR265_INTEGRATION_2026_10_23.json").read_text())
-    assert snapshot["main_sha"] == R.load_ledger()["main_sha"] == snapshot["ci"]["main"]["sha"]
+    historical_pr = next(p for p in R.load_ledger()["pull_requests"] if p["number"] == 265)
+    assert snapshot["main_sha"] == historical_pr["merge_sha"] == snapshot["ci"]["main"]["sha"]
     assert snapshot["ci"]["browser"]["sha"] == snapshot["pr"]["head_sha"]
     assert snapshot["ci"]["browser"]["main_sha_run"] == "NOT RUN"
     assert snapshot["ci"]["browser"]["tree_identical_to_main"] is True
     assert snapshot["production_gate_approvals_added"] == snapshot["language_gate_approvals_added"] == 0
+
+
+def test_post273_offline_closure_does_not_authorize_task08_or_gate_approval():
+    doc = R.load_ledger()
+    current = json.loads((R.EXEC / "evidence/WAVE4_TASK08_PREFLIGHT.json").read_text())
+    pr = next(p for p in doc["pull_requests"] if p["number"] == 273)
+    assert doc["main_sha"] == pr["merge_sha"] == current["baseline"]["main_sha"] == "b463cf9b92b44a600c7b0e842574e1eb32e5e713"
+    assert pr["head_sha"] == current["baseline"]["pr273"]["head"] == "a7fbec43fb2e2e54331655f44cac51065a43ae50"
+    assert pr["ci"]["result"] == "success" and pr["ci"]["source"]
+    runs = current["baseline"]["main_workflows"]
+    assert len(runs) == 7
+    assert all(r["event"] == "push" and r["status"] == "completed" and r["conclusion"] == "success" and r["head_sha"] == doc["main_sha"] for r in runs)
+    assert current["main_campaign"]["source_sha"] == doc["main_sha"]
+    assert current["main_campaign"]["counts"] == {"PASS": 29, "FAIL": 0, "SKIP": 0, "NOT RUN": 6}
+    assert current["task07_status"] == "OFFLINE QUALIFIED — MERGED"
+    assert current["status"] == "READY FOR OWNER DECISION"
+    assert current["authorization_beyond_preparation"] is False
+    assert current["production_or_language_approval_added"] is False
+    assert current["engineering_integrated"] == 40 and current["total_packages"] == 45
+    assert set(current["open_packages"]) == {"00A", "00B", "07B", "07C", "08A"}
+    assert current["hosted_execution"] == current["paid_calls"] == current["registry_publication"] == current["provisioning"] == "NOT RUN"
+    assert [gid for gid, value in doc["gates"].items() if value["state"] == "PASS"] == ["PG-11"]
+    assert all(gate["state"] != "PASS" for locale in doc["language_gates"].values() for gate in locale["gates"].values())

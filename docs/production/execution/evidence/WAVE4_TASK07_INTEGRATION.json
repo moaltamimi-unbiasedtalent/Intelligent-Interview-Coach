@@ -2135,6 +2135,29 @@
     "scope": "old_image_with_current_code_single_api_tmpfs_only",
     "seed": "PASS"
   },
+  "post_merge_main_verification": {
+    "campaign_counts": {
+      "FAIL": 0,
+      "NOT RUN": 6,
+      "PASS": 29,
+      "SKIP": 0
+    },
+    "main_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+    "main_workflow_ids": [
+      40532405846,
+      40532406230,
+      40532406060,
+      40532406024,
+      40532406156,
+      40532406132,
+      40532406623
+    ],
+    "merge_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+    "pr273_head": "a7fbec43fb2e2e54331655f44cac51065a43ae50",
+    "production_or_language_approval_added": false,
+    "result": "all seven mandatory main-push workflows SUCCESS",
+    "source": "docs/production/execution/evidence/WAVE4_TASK08_PREFLIGHT.json"
+  },
   "production_or_language_approvals_added": false,
   "protected_state": {
     "changed_original_branch_tips": 0,
@@ -2337,6 +2360,7 @@
   ],
   "staging_ready": false,
   "task": "wave4_task07",
+  "task07_integration_status": "OFFLINE QUALIFIED \u2014 MERGED",
   "total_packages": 45,
   "version": 1
 }

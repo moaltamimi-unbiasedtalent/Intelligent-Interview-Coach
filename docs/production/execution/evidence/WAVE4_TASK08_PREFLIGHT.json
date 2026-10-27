@@ -1,0 +1,189 @@
+{
+  "authorization_beyond_preparation": false,
+  "baseline": {
+    "main_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+    "main_workflows": [
+      {
+        "conclusion": "success",
+        "event": "push",
+        "head_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+        "id": 40532405846,
+        "name": "Redis shared limiter regression",
+        "status": "completed",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532405846"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "head_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+        "id": 40532406230,
+        "name": "AI budget governor qualification",
+        "status": "completed",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532406230"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "head_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+        "id": 40532406060,
+        "name": "Agent durable admission regression",
+        "status": "completed",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532406060"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "head_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+        "id": 40532406024,
+        "name": "Staging migration image regression",
+        "status": "completed",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532406024"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "head_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+        "id": 40532406156,
+        "name": "Encrypted recovery qualification",
+        "status": "completed",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532406156"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "head_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+        "id": 40532406132,
+        "name": "CI",
+        "status": "completed",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532406132"
+      },
+      {
+        "conclusion": "success",
+        "event": "push",
+        "head_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+        "id": 40532406623,
+        "name": "Immutable local release regression",
+        "status": "completed",
+        "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532406623"
+      }
+    ],
+    "pr273": {
+      "head": "a7fbec43fb2e2e54331655f44cac51065a43ae50",
+      "merge": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+      "merged_at": "2026-10-27T15:34:56Z"
+    }
+  },
+  "decisions": {
+    "authorization": "OPEN / NOT AUTHORIZED",
+    "redis_buckets": 37,
+    "unresolved_register_rows": 104,
+    "worksheet_cards": 26
+  },
+  "engineering_integrated": 40,
+  "hosted_execution": "NOT RUN",
+  "main_campaign": {
+    "counts": {
+      "FAIL": 0,
+      "NOT RUN": 6,
+      "PASS": 29,
+      "SKIP": 0
+    },
+    "duration_seconds": 227.822,
+    "images": {
+      "application": "sha256:351a7afad5da82d61ff7783fa92a014a5a1be2db21584d8d944b2669ac304081",
+      "web": "sha256:c6b3098c4b648eacaf77eaefabb816424a089a3fc19a1263134629e30f257d95"
+    },
+    "operator_image": "sha256:bf828225bbcb789b5f8448ceb602564cf7429fc09f5108543ff0895a24defdc8",
+    "operator_manifest_sha256": "30f85cb17b68e9045e9fdf8f85173fdcb729149e68ef6be58b356eac7ad3cc90",
+    "release_manifest_sha256": "988394acf6404758db0376abade0282a082bceeb6bcd84235d39260a3633d1e0",
+    "result": "PARTIAL_EXTERNAL_DEPENDENCIES",
+    "scenario_statuses": {
+      "active_cancellation_during_settlement": "PASS",
+      "agent_checkpoint_after_database_restart": "PASS",
+      "agent_checkpoint_before_database_restart": "PASS",
+      "agent_completed_run_sse_reconnect": "PASS",
+      "api_process_loss_preserves_unsettled_usage": "PASS",
+      "api_worker_restart_without_migration": "PASS",
+      "connected_browser_journeys": "PASS",
+      "connected_startup_and_one_shot_migration": "PASS",
+      "dependencies_recovered": "PASS",
+      "encrypted_recovery_transfer_erasure_hold": "PASS",
+      "existing_hitl_resume": "PASS",
+      "fault_clamav": "PASS",
+      "fault_db": "PASS",
+      "fault_redis": "PASS",
+      "hosted_tls_and_signature_freshness": "NOT RUN",
+      "live_ai_quality_and_embeddings": "NOT RUN",
+      "migration_failure_blocks_dependents": "PASS",
+      "monetary_limits_unknown_and_kill": "PASS",
+      "new_hosted_language_registration_and_interviews": "NOT RUN",
+      "owned_resource_cleanup": "PASS",
+      "positive_language_interview_and_career_journeys": "NOT RUN",
+      "prerequisites_and_verified_images": "PASS",
+      "private_documents_upload_download_scanner": "PASS",
+      "private_roots_schema_and_service_identity": "PASS",
+      "private_volume_inaccessible_refuses": "PASS",
+      "proxy_forwarded_identity_cors_error_privacy": "PASS",
+      "real_email_oidc": "NOT RUN",
+      "real_scanner_clean_eicar_and_manifest": "PASS",
+      "release_recovery_hold": "NOT RUN",
+      "safe_evidence_capture": "PASS",
+      "scripted_provider_failure_unknown_usage": "PASS",
+      "sessions_ownership_profiles_documents_admin": "PASS",
+      "shared_cross_instance_rate_limits": "PASS",
+      "worker_crash_lease_retry": "PASS",
+      "worker_jobs_and_shared_state": "PASS"
+    },
+    "source_artifact": {
+      "artifact_id": 12747244584,
+      "summary_file_sha256": "5d7f281c7931fb1fe69c91e3c89334d91cf9d9ec103f1ab65463f49dfd1e5589",
+      "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/actions/runs/40532406623",
+      "workflow_id": 40532406623
+    },
+    "source_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+    "started_at": "2026-10-27T15:43:42.448949+00:00"
+  },
+  "open_packages": [
+    "00A",
+    "00B",
+    "07B",
+    "07C",
+    "08A"
+  ],
+  "original_database": "NOT OPENED / NOT MIGRATED",
+  "paid_calls": "NOT RUN",
+  "preservation": {
+    "dirty_original_worktrees": 31,
+    "original_branches": 316,
+    "original_worktrees": 49,
+    "private_inventory_sha256": "851de36b77c160d6fd02cc2043968054876e151d5dea54eec6ddee50f5aa5e2a",
+    "protected_files": 203,
+    "verification": {
+      "changed_original_branch_tips": 0,
+      "changed_original_worktrees": 0,
+      "changed_protected_files": 0,
+      "protected_files_checked": 203
+    }
+  },
+  "production_or_language_approval_added": false,
+  "provisioning": "NOT RUN",
+  "registry_publication": "NOT RUN",
+  "source_documents": [
+    "WAVE4_TASK08_AUTHORIZATION_PREFLIGHT.md",
+    "WAVE4_TASK08_OWNER_DECISIONS.md"
+  ],
+  "status": "READY FOR OWNER DECISION",
+  "task": "Wave 4 Task 08 authorization/readiness preflight (not roadmap08A)",
+  "task07_status": "OFFLINE QUALIFIED \u2014 MERGED",
+  "total_packages": 45,
+  "validation": {
+    "documentation_only_except_existing_evidence_test_update": true,
+    "focused_tests_failed": 0,
+    "focused_tests_passed": 117,
+    "issue_reconciliation": "452 items, 0 unmapped",
+    "package_and_wave_consistency": "45 packages, acyclic, five layers fresh",
+    "release_evidence_checker": "PASS",
+    "ruff": "PASS"
+  },
+  "version": 1
+}
