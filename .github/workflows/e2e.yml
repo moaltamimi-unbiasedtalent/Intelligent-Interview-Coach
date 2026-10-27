@@ -34,7 +34,8 @@ jobs:
       - name: Repeat history readiness, actual images and security observation (zero retries)
         env:
           CI: "true"
-        run: npm run e2e -- --grep 'Candidate: no page requests|History image:|Candidate readiness observer:' --repeat-each=10 --retries=0 --reporter=line --output="$RUNNER_TEMP/history-qualification"
+        run: >-
+          npm run e2e -- --grep 'Candidate: no page requests|History image:|Candidate readiness observer:' --repeat-each=10 --retries=0 --reporter=line --output="$RUNNER_TEMP/history-qualification"
       - name: Retain sanitized history qualification diagnostics
         if: always()
         uses: actions/upload-artifact@v4
