@@ -1,5 +1,7 @@
 # Owner Decision Register (Production Roadmap V2.2, corrected)
 
+> Task08 preparation, 27 October 2026: [complete staging authorization matrix and written budget/Redis/recovery worksheets](execution/WAVE4_TASK08_OWNER_DECISIONS.md) and [readiness preflight](execution/WAVE4_TASK08_AUTHORIZATION_PREFLIGHT.md) are READY FOR OWNER DECISION only. Existing approved directions remain unchanged; no open decision, spending/deployment authority, appointment or gate approval is resolved by that packet.
+
 **Status:** updated 2026-10-22 after Wave 2 (new decisions raised while building are in their own table below); first written 2026-10-21 at the Phase 00 sign-off. **OD-SCOPE-01 is resolved: S1, the full originally agreed R1.0 scope, is OWNER-APPROVED.** Only decisions that are genuinely still awaiting the owner are listed as open. Decisions the owner has already made (languages, Russian exclusion, R1.3 languages, release train, free invitation-only beta, English-only Admin, Basic/Premium as free beta tiers, the owner-requested capabilities and the five reviewer findings) are **requirements**, not open decisions, and are no longer listed here. Earlier open items that were resolved by the recovered text: OD-LANG-01, OD-LANG-05, OD-LANG-06, OD-REQ-TEXT, OD-REVIEW-FINDINGS, OD-RELEASE-TRAIN.
 
 ## Owner-approved decisions (Phase 00 sign-off, 2026-10-21)

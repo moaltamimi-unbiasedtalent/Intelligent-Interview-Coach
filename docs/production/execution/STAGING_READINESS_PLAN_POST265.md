@@ -1,5 +1,7 @@
 # Gap-based staging readiness plan after PR #265
 
+> Current 27 October 2026: Tasks01–07 completed intended offline engineering; PR273 merged at b463cf9b, seven main workflows green and actual main connected campaign29/0/6. The tables below are a **dated post265 audit**, not a current list of unresolved engineering repairs. Use the [Task08 authorization preflight](WAVE4_TASK08_AUTHORIZATION_PREFLIGHT.md) and [owner matrix](WAVE4_TASK08_OWNER_DECISIONS.md) for current gaps. Owner deployment authority, hosted/live qualification and PG/LG acceptance remain OPEN; preparation only.
+
 > Task 06 engineering update: [qualified recovery procedure](WAVE4_TASK06_RECOVERY.md) and [gap audit](WAVE4_TASK06_RECOVERY_AUDIT.md). Baseline PR #271 is merged with six green main workflows. Migration, durable admission, immutable images, Redis and budget repairs are merged; recovery changes require focused PR review/merge/CI. This dated staging plan grants no deployment, key-custody, retention, RTO/RPO or gate approval.
 
 Baseline: main `aedbef3dee28a68b72bc526a1fca537a3da7bd8d`. **Planning and offline inspection only. No deployment, cloud provisioning, provider round trip, paid evaluation, DNS change or real database migration is authorized or performed here.** Existing definitions are retained; this plan does not rebuild the application.

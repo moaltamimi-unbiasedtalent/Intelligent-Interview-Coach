@@ -1,5 +1,7 @@
 # Staging topology notes (package 05A)
 
+> 27 October 2026: PR273 merged with seven green main workflows; actual offline full-stack campaign29/0/6. **Deployment freeze remains.** The [Task08 owner authorization/readiness preflight](../docs/production/execution/WAVE4_TASK08_AUTHORIZATION_PREFLIGHT.md) supersedes dated qualification-gap descriptions below for current offline engineering. No hosted deployment or gate acceptance is inferred; this documentation grants no execution permission.
+
 ## DEPLOYMENT FREEZE
 
 `deploy/docker-compose.staging.yml` is the full staging topology **as code only**, not a deployment. Its

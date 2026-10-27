@@ -1,6 +1,15 @@
 # Whole-Project Status Dashboard
 
-## Task 07 offline requalification — 27 October 2026
+## Current Task 07 merge and Task 08 preparation — 27 October 2026
+
+**VERIFIED: Task 07 OFFLINE QUALIFIED — MERGED.** PR #273 merged at `b463cf9b92b44a600c7b0e842574e1eb32e5e713` from reviewed source `a7fbec43fb2e2e54331655f44cac51065a43ae50`. All seven mandatory main-push workflows passed (CI40532406132, immutable40532406623, migration40532406024, admission40532406060, budget40532406230, Redis40532405846, recovery40532406156). The actual main image/connected artifact records **29 PASS / 0 FAIL / 0 SKIP / 6 owner/hosted NOT RUN**. Historical **27/2/6**, all failed diagnostics and PR-head source/image bindings remain unchanged below. No main-SHA primary Browser result is inferred.
+
+**Task 08 READY FOR OWNER DECISION, NOT READY TO DEPLOY.** [Authorization/readiness packet](WAVE4_TASK08_AUTHORIZATION_PREFLIGHT.md), [complete owner matrix/budget/Redis worksheet](WAVE4_TASK08_OWNER_DECISIONS.md) and [verified main evidence](evidence/WAVE4_TASK08_PREFLIGHT.json) separate preparation from execution. Hosting/region/spend/operators, secrets/custody/retention, Redis policy, budget/provider purposes, language qualification, independent/native/legal/source reviewers and final release approval remain OPEN. No authority beyond preparation was granted. **40/45 integrated**; 00A/00B/07B/07C/08A remain open/incomplete; only existing PG-11 PASS, zero approved hosted languages, no new PG/LG approval. Wave4Task08 is distinct from final-release package08A.
+
+Earlier dated sections are historical snapshots and do not describe the current PR #273 merge state. No deployment, provisioning, registry publication, paid calls, real email/IdP activation, original/real database migration, activation record, approval marker or automatic merge is performed.
+
+
+## Historical PR-head Task 07 offline requalification — 27 October 2026
 
 Normal merge `939b7f02` reconciles original PR #273 with reviewed main `ef2e97ef`; merged PRs #274–276 are retained. **29 PASS / 0 FAIL / 0 SKIP / 6 owner/hosted NOT RUN** in the real disposable full stack; both original APIs recover checkpoint reads without restart/replay, connected browser 3/3, accounting/outage/encrypted recovery checks PASS. All eight source-bound CI workflows PASS, including primary Browser **672 passed / 14 skipped** and 50 History repeats at zero retries. Backend 8,726/181; frontend 1,561; fresh images/manifests verified. [Full source-bound report](WAVE4_TASK07_INTEGRATION.md). Historical 27/2/6 and failed diagnostics remain unchanged; image-stall root cause stays inconclusive.
 

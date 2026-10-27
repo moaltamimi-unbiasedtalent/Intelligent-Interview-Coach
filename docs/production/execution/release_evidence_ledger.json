@@ -1,8 +1,8 @@
 {
  "schema": "ask4mo.release_evidence.v1",
  "note": "Evidence ledger. Nothing is PASS without a human-supplied or CI-produced artefact link here. Engineering and CI are derived from PACKAGE_STATUS and this ledger's PR rows; live staging, human qualification and gate acceptance are recorded as NOT RUN / OPEN / NOT ACCEPTED until a real artefact exists. Seeded 2026-10-22 by 08A0 from git history and the committed dashboards; a human reviews every change.",
- "as_of": "2026-10-23",
- "main_sha": "aedbef3dee28a68b72bc526a1fca537a3da7bd8d",
+ "as_of": "2026-10-27",
+ "main_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
  "policy": {
   "gate_evidence_valid_days": 30,
   "language_approval_valid_days": 90,
@@ -909,6 +909,23 @@
    },
    "recorded_by": "Post-PR-265 reconciliation: GitHub merge metadata and main ancestry",
    "recorded_on": "2026-10-23"
+  },
+  {
+   "number": 273,
+   "title": "test(staging): qualify disposable full-stack integration and failure recovery",
+   "branch": "test/disposable-full-stack-integration",
+   "head_sha": "a7fbec43fb2e2e54331655f44cac51065a43ae50",
+   "merge_sha": "b463cf9b92b44a600c7b0e842574e1eb32e5e713",
+   "merged_at": "2026-10-27",
+   "package": null,
+   "ci": {
+    "result": "success",
+    "checks": "All eight PR workflows SUCCESS at a7fbec43; all seven main-push workflows SUCCESS at b463cf9b; main connected campaign29/0/6, primary Browser on PR head only",
+    "source": "docs/production/execution/evidence/WAVE4_TASK08_PREFLIGHT.json (verified GitHub merge/main workflow metadata and actual main source-bound campaign)",
+    "url": "https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach/pull/273/checks"
+   },
+   "recorded_by": "Task08 read-only GitHub merge/main verification; no gate approval",
+   "recorded_on": "2026-10-27"
   }
  ],
  "packages": {
