@@ -1,26 +1,24 @@
 # Task 08 — owner-decision and authorization matrix
 
-**READY FOR OWNER DECISION.** All worksheet items below are **OPEN / NOT AUTHORIZED**. Defaults are **PROPOSED**, never approval. H/R/S/A/L/Q/G/I references are local worksheet labels under existing register IDs, not approval markers or new owner decisions adopted by this document. [Main packet](WAVE4_TASK08_AUTHORIZATION_PREFLIGHT.md).
+**H01/H02 APPROVED FOR S1 DOCUMENTATION ONLY — NOT READY TO PROVISION OR DEPLOY.** See [owner-approved S1 documentation record](WAVE4_S1_H01_H02_OWNER_AUTHORIZATION.md) for the exact 27 October owner statement and approved fixed window. Overall OD-HOSTED and S1 deployment-entry remain PARTIAL / OPEN / BLOCKED; all other worksheet acceptances remain OPEN. Defaults remain PROPOSED. H/R/S/A/L/Q/G/I references are worksheet labels under existing IDs, not runtime approval markers. [Main packet](WAVE4_TASK08_AUTHORIZATION_PREFLIGHT.md).
 
-Each card explicitly records required decision, proposal, available/missing evidence, accountable role, security/privacy consequence, cost, prerequisites, current authorization state, acceptance and blocking phase. No numeric spend ceiling or appointment is supplied.
+Each card explicitly records required decision, proposal, available/missing evidence, accountable role, security/privacy consequence, cost, prerequisites, current authorization state, acceptance and blocking phase. H01/H02 now record only the named owner-approved terms below; no other appointment, spend scope or acceptance is inferred.
 
 ## H01 — Provider, account/project, region and permitted data locations
 
-- **Decision ID:** OD-HOSTED. **Authorization:** OPEN / NOT AUTHORIZED.
-- **Required / proposed:** Provider, account/project, region and permitted data locations. PROPOSED EU-region container VM; shortlist Hetzner Germany/Finland, Scaleway Paris/Amsterdam, AWS Frankfurt; owner selects.
-- **Evidence available:** Qualified Compose architecture and Task 07 main campaign. **Missing evidence:** Provider quote, availability, contract/DPA and processing-location review; written selection.
-- **Responsible role:** Product owner + operations + privacy qualifier. **Prerequisites:** Named operator and legal/data classification review.
-- **Security/privacy:** EU compute does not prove EU-only support, telemetry, backup or AI processing; review subprocessors/transfers. **Cost implications:** Quoted recurring infrastructure, support, tax, transfer and teardown costs.
-- **Acceptance test:** Approved provider/account/region inventory and documented access/data-flow review. **Blocks:** S1 deployment.
+- **Decision ID:** OD-HOSTED. **Authorization:** OWNER-APPROVED FOR S1 DOCUMENTATION ONLY; overall hosting execution PARTIAL / OPEN.
+- **Recorded selection:** Hetzner Cloud, Nuremberg nbg1, isolated ask4mo-staging-eu, one CPX42 x86 Linux VM with included 320 GB system disk, one primary IPv4, IPv6, one private network and firewall. Primary application/DB/documents/index/logs/runtime-secret processing Germany only. Future independently controlled encrypted backups Germany/France only after separate approval; cloud backup provisioning is excluded now.
+- **Authority / exact text:** [owner-approved S1 documentation record](WAVE4_S1_H01_H02_OWNER_AUTHORIZATION.md). Mo Al-Tamimi explicitly approves every stated field; no fallback SKU, region or additional service is authorized.
+- **Evidence available:** Current main bf579aa5 and seven green post-merge workflows; official catalog/specifications and itemized rate model. **Still missing:** Account-specific stock/quota and billing-tax quote, measured usable disk/RAM/restore headroom, contract/DPA and all processing-location/access verification. Catalog active=true is not stock.
+- **Acceptance boundary:** Owner selection is recorded; S1 resource/deployment-entry remains BLOCKED. No account creation, purchase, provisioning, DNS, registry or deployment authority. S2 security/privacy/recovery and later execution approvals remain independent.
 
 ## H02 — Infrastructure spend, duration, permitted operations and named operator
 
-- **Decision ID:** OD-HOSTED / OD-RESOURCE. **Authorization:** OPEN / NOT AUTHORIZED.
-- **Required / proposed:** Infrastructure spend, duration, permitted operations and named operator. PROPOSED time-limited staging-only authorization; no real candidate data, paid AI or production access.
-- **Evidence available:** No provisioning performed; existing deployment freeze. **Missing evidence:** Written currency/ceiling, start/expiry, purchase authority, operator, shutdown owner and emergency stop.
-- **Responsible role:** Product owner. **Prerequisites:** H01 and role appointments.
-- **Security/privacy:** Least-privilege account and MFA; separate production account/project. **Cost implications:** Owner sets all ceilings; estimates are not spend authority.
-- **Acceptance test:** Signed scope names exact resources, access, ceiling, expiry and exclusions. **Blocks:** S1 deployment.
+- **Decision ID:** OD-HOSTED / OD-RESOURCE. **Authorization:** OWNER-APPROVED FOR S1 DOCUMENTATION ONLY; execution NOT AUTHORIZED.
+- **Recorded terms:** Mo Al-Tamimi accepts operations, billing and shutdown accountability and is the only authorized operator/tester. Aggregate ceiling EUR150 including applicable VAT and all authorized infrastructure charges; fixed interval 28 October 2026 09:00 CET through 27 November 2026 09:00 CET exclusive (30 days). No automatic shift, renewal, scaling or new billable services.
+- **Permitted scope / exclusions:** Infrastructure-only preparation, security and synthetic offline qualification, subject to separate S2/entry approvals. Exact resource list and all owner exclusions in [owner-approved S1 documentation record](WAVE4_S1_H01_H02_OWNER_AUTHORIZATION.md); no paid AI/embeddings/OCR, real candidate data, transactional email/OIDC, languages/public beta/production/live billing, extra storage/instances, cloud backups, registry publication or budget increase.
+- **Evidence / missing:** Exact written approval received 27 October; no separate signature time invented. Actual customer VAT/stock/quote and capacity NOT VERIFIED. Ceiling is an owner constraint, not provider-native hard enforcement. Operator must review charges, stop new spend before the ceiling and plan timely deletion only of separately authorized new rehearsal resources.
+- **Acceptance boundary:** Named terms recorded, but no purchase/deployment authorization, monetary reset, hold release or specialist appointment. Wider OD-RESOURCE and OD-BUDGET remain OPEN. [S2 security/deployment-entry checklist](WAVE4_S2_SECURITY_ENTRY_CHECKLIST.md) remains entirely OPEN.
 
 ## H03 — PostgreSQL hosting and privileges
 
