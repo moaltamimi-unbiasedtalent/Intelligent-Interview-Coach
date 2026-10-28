@@ -60,6 +60,15 @@ describe("redirectVerified", () => {
     expect(hardNavigate).not.toHaveBeenCalled();
   });
 
+  it("compares pathname without a fragment, avoiding a redundant hard navigation", () => {
+    const replace = vi.fn();
+    const hardNavigate = vi.fn();
+    redirectVerified({ replace }, "/app#section", { getPathname: () => "/app", hardNavigate });
+    vi.advanceTimersByTime(REDIRECT_VERIFY_MS * 5);
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(hardNavigate).not.toHaveBeenCalled();
+  });
+
   it("compares the pathname only (a ?next= query does not count as 'not landed')", () => {
     const replace = vi.fn();
     const hardNavigate = vi.fn();

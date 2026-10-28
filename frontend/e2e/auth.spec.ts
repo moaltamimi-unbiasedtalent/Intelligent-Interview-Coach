@@ -147,3 +147,20 @@ test("the header shows Sign in when signed out", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
 });
+
+test("hostile sign-in return stays on the application origin", async ({ page }) => {
+  await mockAuth(page, { signedIn: false });
+  await page.goto("/sign-in?next=%2F%2Fevil.example");
+  await waitForClientHydrated(page);
+  await page.getByLabel("Email").fill("user@example.com");
+  await page.getByLabel("Password").fill("synthetic-password");
+  await Promise.all([page.waitForURL("**/app"), page.getByRole("button", { name: /sign in/i }).click()]);
+  expect(new URL(page.url()).origin).toBe(new URL(test.info().project.use.baseURL as string).origin);
+});
+
+test("authenticated auth-page return rejects a protocol-relative target", async ({ page }) => {
+  await mockAuth(page, { signedIn: true });
+  await page.goto("/sign-in?next=%2F%2Fevil.example");
+  await page.waitForURL("**/app");
+  expect(new URL(page.url()).origin).toBe(new URL(test.info().project.use.baseURL as string).origin);
+});

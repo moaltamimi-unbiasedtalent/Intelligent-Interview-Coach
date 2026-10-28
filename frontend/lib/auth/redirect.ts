@@ -32,7 +32,7 @@ export function redirectVerified(
 ): () => void {
   const getPathname = opts.getPathname ?? (() => window.location.pathname);
   const hardNavigate = opts.hardNavigate ?? ((href: string) => window.location.replace(href));
-  const targetPath = target.split("?")[0];
+  const targetPath = target.split(/[?#]/, 1)[0];
 
   router.replace(target);
   let checks = 0;

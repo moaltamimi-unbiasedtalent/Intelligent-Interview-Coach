@@ -1,5 +1,7 @@
 "use client";
 
+import { returnDestination } from "@/lib/auth/return-destination";
+
 /**
  * Client-side route boundary (Capstone P1/E1, §13).
  *
@@ -13,7 +15,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "./AuthProvider";
-import { isProtectedRoute, AUTH_ONLY_ROUTES, APP_HOME } from "@/lib/auth/routes";
+import { isProtectedRoute, AUTH_ONLY_ROUTES } from "@/lib/auth/routes";
 import { redirectVerified } from "@/lib/auth/redirect";
 import { LoadingState } from "@/components/ui/States";
 import { useT } from "@/components/i18n/I18nProvider";
@@ -42,7 +44,7 @@ export function RouteGuard({ children }: { children: ReactNode }) {
       // Read from the location when the effect runs. `useSearchParams` here would suspend the whole boundary during static prerender/hydration, and the shell's Suspense fallback
       // is a SECOND copy of the page: a stateful page (onboarding) the candidate had already used was thrown away and re-mounted from stale state (04D).
       const next = new URLSearchParams(window.location.search).get("next");
-      return redirectVerified(router, next && next.startsWith("/") ? next : APP_HOME);
+      return redirectVerified(router, returnDestination(next));
     } else if (needsOnboarding && protectedRoute && !onOnboarding) {
       return redirectVerified(router, "/onboarding");
     }

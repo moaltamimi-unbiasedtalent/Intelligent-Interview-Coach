@@ -22,10 +22,11 @@ vi.mock("@/lib/api/client", async (importOriginal) => {
 });
 
 let pathname = "/prepare";
+let search = "";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
   useRouter: () => ({ push: vi.fn(), replace }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(search),
 }));
 
 import { ApiError } from "@/lib/api/client";
@@ -48,6 +49,8 @@ function unauthorized() {
 afterEach(() => {
   vi.clearAllMocks();
   pathname = "/prepare";
+  search = "";
+  window.history.replaceState({}, "", "/");
 });
 
 describe("AccountMenu", () => {
@@ -83,6 +86,15 @@ describe("RouteGuard", () => {
     );
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/sign-in?next=%2Fprogress"));
     expect(screen.queryByText("secret content")).not.toBeInTheDocument();
+  });
+
+  it("rejects an external next target for an already authenticated user", async () => {
+    pathname = "/sign-in";
+    window.history.replaceState({}, "", "/sign-in?next=%2F%2Fevil.test");
+    me.mockResolvedValue(SESSION_ACCOUNT);
+    render(<AuthProvider><RouteGuard><p>child</p></RouteGuard></AuthProvider>);
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/app"));
+    expect(replace).not.toHaveBeenCalledWith("//evil.test");
   });
 
   it("renders protected content for an authenticated session", async () => {
@@ -122,6 +134,19 @@ describe("SignInForm", () => {
       expect(login).toHaveBeenCalledWith({ email: "user@example.com", password: "correcthorsebattery" }),
     );
   });
+
+  it.each([["%2F%2Fevil.test", "/app"], ["%2Fprepare%3Ftab%3Done%23focus", "/prepare?tab=one#focus"]])(
+    "validates the sign-in return destination %s", async (next, expected) => {
+      search = `next=${next}`;
+      me.mockResolvedValue(SESSION_ACCOUNT);
+      login.mockResolvedValue({ message: "Signed in." });
+      render(<AuthProvider><SignInForm /></AuthProvider>);
+      await userEvent.type(screen.getByLabelText("Email"), "user@example.com");
+      await userEvent.type(screen.getByLabelText("Password"), "synthetic-password");
+      await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+      await waitFor(() => expect(replace).toHaveBeenCalledWith(expected));
+    },
+  );
 
   it("shows a generic error message on failed sign-in", async () => {
     me.mockRejectedValue(unauthorized());
