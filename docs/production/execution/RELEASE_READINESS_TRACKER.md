@@ -159,3 +159,17 @@ Main is `f9a06a9`. PRs #213 to #221 are merged: 02K, 01B0, 03K, 01B, 05A, 02A, 0
 ## 9. Wave 2 final state and the five-layer view (2026-10-22)
 
 Wave 2 is merged: PRs #222 to #234, main @ `e4aed13`, one Alembic head (`0043_story_bank_completion`). The tracker above and `WAVE3_EXECUTION_PLAN.md` (section 3) record each package's engineering, CI, live-staging, human-qualification and gate-acceptance state separately. The earlier sections 7 and 8 are kept as the historical record of Waves 1 and 2 and are superseded by sections 1 to 3 above.
+
+## PR #280 reconciliation and S2-B decision preparation — 28 October 2026
+
+**Exact-main offline qualification VERIFIED; execution NOT AUTHORIZED.**
+
+PR #280 is merged at **5c76f1ea144663bc17a8972827d368f306a0a756**. Its tree matches reviewed head320ea2a7. Seven main-push workflows succeeded on attempt1; source-bound workflow IDs, artifact anchors, acceptance matrix and owner requirements are recorded in the [S2-B packet](WAVE4_S2B_READINESS_DECISION_REVIEW.md).
+
+Main CSP qualification passed the complete journey with zero unexpected console/page errors; eleven aborted requests remain separately recorded. The connected campaign retains **29 PASS / 0 FAIL / 0 SKIP / 6 NOT RUN** and `PARTIAL_EXTERNAL_DEPENDENCIES`. All six external/hosted scenarios remain incomplete.
+
+The historical main291eb523 failure and earlier Task07/08 records are unchanged. The historical 13-console-error cause remains **UNPROVEN**. Capping legacy in-page CSP retention is an OPEN, separate engineering follow-up.
+
+Next permitted preparation: redacted owner evidence, independent review requirements and separately scoped backup/custody/recovery/monitoring decisions. Account-specific stock/quota/VAT quote, residency, measured capacity, Redis policies, retention/RPO/RTO and explicit execution authority remain unresolved.
+
+R1.0 stays **40/45**; OD-BUDGET and all16 S2 controls OPEN; PG/LG unchanged; hosted-qualified languages ZERO. Hosted staging NOT RUN; human qualification OPEN; infrastructure execution BLOCKED. No date, merge or successful workflow grants provisioning, deployment, migration, paid-call, language or hold-release authority.

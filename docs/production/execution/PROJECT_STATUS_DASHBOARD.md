@@ -204,3 +204,17 @@ Only existing PG-11 retains PASS; all production gate states and all seven langu
 POST265-01 was repaired in merged PR #267 and POST265-02 in merged PR #268. Their engineering regressions passed; hosted migration/multi-worker/provider qualification remains outstanding. Task 03 supplies verified local image/plan controls, pending merge; this does not approve deployment or recovery. The [staging plan](STAGING_READINESS_PLAN_POST265.md) also records Redis/client wiring, budget enforcement, immutable images, PostgreSQL/ClamAV/backup drills, licensed sources and language/owner prerequisites.
 
 Priorities: focused migration/topology remediation PR; 00A appointments and 00B dispositions; fresh 07B budget and protocol; explicitly authorized staging/real-world verification including 07C; independent qualification; then 08A release freeze and owner go/no-go. No scope cut, automatic PR merge, deployment or paid evaluation is approved here. 30 November 2026 remains a gate-dependent target.
+
+## PR #280 post-merge qualification and S2-B preparation — 28 October 2026
+
+Current source: **5c76f1ea144663bc17a8972827d368f306a0a756**, merging PR #280 from **320ea2a74a354f983e2e07639f570f5c9bdb4f53** with an identical Git tree.
+
+All seven exact-main push workflows succeeded, attempt1: CI40602784672, immutable40602784475, migration40602784668, admission40602784487, budget40602784729, Redis40602784549 and recovery40602784582. Main backend: **8,737 passed / 180 skipped**; frontend: **1,574 passed**.
+
+Main CSP artifact12779756614 records the complete passing journey, zero unexpected console/page errors and eleven aborted requests recorded separately. Campaign artifact12779358359 records **29 PASS / 0 FAIL / 0 SKIP / 6 NOT RUN**, with matching source/image/manifest identities. This is offline synthetic qualification, not hosted capacity, residency, independent custody, genuine scanner freshness or language acceptance.
+
+Historical run40582511816 remains FAIL on291eb523; its 13-console-error cause remains **UNPROVEN**. Earlier dated “current” sections are historical snapshots and remain unchanged.
+
+[S2-B decision packet](WAVE4_S2B_READINESS_DECISION_REVIEW.md): **documentation/evidence preparation GO; infrastructure execution BLOCKED**. Legacy uncapped in-page CSP retention is a separate OPEN engineering follow-up.
+
+Five layers: **engineering40/45**; exact-main CI/offline qualification VERIFIED; hosted staging NOT RUN; human qualification OPEN; PG/LG unchanged. OD-BUDGET and all16 S2 controls remain OPEN; hosted-qualified languages ZERO. The fixed H01/H02 scope/window grants no execution permission.
