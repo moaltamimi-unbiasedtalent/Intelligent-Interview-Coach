@@ -1,5 +1,7 @@
 "use client";
 
+import { returnDestination } from "@/lib/auth/return-destination";
+
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -10,7 +12,6 @@ import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { useT } from "@/components/i18n/I18nProvider";
-import { APP_HOME } from "@/lib/auth/routes";
 
 export function SignInForm() {
   const router = useRouter();
@@ -30,7 +31,7 @@ export function SignInForm() {
       await api.auth.login({ email, password });
       await refresh();
       const next = params.get("next");
-      router.replace(next && next.startsWith("/") ? next : APP_HOME);
+      router.replace(returnDestination(next));
     } catch (err) {
       // Safe, generic message from the backend (no enumeration).
       setError(err instanceof ApiError ? err.message : t("auth.signInFailed"));
