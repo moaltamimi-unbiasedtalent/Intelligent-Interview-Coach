@@ -272,3 +272,16 @@ def test_promotion_and_rollback_refuse_images_without_recovery_quarantine_policy
 def test_recovered_database_cannot_be_promoted_or_rolled_back_until_reconciled(manifest,hold):
     for mode in ('promote','rollback'):
         with pytest.raises(R.ReleaseError,match='recovery_reconciliation_required'):R.check_state(state(recovery_pending=hold),manifest,mode)
+
+
+def test_unreviewed_future_migration_head_still_requires_policy_review(source):
+    future = source / 'migrations/versions/0050_unreviewed.py'
+    future.write_text('revision="0050_unreviewed"\ndown_revision="0002_next"')
+    with pytest.raises(R.ReleaseError, match='schema_policy_requires_review'):
+        R.source_record(source, 'a' * 40)
+
+
+def test_previous_image_refuses_rollback_onto_0049(manifest):
+    manifest['source']['compatible_schema_revisions'] = ['0048_agent_run_controls']
+    with pytest.raises(R.ReleaseError, match='rollback_schema_incompatible'):
+        R.check_state(state('0049_workspace_mail_attempts'), manifest, 'rollback')

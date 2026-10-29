@@ -23,7 +23,7 @@ KEY = b'b' * 32
 LEDGER_KEY = b'l' * 32
 MASTER = base64.b64encode(b'm' * 32).decode()
 RELEASE = dict(application_sha='a'*40, manifest_sha256='b'*64, budget_policy_version=2, recovery_policy_version=1,
-               migration_head='0048_agent_run_controls', prompt_assets_sha256='c'*64, language_activation_sha256='d'*64)
+               migration_head='0049_workspace_mail_attempts', prompt_assets_sha256='c'*64, language_activation_sha256='d'*64)
 
 
 @pytest.fixture
@@ -51,6 +51,8 @@ def environment(tmp_path):
         s.add_all([AiBudgetControl(scope_key='global',held_micro_usd=0,requests=0,killed=False),
                    AiBudgetControl(scope_key='class:production',held_micro_usd=200,requests=1,killed=False),
                    AiBudgetControl(scope_key='cat:production:agent',held_micro_usd=200,requests=1,killed=False)])
+        from src.persistence import EmailAttempt
+        s.add_all([EmailAttempt(message_type=kind, provider='memory', status='captured') for kind in ('workspace_invitation', 'ownership_transfer')])
         s.add(AiBudgetEntry(created_ts=1,budget_class='production',category='agent',operation='agent',model='synthetic-only',
                             endpoint='chat',fingerprint='f'*64,state='unknown',reserved_micro_usd=200))
         s.commit()
@@ -98,6 +100,7 @@ def test_real_postgresql_encrypted_roundtrip_and_historical_accounting_hold(envi
     r=backup(e);assert r.ok,r.codes
     m=E.load_manifest(e.root/'set')
     assert m['qualified_recovery']['checkpoint_placement']=='shared_public_database'
+    assert len(m['qualified_recovery']['extended_schema_sha256'])==64
     assert m['retrieval_probe']['protected_file']=='evidence/retrieval-probe.json'
     assert 'Prioritisation frameworks' not in (e.root/'set'/'manifest.json').read_text()
     assert before==[Q.file_tree(p) for p in (e.source.documents_dir,e.source.knowledge_files_dir,e.source.knowledge_index_dir)]
@@ -118,6 +121,13 @@ def test_real_postgresql_encrypted_roundtrip_and_historical_accounting_hold(envi
             assert s.scalar(select(AiBudgetControl.killed).where(AiBudgetControl.scope_key=='global')) is True
             assert s.scalar(select(AiBudgetEntry.reserved_micro_usd))==200
             assert s.scalar(select(AiBudgetEntry.committed_micro_usd))==0
+            from src.persistence import EmailAttempt
+            assert set(s.scalars(select(EmailAttempt.message_type)).all()) == {'workspace_invitation', 'ownership_transfer'}
+            assert set(s.scalars(select(EmailAttempt.status)).all()) == {'captured'}
+            constraints = s.execute(text("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='email_attempts'::regclass AND conname='ck_email_attempts_type'")).scalar_one()
+            assert 'workspace_invitation' in constraints and 'ownership_transfer' in constraints
+            indexes = {row[0] for row in s.execute(text("SELECT indexname FROM pg_indexes WHERE schemaname='public' AND tablename='email_attempts'"))}
+            assert {'ix_email_attempts_created', 'ix_email_attempts_type_created', 'ix_email_attempts_message_ref'} <= indexes
             assert s.scalar(select(AIUsageFact.input_tokens).limit(1))==11
             assert s.scalar(select(AIUsageFact.output_tokens).limit(1)) is None
             assert s.execute(text('SELECT COUNT(*) FROM checkpoints')).scalar()==2
@@ -313,17 +323,32 @@ def test_recovery_quarantine_blocks_private_api_and_queued_worker_jobs(environme
     finally:engine.dispose()
 
 
-def test_controlled_older_revision_upgrade_requires_explicit_flag_on_new_target(environment):
+@pytest.mark.parametrize('old_revision', ['0047_workspace_ownership_transfers', '0048_agent_run_controls'])
+def test_controlled_older_revision_upgrade_requires_explicit_flag_on_new_target(environment, old_revision):
     e=environment
     old_url=e.database('old_source')
     e.source=build_synthetic_environment(e.root/'older',use_alembic=True,database_url=old_url,
-                                        migration_revision='0047_workspace_ownership_transfers')
+                                        migration_revision=old_revision)
     e.url=old_url
+    old_engine = make_engine(old_url)
+    try:
+        with old_engine.begin() as c:
+            c.execute(text("INSERT INTO email_attempts (message_type, provider, status, created_at) VALUES ('password_reset', 'memory', 'captured', CURRENT_TIMESTAMP)"))
+    finally:
+        old_engine.dispose()
     backup(e)
     with pytest.raises(E.SetError,match='controlled_upgrade_required'):restore(e)
     result,args=restore(e,upgrade_to_head=True)
-    assert result.ok and E.schema_revision(old_url)=='0047_workspace_ownership_transfers'
-    assert E.schema_revision(args['target_database_url'])=='0048_agent_run_controls'
+    assert result.ok and E.schema_revision(old_url)==old_revision
+    assert E.schema_revision(args['target_database_url'])=='0049_workspace_mail_attempts'
+    restored_engine = make_engine(args['target_database_url'])
+    try:
+        with restored_engine.connect() as c:
+            assert c.execute(text("SELECT message_type, provider, status FROM email_attempts")).all() == [('password_reset', 'memory', 'captured')]
+            definition = c.execute(text("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='email_attempts'::regclass AND conname='ck_email_attempts_type'")).scalar_one()
+            assert 'workspace_invitation' in definition and 'ownership_transfer' in definition
+    finally:
+        restored_engine.dispose()
     assert pending(make_session_factory(make_engine(args['target_database_url'])))
 
 
@@ -359,3 +384,25 @@ def test_exact_operator_cli_roundtrip_uses_only_explicit_private_environment(env
     output=capsys.readouterr().out
     assert json.loads(output)['details']['recovery_hold'] is True
     assert e.url not in output and 'synthetic-not-a-provider-credential' not in output and base64.b64encode(KEY).decode() not in output
+
+
+def test_historical_0048_release_restores_only_with_matching_release(environment):
+    e = environment
+    old_url = e.database('old_release')
+    e.source = build_synthetic_environment(e.root / 'old-release', use_alembic=True, database_url=old_url,
+                                           migration_revision='0048_agent_run_controls')
+    e.url = old_url
+    old_release = {**RELEASE, 'migration_head': '0048_agent_run_controls'}
+    assert backup(e, release=old_release).ok
+    with pytest.raises(E.SetError, match='recovery_release_mismatch'):
+        restore(e)
+    result, args = restore(e, expected_release=old_release)
+    assert result.ok
+    assert E.schema_revision(args['target_database_url']) == '0048_agent_run_controls'
+    assert pending(make_session_factory(make_engine(args['target_database_url'])))
+
+
+def test_current_schema_cannot_be_backed_up_as_an_older_release(environment):
+    old_release = {**RELEASE, 'migration_head': '0048_agent_run_controls'}
+    with pytest.raises(E.SetError, match='recovery_release_schema_incompatible'):
+        backup(environment, release=old_release)

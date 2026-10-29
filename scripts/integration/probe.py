@@ -227,15 +227,35 @@ def seed():
     }
 
 
+def reviewed_head():
+    from scripts import release_images as R
+
+    try:
+        release = R.decode_json(Path("/release-facts.json").read_text())
+        expected_sha = os.environ["APP_GIT_SHA"]
+        expected_manifest = os.environ["CAMPAIGN_MANIFEST_SHA256"]
+        expected_facts = os.environ["CAMPAIGN_RELEASE_FACTS_SHA256"]
+        require(isinstance(release, dict), "release_facts_invalid")
+        require(re.fullmatch(r"[0-9a-f]{40}", expected_sha) is not None and release.get("application_sha") == expected_sha, "release_facts_invalid")
+        require(re.fullmatch(r"[0-9a-f]{64}", expected_manifest) is not None and release.get("manifest_sha256") == expected_manifest, "release_facts_invalid")
+        require(re.fullmatch(r"[0-9a-f]{64}", expected_facts) is not None and R.digest(R.canonical(release)) == expected_facts, "release_facts_invalid")
+        head = release.get("migration_head")
+        require(isinstance(head, str) and re.fullmatch(r"[0-9a-z_]{1,100}", head) is not None, "release_facts_invalid")
+        return head
+    except (OSError, KeyError, ValueError, TypeError) as exc:
+        raise ProbeFailure("release_facts_invalid") from exc
+
+
 def state():
     from sqlalchemy import text
 
+    expected = reviewed_head()
     with factory()() as s:
         heads = (
             s.execute(text("select version_num from alembic_version")).scalars().all()
         )
         version = s.execute(text("SHOW server_version")).scalar()
-    require(heads == ["0048_agent_run_controls"], "unexpected_schema")
+    require(heads == [expected], "unexpected_schema")
     return {"schema": heads[0], "postgresql_version": version}
 
 

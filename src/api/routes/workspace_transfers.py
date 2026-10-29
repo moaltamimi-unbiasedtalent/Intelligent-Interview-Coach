@@ -34,9 +34,12 @@ router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
 def get_ownership_transfer_service(request: Request, workspaces=Depends(get_workspace_repository),
                                    accounts=Depends(get_account_repository), email=Depends(get_email_sender)):
+    from src.mail.service import EmailAttemptRepository, EmailService
+
     base = getattr(getattr(request.app.state, "settings", None), "app_base_url", None) or "https://app.ask4mo.local"
+    mail = email if isinstance(email, EmailService) else EmailService(email, EmailAttemptRepository(workspaces.session_factory))
     return OwnershipTransferService(workspaces=workspaces, transfers=OwnershipTransferRepository(workspaces.session_factory),
-                                    accounts=accounts, email=email, app_base_url=base)
+                                    accounts=accounts, email=mail, app_base_url=base)
 
 
 def _guard(fn):

@@ -44,6 +44,8 @@ _SCRUB_PREFIXES = (
 )
 
 if not _ALLOW_DEV:
+    # 0049 permits schema rebuilds only in opted-in temporary SQLite test databases.
+    os.environ["ASK4MO_DISPOSABLE_SQLITE_MIGRATION"] = "1"
     for _key in [k for k in os.environ if k.startswith(_SCRUB_PREFIXES)]:
         del os.environ[_key]
     os.environ["PYTHON_DOTENV_DISABLED"] = "1"

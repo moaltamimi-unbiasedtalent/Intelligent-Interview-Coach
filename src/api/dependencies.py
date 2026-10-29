@@ -565,11 +565,13 @@ def get_workspace_service(
     email=Depends(get_email_sender),
 ):
     from src.application.workspace_service import WorkspaceService
+    from src.mail.service import EmailAttemptRepository, EmailService
 
     base = getattr(getattr(request.app.state, "settings", None), "app_base_url", None) \
         or "https://app.ask4mo.local"
+    mail = email if isinstance(email, EmailService) else EmailService(email, EmailAttemptRepository(workspaces.session_factory))
     return WorkspaceService(workspaces=workspaces, accounts=accounts, audit=audit,
-                           email=email, app_base_url=base)
+                           email=mail, app_base_url=base)
 
 
 def get_sharing_service(

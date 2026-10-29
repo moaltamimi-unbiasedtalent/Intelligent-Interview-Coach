@@ -174,6 +174,8 @@ jobs:
       - name: Per-language injection report (06E; offline; DEV split only, held-out never evaluated; REPORT ONLY, no threshold, never fails on quality)
         run: python scripts/eval_injection_corpus.py --language-report
       - name: Identity & platform evaluation (Capstone P1/E1; offline; safety invariants = 1.0)
+        env:
+          ASK4MO_DISPOSABLE_SQLITE_MIGRATION: "1"
         run: python scripts/eval_identity_platform.py
       - name: Response-experience evaluation (Capstone P2/E2; offline; presentation + preference)
         run: python scripts/eval_response_experience.py
@@ -256,6 +258,7 @@ jobs:
       - name: Alembic migration validation (fresh upgrade + downgrade, single head)
         env:
           DATABASE_URL: sqlite:////tmp/ci_migrations.db
+          ASK4MO_DISPOSABLE_SQLITE_MIGRATION: "1"
         run: |
           alembic upgrade head
           alembic downgrade 0003_interview_sessions

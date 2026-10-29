@@ -42,6 +42,22 @@ def require(ok, code):
         raise ValueError(code)
 
 
+def expected_database_head(manifest):
+    """Select the single reviewed head from an already validated release manifest."""
+    source = manifest.get("source") if isinstance(manifest, dict) else None
+    require(isinstance(source, dict), "invalid_manifest_schema")
+    chain = source.get("migration_chain")
+    compatible = source.get("compatible_schema_revisions")
+    require(isinstance(chain, list) and bool(chain) and all(isinstance(x, str) and x for x in chain), "invalid_manifest_schema")
+    require(compatible == [chain[-1]], "invalid_manifest_schema")
+    return chain[-1]
+
+
+def require_database_head(observed, expected):
+    require(isinstance(expected, str) and bool(expected), "invalid_manifest_schema")
+    require(observed == [expected], "unexpected_database_head")
+
+
 def run(args, *, timeout=180, env=None, check=True):
     p = subprocess.run(
         [str(a) for a in args], capture_output=True, timeout=timeout, env=env
@@ -107,6 +123,7 @@ class Check:
         self.summary["phase"] = "verify_candidate_manifest"
         m = R.decode_json(Path(self.args.manifest).read_text())
         R.validate_manifest(m, self.args.sha, self.args.anchor)
+        self.expected_schema = expected_database_head(m)
         require(
             m["public_api_base_url"] == "https://api.staging.example.com/api/v1",
             "reserved_api_origin_required",
@@ -447,7 +464,7 @@ class Check:
             .stdout.decode()
             .splitlines()
         )
-        require(head == ["0048_agent_run_controls"], "unexpected_database_head")
+        require_database_head(head, self.expected_schema)
         self.summary["schema"] = head[0]
         for role in ("api", "web"):
             cid = self.compose("ps", "-q", role).stdout.decode().strip()

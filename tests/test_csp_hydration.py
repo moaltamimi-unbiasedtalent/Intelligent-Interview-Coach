@@ -195,3 +195,25 @@ def test_failure_summary_can_carry_safe_browser_diagnostics_without_process_outp
     assert c.summary["after_browser_exit"] == 1
     assert "canary" not in json.dumps(c.summary)
     assert not list(c.out.rglob("*.log"))
+
+
+def test_csp_database_revision_is_bound_to_reviewed_manifest():
+    manifest = {"source": {"migration_chain": ["0048_agent_run_controls", "0049_workspace_mail_attempts"],
+                           "compatible_schema_revisions": ["0049_workspace_mail_attempts"]}}
+    expected = Q.expected_database_head(manifest)
+    assert expected == "0049_workspace_mail_attempts"
+    Q.require_database_head([expected], expected)
+    for observed in ([], ["0048_agent_run_controls"], ["0050_future"], [expected, expected]):
+        with pytest.raises(ValueError, match="unexpected_database_head"):
+            Q.require_database_head(observed, expected)
+
+
+@pytest.mark.parametrize("manifest", [None, {}, {"source": {}},
+    {"source": {"migration_chain": [], "compatible_schema_revisions": []}},
+    {"source": {"migration_chain": ["0049"], "compatible_schema_revisions": ["0048"]}},
+    {"source": {"migration_chain": ["0049"], "compatible_schema_revisions": ["0049", "0050"]}},
+    {"source": {"migration_chain": [None], "compatible_schema_revisions": [None]}},
+])
+def test_csp_refuses_missing_malformed_or_mismatched_reviewed_head(manifest):
+    with pytest.raises(ValueError, match="invalid_manifest_schema"):
+        Q.expected_database_head(manifest)
