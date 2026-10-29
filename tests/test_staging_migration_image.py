@@ -137,3 +137,38 @@ def test_failed_upgrade_rolls_back_and_blocks_api_and_worker_startup(stack):
             state = json.loads(docker("inspect", container).stdout)[0]["State"]
             assert state["Status"] == "created" and state["StartedAt"].startswith("0001-")
         assert "STARTED" not in dc("logs", name).stdout
+
+
+def test_existing_postgres_mail_attempts_survive_category_constraint_upgrade(stack):
+    """Qualify 0048 -> 0049 in the built image without rebuilding the table."""
+    _, _, _, dc, sql, _ = stack
+    dc('run', '--rm', 'migrate', 'python', '-m', 'alembic', 'upgrade', '0048_agent_run_controls')
+    sql("INSERT INTO email_attempts (id,message_type,provider,status,created_at) "
+        "VALUES (701,'password_reset','memory','captured',now()); "
+        "GRANT SELECT ON email_attempts TO PUBLIC")
+    oid = sql("SELECT oid FROM pg_class WHERE oid='email_attempts'::regclass")
+    acl = sql("SELECT relacl::text FROM pg_class WHERE oid='email_attempts'::regclass")
+    indexes = sql("SELECT string_agg(indexdef, E'\\n' ORDER BY indexname) FROM pg_indexes WHERE tablename='email_attempts'")
+    checks = sql("SELECT string_agg(conname || ':' || pg_get_constraintdef(oid), E'\\n' ORDER BY conname) "
+                 "FROM pg_constraint WHERE conrelid='email_attempts'::regclass AND conname <> 'ck_email_attempts_type'")
+    dc('run', '--rm', 'migrate')
+    assert sql('SELECT version_num FROM alembic_version') == repository_head()
+    assert sql("SELECT id || ':' || message_type || ':' || status FROM email_attempts WHERE id=701") == '701:password_reset:captured'
+    assert sql("SELECT oid FROM pg_class WHERE oid='email_attempts'::regclass") == oid
+    assert sql("SELECT relacl::text FROM pg_class WHERE oid='email_attempts'::regclass") == acl
+    assert sql("SELECT string_agg(indexdef, E'\\n' ORDER BY indexname) FROM pg_indexes WHERE tablename='email_attempts'") == indexes
+    assert sql("SELECT string_agg(conname || ':' || pg_get_constraintdef(oid), E'\\n' ORDER BY conname) "
+               "FROM pg_constraint WHERE conrelid='email_attempts'::regclass AND conname <> 'ck_email_attempts_type'") == checks
+    for idx, kind in enumerate(('email_verification', 'password_reset', 'account_notice', 'admin_test',
+                                'workspace_invitation', 'ownership_transfer'), start=702):
+        sql("INSERT INTO email_attempts (id,message_type,provider,status,created_at) "
+            f"VALUES ({idx},'{kind}','memory','captured',now())")
+    invalid = dc('exec', '-T', 'db', 'psql', '-U', 'disposable', '-d', 'disposable_migration', '-v', 'ON_ERROR_STOP=1',
+                 '-c', "INSERT INTO email_attempts (id,message_type,provider,status,created_at) "
+                       "VALUES (799,'unknown_kind','memory','captured',now())", check=False)
+    assert invalid.returncode != 0
+    invalid_status = dc('exec', '-T', 'db', 'psql', '-U', 'disposable', '-d', 'disposable_migration', '-v', 'ON_ERROR_STOP=1',
+                        '-c', "INSERT INTO email_attempts (id,message_type,provider,status,created_at) "
+                              "VALUES (800,'account_notice','memory','not_a_status',now())", check=False)
+    assert invalid_status.returncode != 0
+    assert sql('SELECT count(*) FROM email_attempts WHERE id=701') == '1'

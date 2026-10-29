@@ -1358,7 +1358,8 @@ class ManagedSecret(Base):
     updated_by_user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
 
-EMAIL_ATTEMPT_TYPES = ("email_verification", "password_reset", "account_notice", "admin_test")
+EMAIL_ATTEMPT_TYPES = ("email_verification", "password_reset", "account_notice", "admin_test",
+                       "workspace_invitation", "ownership_transfer")
 EMAIL_ATTEMPT_STATUSES = ("provider_accepted", "failed", "not_configured", "delivery_unknown", "captured")
 # 05D: a verified provider delivery event (webhook) may set ``delivery_state``, a SEPARATE fact from ``status`` (provider acceptance at submission).
 # Collection is behind the code gate ``src.mail.webhook.DELIVERY_EVENTS_AUTHORIZED`` (False): until the owner authorises it every row keeps NULL.
