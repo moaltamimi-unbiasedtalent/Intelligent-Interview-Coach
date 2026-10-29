@@ -23,7 +23,11 @@ from src.mail.sender import (
     send_detailed,
 )
 
+from src.mail.gmail import GmailEmailSender, GmailTokenSource
+
 __all__ = [
+    "GmailEmailSender",
+    "GmailTokenSource",
     "BrevoEmailSender",
     "EmailMessage",
     "EmailSender",
