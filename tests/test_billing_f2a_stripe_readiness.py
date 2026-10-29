@@ -559,8 +559,8 @@ def test_the_checkout_url_that_is_stored_must_pass_the_https_check_and_the_adapt
 
 def test_the_sdk_pin_and_api_version_are_unchanged_and_agree():
     from importlib.metadata import version
-    assert P.STRIPE_API_VERSION == "2026-09-30.endive" and version("stripe").startswith("16.")
-    assert '"stripe>=16,<17"' in (ROOT / "pyproject.toml").read_text()
+    assert P.STRIPE_API_VERSION == "2026-09-30.endive" and version("stripe") == "16.0.1"
+    assert '"stripe==16.0.1"' in (ROOT / "pyproject.toml").read_text()
     from stripe import _api_version
     assert _api_version._ApiVersion.CURRENT == P.STRIPE_API_VERSION
 

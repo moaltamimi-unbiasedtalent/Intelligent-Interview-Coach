@@ -44,7 +44,7 @@ def infrastructure_dependencies_allowed(source: str) -> bool:
         extras = project["optional-dependencies"]
         if not isinstance(base, list) or not isinstance(extras, dict):
             return False
-        if extras.get("redis") != ["redis==8.1.0"] or "stripe>=16,<17" not in base:
+        if extras.get("redis") != ["redis==8.1.0"] or "stripe==16.0.1" not in base:
             return False
         other = list(base)
         for name, dependencies in extras.items():

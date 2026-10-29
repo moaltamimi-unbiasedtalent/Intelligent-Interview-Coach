@@ -367,7 +367,7 @@ def test_test_credentials_and_the_stripe_sdk_pin_are_confined():
     import subprocess
     out = subprocess.run(["git", "grep", "-l", "DO_NOT_LEAK_W12_04DB", "--", "."], cwd=ROOT, capture_output=True, text=True).stdout.split()
     assert set(out) <= {"tests/test_stripe_foundation_w12_4d_b.py"}, out
-    assert "stripe>=16,<17" in (ROOT / "pyproject.toml").read_text() and "stripe>=16,<17" in (ROOT / "requirements.txt").read_text()
+    assert "stripe==16.0.1" in (ROOT / "pyproject.toml").read_text() and "stripe==16.0.1" in (ROOT / "requirements.txt").read_text()
     tracked = subprocess.run(["git", "ls-files", "src", "frontend/components", "frontend/lib"], cwd=ROOT, capture_output=True, text=True).stdout.split()
     for f in tracked:
         if f.endswith((".py", ".ts", ".tsx")) and Path(ROOT / f).exists():
