@@ -269,6 +269,9 @@ def build_email_sender() -> EmailSender:
     """
     provider = (os.environ.get("EMAIL_PROVIDER") or "").strip().lower()
     dev = _is_dev_env()
+    if provider == "gmail":
+        # OAuth credentials and live activation require a separate readiness decision.
+        return NotConfiguredEmailSender("provider_not_configured")
     if provider == "brevo":
         api_key = (_secrets.read_setting("BREVO_API_KEY") or "").strip()
         sender = os.environ.get("EMAIL_SENDER", "").strip()
