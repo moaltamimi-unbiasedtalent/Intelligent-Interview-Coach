@@ -9,7 +9,7 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
-from src.mail.gmail_oauth import GMAIL_SEND_SCOPE, GmailOAuthTokenSource
+from src.mail.gmail_oauth import GMAIL_SEND_SCOPE, GmailOAuthCredentials, GmailOAuthTokenSource
 
 SENDER = "sender@example.test"
 CLIENT_ID = "synthetic-client-id"
@@ -18,18 +18,15 @@ REFRESH = "synthetic-refresh-token"
 TOKEN = "synthetic-access-token"
 
 
-class Store:
-    def __init__(self, values=None):
-        self.values = dict(values or {"GMAIL_OAUTH_CLIENT_ID": CLIENT_ID,
-                                      "GMAIL_OAUTH_CLIENT_SECRET": CLIENT_SECRET,
-                                      "GMAIL_OAUTH_REFRESH_TOKEN": REFRESH})
-
-    def get_for_runtime(self, name):
-        return SecretStr(self.values[name]) if name in self.values else None
+def credentials(**overrides):
+    values = dict(client_id=SecretStr(CLIENT_ID), client_secret=SecretStr(CLIENT_SECRET),
+                  refresh_token=SecretStr(REFRESH))
+    values.update(overrides)
+    return GmailOAuthCredentials(**values)
 
 
 def source(handler, **overrides):
-    options = dict(secrets=Store(), sender_email=SENDER, authorized_mailbox=SENDER,
+    options = dict(credentials=credentials(), sender_email=SENDER, authorized_mailbox=SENDER,
                    granted_scopes=(GMAIL_SEND_SCOPE,), synthetic_authorized=True,
                    transport=httpx.MockTransport(handler))
     options.update(overrides)
@@ -69,11 +66,9 @@ def test_no_activation_no_transport_no_grant_no_mailbox_never_calls_transport():
         assert s.access_token(timeout=10.0) is None
 
 
-@pytest.mark.parametrize("missing", ["GMAIL_OAUTH_CLIENT_ID", "GMAIL_OAUTH_CLIENT_SECRET", "GMAIL_OAUTH_REFRESH_TOKEN"])
+@pytest.mark.parametrize("missing", ["client_id", "client_secret", "refresh_token"])
 def test_missing_secret_fails_closed_without_request(missing):
-    store = Store()
-    del store.values[missing]
-    assert source(lambda _: pytest.fail("must refuse"), secrets=store).access_token(timeout=10.0) is None
+    assert source(lambda _: pytest.fail("must refuse"), credentials=credentials(**{missing: None})).access_token(timeout=10.0) is None
 
 
 @pytest.mark.parametrize("timeout", [0, -1, 10.01, True, "10"])
@@ -147,15 +142,31 @@ def test_parallel_refresh_is_single_flight():
     assert tokens == [TOKEN] * 16 and len(calls) == 1
 
 
-def test_secret_reader_error_fails_closed():
-    class Broken:
+def test_generic_secret_store_cannot_be_substituted():
+    class Store:
         def get_for_runtime(self, name):
-            raise RuntimeError("synthetic private credential")
-    assert source(lambda _: pytest.fail("must refuse"), secrets=Broken()).access_token(timeout=10) is None
+            pytest.fail("generic secret store must not be accessed")
+    assert source(lambda _: pytest.fail("must refuse"), credentials=Store()).access_token(timeout=10) is None
 
 
-def test_only_secretstr_accepted():
-    class Broken:
-        def get_for_runtime(self, name):
-            return "raw-secret"
-    assert source(lambda _: pytest.fail("must refuse"), secrets=Broken()).access_token(timeout=10) is None
+@pytest.mark.parametrize("field", ["client_id", "client_secret", "refresh_token"])
+def test_only_secretstr_accepted(field):
+    assert source(lambda _: pytest.fail("must refuse"), credentials=credentials(**{field: "raw-secret"})).access_token(timeout=10) is None
+
+
+def test_credentials_are_immutable_and_redacted():
+    from dataclasses import FrozenInstanceError
+    bundle = credentials()
+    with pytest.raises(FrozenInstanceError):
+        bundle.client_id = SecretStr("other")
+    assert CLIENT_ID not in repr(bundle) and CLIENT_SECRET not in repr(bundle) and REFRESH not in repr(bundle)
+
+
+def test_broken_secret_wrapper_fails_closed_without_leaking(caplog):
+    class BrokenSecret(SecretStr):
+        def get_secret_value(self):
+            raise RuntimeError('synthetic-secret-canary')
+    caplog.set_level(logging.DEBUG)
+    s = source(lambda _: pytest.fail('must refuse'), credentials=credentials(client_secret=BrokenSecret('canary')))
+    assert s.access_token(timeout=10) is None
+    assert 'synthetic-secret-canary' not in caplog.text

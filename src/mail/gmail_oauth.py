@@ -3,13 +3,14 @@
 The production sender factory remains disabled. This implementation requires an
 explicit synthetic opt-in and httpx.MockTransport; it cannot contact Google.
 Mailbox and real credential provisioning, custody approval, and live activation
-remain separate release gates. Secrets are read via SecretStore runtime reads.
+remain separate release gates. Credentials are injected as an immutable bundle.
 """
 from __future__ import annotations
 
 import threading
 import time
-from typing import Callable, Protocol
+from typing import Callable
+from dataclasses import dataclass
 
 import httpx
 from pydantic import SecretStr
@@ -18,15 +19,12 @@ from src.mail.sender import _valid_sender_identity
 
 GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
 _TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
-_CLIENT_ID = "GMAIL_OAUTH_CLIENT_ID"
-_CLIENT_SECRET = "GMAIL_OAUTH_CLIENT_SECRET"
-_REFRESH_TOKEN = "GMAIL_OAUTH_REFRESH_TOKEN"
-
-
-class RuntimeSecretReader(Protocol):
-    """The existing SecretStore read interface; never an Admin secret-read API."""
-
-    def get_for_runtime(self, secret_name: str) -> SecretStr | None: ...
+@dataclass(frozen=True)
+class GmailOAuthCredentials:
+    """Immutable, synthetic credentials with no secret-store lookup authority."""
+    client_id: SecretStr
+    client_secret: SecretStr
+    refresh_token: SecretStr
 
 
 class GmailOAuthTokenSource:
@@ -42,7 +40,7 @@ class GmailOAuthTokenSource:
     def __init__(
         self,
         *,
-        secrets: RuntimeSecretReader,
+        credentials: GmailOAuthCredentials,
         sender_email: str,
         authorized_mailbox: str | None = None,
         granted_scopes: tuple[str, ...] = (),
@@ -50,7 +48,7 @@ class GmailOAuthTokenSource:
         transport: httpx.MockTransport | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
-        self._secrets = secrets
+        self._credentials = credentials
         self._sender_email = sender_email
         self._authorized_mailbox = authorized_mailbox
         self._scopes = granted_scopes
@@ -80,16 +78,16 @@ class GmailOAuthTokenSource:
             and self._scopes == (GMAIL_SEND_SCOPE,)
         )
 
-    def _read_secret(self, name: str) -> str | None:
+    @staticmethod
+    def _unwrap(secret: object) -> str | None:
+        if not isinstance(secret, SecretStr):
+            return None
         try:
-            secret = self._secrets.get_for_runtime(name)
-            if not isinstance(secret, SecretStr):
-                return None
             raw = secret.get_secret_value()
             if not raw or len(raw) > 4096 or any(ord(c) < 33 or ord(c) > 126 for c in raw):
                 return None
             return raw
-        except Exception:  # noqa: BLE001 - secret-store failures never reach logs
+        except Exception:  # noqa: BLE001 - invalid secret wrappers fail closed
             return None
 
     def access_token(self, *, timeout: float) -> str | None:
@@ -113,9 +111,11 @@ class GmailOAuthTokenSource:
                 return self._token
             self._token = None
             self._valid_until = 0.0
-            client_id = self._read_secret(_CLIENT_ID)
-            client_secret = self._read_secret(_CLIENT_SECRET)
-            refresh_token = self._read_secret(_REFRESH_TOKEN)
+            if type(self._credentials) is not GmailOAuthCredentials:
+                return None
+            client_id = self._unwrap(self._credentials.client_id)
+            client_secret = self._unwrap(self._credentials.client_secret)
+            refresh_token = self._unwrap(self._credentials.refresh_token)
             if not all((client_id, client_secret, refresh_token)):
                 return None
             try:
