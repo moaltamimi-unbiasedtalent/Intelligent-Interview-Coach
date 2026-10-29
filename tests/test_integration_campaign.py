@@ -114,11 +114,18 @@ def test_topology_keeps_image_identity_dependencies_isolation_and_security(tmp_p
             "web": {"image_id": "sha256:" + "c" * 64},
         },
     }
-    topology = C.topology(
-        manifest, {"operator_image_id": "sha256:" + "d" * 64}, tmp_path, "a" * 16
-    )
+    from scripts import recovery_images as I
+    manifest["source"].update(prompt_files={}, language_activation_sha256="e" * 64)
+    record = {"operator_image_id": "sha256:" + "d" * 64, "release": I.facts(manifest, "f" * 64)}
+    topology = C.topology(manifest, record, tmp_path, "a" * 16)
     assert all(s["labels"][C.LABEL] == "a" * 16 for s in topology["services"].values())
     services = topology["services"]
+    assert any(v.get("target") == "/release-facts.json" and v.get("read_only") is True
+               for v in services["probe"]["volumes"] if isinstance(v, dict))
+    assert services["probe"]["environment"]["CAMPAIGN_MANIFEST_SHA256"] == "f" * 64
+    mismatched = {**record, "release": {**record["release"], "migration_head": "0050_future"}}
+    with pytest.raises(C.CampaignError, match="campaign_release_facts_mismatch"):
+        C.topology(manifest, mismatched, tmp_path, "a" * 16)
     assert all(
         services[k]["image"] == manifest["images"]["application"]["image_id"]
         for k in ("api", "api_b", "worker", "worker_b", "migrate")
@@ -349,3 +356,64 @@ def test_checkpoint_failure_never_restarts_api(tmp_path, monkeypatch):
     monkeypatch.setattr(c, "probe", failed)
     with pytest.raises(C.CampaignError, match="checkpoint_unavailable"):
         c.checkpoint_recovery()
+
+
+def test_campaign_schema_probe_requires_reviewed_facts_and_exact_revision(monkeypatch, tmp_path):
+    from scripts.integration import probe as P
+    from scripts import release_images as R
+    facts = {"application_sha": "a" * 40, "manifest_sha256": "b" * 64, "migration_head": "0049_workspace_mail_attempts"}
+    path = tmp_path / 'facts.json'
+    path.write_text(json.dumps(facts))
+    monkeypatch.setattr(P, 'Path', lambda _: path)
+    monkeypatch.setenv('APP_GIT_SHA', facts['application_sha'])
+    monkeypatch.setenv('CAMPAIGN_MANIFEST_SHA256', facts['manifest_sha256'])
+    monkeypatch.setenv('CAMPAIGN_RELEASE_FACTS_SHA256', R.digest(R.canonical(facts)))
+    assert P.reviewed_head() == facts['migration_head']
+    for key in ('APP_GIT_SHA', 'CAMPAIGN_MANIFEST_SHA256', 'CAMPAIGN_RELEASE_FACTS_SHA256'):
+        with monkeypatch.context() as m:
+            m.setenv(key, '0' * (40 if key == 'APP_GIT_SHA' else 64))
+            with pytest.raises(P.ProbeFailure, match='release_facts_invalid'):
+                P.reviewed_head()
+    for invalid in ('not json', '{}'):
+        path.write_text(invalid)
+        with pytest.raises(P.ProbeFailure, match='release_facts_invalid'):
+            P.reviewed_head()
+    path.unlink()
+    with pytest.raises(P.ProbeFailure, match='release_facts_invalid'):
+        P.reviewed_head()
+
+
+@pytest.mark.parametrize('heads,valid', [(['0049_workspace_mail_attempts'], True), ([], False),
+    (['0048_agent_run_controls'], False), (['0050_future'], False),
+    (['0049_workspace_mail_attempts', '0049_workspace_mail_attempts'], False),
+    (['0049_workspace_mail_attempts', '0050_future'], False)])
+def test_campaign_probe_schema_exactly_matches_one_reviewed_revision(monkeypatch, heads, valid):
+    from scripts.integration import probe as P
+    class Rows:
+        def scalars(self): return self
+        def all(self): return heads
+        def scalar(self): return '16'
+    class Session:
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def execute(self, statement): return Rows()
+    monkeypatch.setattr(P, 'reviewed_head', lambda: '0049_workspace_mail_attempts')
+    monkeypatch.setattr(P, 'factory', lambda: lambda: Session())
+    if valid:
+        assert P.state()['schema'] == '0049_workspace_mail_attempts'
+    else:
+        with pytest.raises(P.ProbeFailure, match='unexpected_schema'):
+            P.state()
+
+
+def test_campaign_restart_checks_before_and_after_against_manifest(monkeypatch, tmp_path):
+    c = C.Campaign(argparse.Namespace(out=str(tmp_path / 'out'), expected_sha='a' * 40))
+    c.manifest = {'source': {'migration_chain': ['0049_workspace_mail_attempts']}}
+    monkeypatch.setattr(c, 'compose', lambda *a, **kw: None)
+    monkeypatch.setattr(c, 'wait_ready', lambda: None)
+    values = iter([{'schema': '0049_workspace_mail_attempts'}, {'schema': '0049_workspace_mail_attempts'}])
+    monkeypatch.setattr(c, 'probe', lambda *a: next(values))
+    assert c.restart()['schema_unchanged'] is True
+    values = iter([{'schema': '0049_workspace_mail_attempts'}, {'schema': '0050_future'}])
+    with pytest.raises(C.CampaignError, match='restart_migration_changed'):
+        c.restart()

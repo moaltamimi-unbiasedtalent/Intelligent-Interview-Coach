@@ -238,7 +238,11 @@ def topology(manifest, record, directory, campaign):
             read_only=True,
         )
     )
+    release = record["release"]
+    require(release == I.facts(manifest, release["manifest_sha256"]), "campaign_release_facts_mismatch")
     probe["environment"]["RECOVERY_RELEASE_FILE"] = "/release-facts.json"
+    probe["environment"]["CAMPAIGN_RELEASE_FACTS_SHA256"] = R.digest(R.canonical(release))
+    probe["environment"]["CAMPAIGN_MANIFEST_SHA256"] = release["manifest_sha256"]
     probe["volumes"] += [
         "campaign-backup:/campaign-backup",
         "campaign-transfer:/campaign-transfer",
@@ -687,9 +691,9 @@ class Campaign:
         self.compose("restart", "api", "api_b", "worker", "worker_b", timeout=90)
         self.wait_ready()
         after = self.probe("state")
+        expected = self.manifest["source"]["migration_chain"][-1]
         require(
-            before["schema"] == after["schema"]
-            and before["schema"] == "0048_agent_run_controls",
+            before["schema"] == after["schema"] == expected,
             "restart_migration_changed",
         )
         return {"schema_unchanged": True, "source_revision": after["schema"]}
