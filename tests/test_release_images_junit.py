@@ -10,8 +10,8 @@ from tests.test_release_images_docker import REQUIRED_MIGRATION_TESTS, assert_mi
 
 def write_report(path, names, *, outcome=None, suite_counts=None, classname="tests.test_staging_migration_image"):
     root = ET.Element("testsuites")
-    counts = {"tests": str(len(names)), "failures": str(outcome == "failure"),
-              "errors": str(outcome == "error"), "skipped": str(outcome == "skipped")}
+    counts = {"tests": str(len(names)), "failures": str(int(outcome == "failure")),
+              "errors": str(int(outcome == "error")), "skipped": str(int(outcome == "skipped"))}
     counts.update(suite_counts or {})
     suite = ET.SubElement(root, "testsuite", counts)
     for i, name in enumerate(names):
