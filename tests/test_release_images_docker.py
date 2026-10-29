@@ -13,6 +13,7 @@ import subprocess
 import sys
 import time
 import uuid
+from xml.etree import ElementTree as ET
 
 import pytest
 import yaml
@@ -165,6 +166,46 @@ def test_built_application_retains_durable_admission_billing_and_language_guards
     assert b"fail-closed languages verified" in result
 
 
+
+REQUIRED_MIGRATION_TESTS = frozenset({
+    "test_built_image_contains_exact_compose_entrypoint_and_nonroot_user",
+    "test_exact_command_upgrades_postgresql_twice_without_losing_rows",
+    "test_failed_upgrade_rolls_back_and_blocks_api_and_worker_startup",
+    "test_existing_postgres_mail_attempts_survive_category_constraint_upgrade",
+})
+
+
+def assert_migration_junit_report(path: Path) -> None:
+    """Require all real-image migration checks to run and pass; never rely on stdout counts."""
+    try:
+        root = ET.parse(path).getroot()
+    except (OSError, ET.ParseError) as exc:
+        raise AssertionError("Nested migration JUnit report missing or malformed") from exc
+    assert root.tag in {"testsuites", "testsuite"}, "Unexpected JUnit document root"
+    suites = [root] if root.tag == "testsuite" else list(root)
+    assert suites and all(suite.tag == "testsuite" for suite in suites), "Malformed JUnit suites"
+    seen: set[str] = set()
+    total = 0
+    for suite in suites:
+        cases = suite.findall("testcase")
+        try:
+            assert int(suite.attrib["tests"]) == len(cases), "JUnit test count mismatch"
+            assert all(int(suite.attrib[key]) == 0 for key in ("failures", "errors", "skipped")), "Nested migration suite has non-passing tests"
+        except (KeyError, ValueError) as exc:
+            raise AssertionError("Malformed JUnit suite counters") from exc
+        total += len(cases)
+        for case in cases:
+            name = case.get("name")
+            classname = case.get("classname", "").rsplit(".", 1)[-1]
+            assert name and classname == "test_staging_migration_image", "Unexpected migration test identity"
+            assert name not in seen, f"Duplicate migration test: {name}"
+            seen.add(name)
+            assert case.get("status") in (None, "run", "passed"), f"Migration test not executed: {name}"
+            assert not any(case.find(tag) is not None for tag in ("failure", "error", "skipped")), f"Migration test did not pass: {name}"
+    assert total > 0, "Empty nested migration JUnit report"
+    assert REQUIRED_MIGRATION_TESTS <= seen, f"Required migration tests missing: {sorted(REQUIRED_MIGRATION_TESTS - seen)}"
+
+
 def test_same_built_api_image_keeps_migration_helper_and_failure_dependencies(bundle, tmp_path):
     manifest, _, _ = bundle
     # Dockerfile FROM needs a named local reference. This unique test alias is
@@ -175,11 +216,13 @@ def test_same_built_api_image_keeps_migration_helper_and_failure_dependencies(bu
     try:
         assert json.loads(R.run(["docker", "image", "inspect", tag]))[0]["Id"] == image_id
         env = {**os.environ, "RUN_MIGRATION_IMAGE_TESTS": "1", "MIGRATION_TEST_IMAGE": tag}
-        result = subprocess.run([sys.executable, "-m", "pytest", "-q", "-o", "addopts=", "-p", "no:cacheprovider", "tests/test_staging_migration_image.py"],
+        junit = tmp_path / "migration-test.xml"
+        result = subprocess.run([sys.executable, "-m", "pytest", "-q", "-o", "addopts=", "-p", "no:cacheprovider",
+                                 f"--junitxml={junit}", "tests/test_staging_migration_image.py"],
                                 cwd=R.ROOT, env=env, capture_output=True, text=True, timeout=300)
         (tmp_path / "migration-test.log").write_text(result.stdout + result.stderr)
         assert result.returncode == 0, result.stdout[-1600:] + result.stderr[-400:]
-        assert "3 passed" in result.stdout
+        assert_migration_junit_report(junit)
     finally:
         R.run(["docker", "image", "rm", tag])
 
