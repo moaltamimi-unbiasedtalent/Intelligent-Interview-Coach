@@ -1,5 +1,5 @@
 {
   "version": 1,
   "minimum_source_sha": "95fd2a3c3de5ee8af64c3f5c538b8a4824ce3ff2",
-  "compatible_schema_revisions": ["0048_agent_run_controls"]
+  "compatible_schema_revisions": ["0049_workspace_mail_attempts"]
 }

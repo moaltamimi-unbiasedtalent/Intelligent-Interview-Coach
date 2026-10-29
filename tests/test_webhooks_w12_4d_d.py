@@ -1083,8 +1083,10 @@ def test_migration_0029_upgrade_downgrade_and_constraint_widening(tmp_path, monk
     assert ("provider", "environment", "provider_event_id") in uniques
     with create_engine(url).begin() as c:                      # the widened constraint accepts 'provider' and still rejects anything else
         cols = "user_id, plan_version_id, status, source, started_at"
-        c.execute(text("PRAGMA foreign_keys=OFF"))
+        c.execute(text("PRAGMA foreign_keys=ON"))
+        c.execute(text("INSERT INTO users (id,subject,provider,created_at,updated_at) VALUES (1,'synthetic-migration-user','local','2026-01-01','2026-01-01')"))
         c.execute(text(f"INSERT INTO subscriptions ({cols}) VALUES (1, 1, 'ended', 'provider', '2026-01-01')"))
+        assert c.exec_driver_sql("PRAGMA foreign_key_check").all() == []
         with pytest.raises(Exception):
             c.execute(text(f"INSERT INTO subscriptions ({cols}) VALUES (1, 1, 'ended', 'bogus', '2026-01-01')"))
     with pytest.raises(Exception, match="Refusing to downgrade"):          # the provider row is real data: the downgrade refuses instead of deleting it
@@ -1244,8 +1246,23 @@ def test_downgrade_fails_closed_when_any_provider_record_exists_and_deletes_noth
     cfg, url = _alembic(tmp_path, monkeypatch)
     command.upgrade(cfg, "head")
     now = utcnow()
-    sf = make_session_factory(create_engine(url))
+    engine = create_engine(url)
+    from sqlalchemy import event
+    event.listen(engine, "connect", lambda dbapi, _: dbapi.execute("PRAGMA foreign_keys=ON"))
+    sf = make_session_factory(engine)
     with sf() as s:
+        if seed in ("subscription", "link", "decision"):
+            s.add(User(id=1, subject="synthetic-migration-user", provider="local"))
+            s.flush()
+        if seed in ("link", "decision"):
+            terms = BillingCommercialTerms(id=1, public_id="t" * 32, plan_version_id=1, version=1, amount_minor=100,
+                                           currency="EUR", billing_interval="month", visibility="public", state="active")
+            s.add(terms)
+            s.flush()
+            s.add(BillingProviderPrice(id=1, public_id="p" * 32, commercial_terms_id=1, provider=P.PROVIDER_STRIPE_MP,
+                                       environment="sandbox", provider_product_id="prod_x", provider_price_id="price_x",
+                                       amount_minor=100, currency="EUR", billing_interval="month", status="active"))
+            s.flush()
         if seed == "subscription":
             s.add(Subscription(user_id=1, plan_version_id=1, status="active", source="provider"))
         elif seed == "event":
@@ -1255,8 +1272,24 @@ def test_downgrade_fails_closed_when_any_provider_record_exists_and_deletes_noth
             s.add(BillingProviderLink(public_id="l" * 32, provider=P.PROVIDER_STRIPE_MP, environment="sandbox", provider_subscription_id="sub_x", provider_customer_id="cus_x",
                                       user_id=1, plan_version_id=1, commercial_terms_id=1, price_mapping_id=1, created_at=now, updated_at=now))
         else:
+            s.add(BillingProviderLink(id=1, public_id="l" * 32, provider=P.PROVIDER_STRIPE_MP, environment="sandbox",
+                                      provider_subscription_id="sub_x", provider_customer_id="cus_x", user_id=1,
+                                      plan_version_id=1, commercial_terms_id=1, price_mapping_id=1, created_at=now, updated_at=now))
+            s.flush()
             s.add(BillingEntitlementDecision(link_id=1, decision="grant", reason="r", policy_id="p", provider_state="active", created_at=now))
         s.commit()
+    with engine.connect() as c:
+        assert c.exec_driver_sql("PRAGMA foreign_key_check").all() == []
+        snapshot = {t: c.execute(text(f"SELECT COUNT(*) FROM {t}")).scalar_one() for t in
+                    ("billing_provider_events", "billing_provider_links", "billing_entitlement_decisions")}
+        snapshot["subscriptions"] = c.execute(text("SELECT COUNT(*) FROM subscriptions WHERE source = 'provider'")).scalar_one()
+        preserved_queries = {
+            "subscriptions": "SELECT id, user_id, plan_version_id, status, source FROM subscriptions WHERE source = 'provider' ORDER BY id",
+            "events": "SELECT id, public_id, provider, environment, provider_event_id FROM billing_provider_events ORDER BY id",
+            "links": "SELECT id, public_id, provider, environment, user_id, plan_version_id, commercial_terms_id, price_mapping_id FROM billing_provider_links ORDER BY id",
+            "decisions": "SELECT id, link_id, decision, reason, policy_id, provider_state FROM billing_entitlement_decisions ORDER BY id",
+        }
+        rows_before = {name: c.execute(text(query)).all() for name, query in preserved_queries.items()}
     with pytest.raises(Exception) as e:
         command.downgrade(cfg, "0028_checkout_sessions")
     assert "Refusing to downgrade" in str(e.value) and "backup" in str(e.value)
@@ -1264,7 +1297,13 @@ def test_downgrade_fails_closed_when_any_provider_record_exists_and_deletes_noth
     with create_engine(url).connect() as c:
         total = sum(c.execute(text(f"SELECT COUNT(*) FROM {t}")).scalar() for t in ("billing_provider_events", "billing_provider_links", "billing_entitlement_decisions"))
         total += c.execute(text("SELECT COUNT(*) FROM subscriptions WHERE source = 'provider'")).scalar()
-    assert total == 1                                                                                 # the seeded record is intact
+    assert total == sum(snapshot.values()) == (2 if seed == "decision" else 1)  # decision requires its real parent link
+    with engine.connect() as c:
+        assert c.exec_driver_sql("PRAGMA foreign_key_check").all() == []
+        for table in ("billing_provider_events", "billing_provider_links", "billing_entitlement_decisions"):
+            assert c.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar_one() == snapshot[table]
+        assert c.execute(text("SELECT COUNT(*) FROM subscriptions WHERE source = 'provider'")).scalar_one() == snapshot["subscriptions"]
+        assert {name: c.execute(text(query)).all() for name, query in preserved_queries.items()} == rows_before
 
 
 def test_the_migration_source_never_deletes_provider_data():

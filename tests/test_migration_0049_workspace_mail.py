@@ -246,3 +246,22 @@ def test_table_statistics_refuse_without_mutation(tmp_path, monkeypatch):
         assert c.execute(text("SELECT tbl,idx,stat FROM sqlite_stat1 WHERE tbl='email_attempts' ORDER BY idx")).all() == before
         assert c.execute(text('SELECT id,message_type FROM email_attempts')).all() == [(8, 'admin_test')]
         assert c.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == PREV
+
+
+def test_preexisting_foreign_key_violation_refuses_without_data_or_schema_loss(tmp_path, monkeypatch):
+    cfg, eng = _database(tmp_path, monkeypatch)
+    with eng.begin() as c:
+        # An intentionally corrupt synthetic fixture tests refusal; it is never used to bypass a check.
+        c.execute(text("INSERT INTO subscriptions (user_id, plan_version_id, status, source, started_at) VALUES (987654, 1, 'ended', 'provider', '2026-01-01')"))
+        c.execute(text("INSERT INTO email_attempts (id,message_type,provider,status,created_at) VALUES (11,'admin_test','memory','captured','2020-01-01')"))
+        violations = c.exec_driver_sql('PRAGMA foreign_key_check').all()
+        before = c.execute(text('SELECT type,name,tbl_name,sql FROM sqlite_schema ORDER BY type,name')).all()
+        assert violations
+    monkeypatch.setenv('ASK4MO_DISPOSABLE_SQLITE_MIGRATION', '1')
+    with pytest.raises(RuntimeError, match='Existing foreign-key violation'):
+        command.upgrade(cfg, REV)
+    with eng.connect() as c:
+        assert c.exec_driver_sql('PRAGMA foreign_key_check').all() == violations
+        assert c.execute(text('SELECT type,name,tbl_name,sql FROM sqlite_schema ORDER BY type,name')).all() == before
+        assert c.execute(text('SELECT id,message_type FROM email_attempts')).all() == [(11, 'admin_test')]
+        assert c.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == PREV

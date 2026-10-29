@@ -26,6 +26,10 @@ from src.knowledge_admin.recovery import Report
 
 FORMAT = 1
 QUALIFIED = "qualified_recovery"
+# Explicitly reviewed revisions only; never infer compatibility with a future head.
+RECOVERY_REVISIONS = ("0047_workspace_ownership_transfers", "0048_agent_run_controls", "0049_workspace_mail_attempts")
+RELEASE_REVISIONS = ("0048_agent_run_controls", "0049_workspace_mail_attempts")
+EMAIL_TYPES_0049 = ("email_verification", "password_reset", "account_notice", "admin_test", "workspace_invitation", "ownership_transfer")
 
 
 def require(ok, code):
@@ -86,6 +90,30 @@ def schema_objects(connection):
     return _hash([[[_canonical_definition(v) for v in row] for row in connection.execute(text(q))] for q in queries])
 
 
+
+def extended_schema_objects(connection):
+    """Index and view definitions, recorded separately to preserve older set format."""
+    queries = [
+        "SELECT tablename,indexname,indexdef FROM pg_indexes WHERE schemaname='public' ORDER BY 1,2",
+        "SELECT viewname,definition FROM pg_views WHERE schemaname='public' ORDER BY 1",
+        "SELECT matviewname,definition FROM pg_matviews WHERE schemaname='public' ORDER BY 1",
+    ]
+    return _hash([[[_canonical_definition(v) for v in row] for row in connection.execute(text(q))] for q in queries])
+
+
+def _require_reviewed_schema(connection, revision, names):
+    require(revision in RECOVERY_REVISIONS, "recovery_schema_unsupported")
+    if revision in RECOVERY_REVISIONS[1:]:
+        require("agent_run_controls" in names, "recovery_schema_unsupported")
+    if revision == RECOVERY_REVISIONS[2]:
+        require("email_attempts" in names, "recovery_schema_unsupported")
+        definition = connection.execute(text("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='public.email_attempts'::regclass AND conname='ck_email_attempts_type' AND contype='c' AND convalidated")).scalar_one_or_none()
+        literals = ", ".join("'" + value + "'::character varying" for value in EMAIL_TYPES_0049)
+        expected = "CHECK (((message_type)::text = ANY ((ARRAY[" + literals + "])::text[])))"
+        require(definition is not None and _canonical_definition(definition) == _canonical_definition(expected), "recovery_schema_unsupported")
+        indexes = {row[0] for row in connection.execute(text("SELECT indexname FROM pg_indexes WHERE schemaname='public' AND tablename='email_attempts'"))}
+        require({"ix_email_attempts_created", "ix_email_attempts_type_created", "ix_email_attempts_message_ref"} <= indexes, "recovery_schema_unsupported")
+
 def database_content_fingerprint(connection, names):
     """Hash every row, including unknown usage, credentials and checkpoints.
 
@@ -115,7 +143,7 @@ def money_fingerprint(url):
 def _source_checks(source, checkpoint_url, release):
     require(identity(source.database_url) == identity(checkpoint_url), "separate_checkpoint_store_unsupported")
     require(set(release) == {"application_sha", "manifest_sha256", "budget_policy_version", "recovery_policy_version", "migration_head", "prompt_assets_sha256", "language_activation_sha256"}, "release_fields_invalid")
-    require(release["migration_head"] == "0048_agent_run_controls" and all(re.fullmatch(r"[0-9a-f]{64}", release[k]) for k in ("prompt_assets_sha256", "language_activation_sha256")), "release_metadata_invalid")
+    require(release["migration_head"] in RELEASE_REVISIONS and all(re.fullmatch(r"[0-9a-f]{64}", release[k]) for k in ("prompt_assets_sha256", "language_activation_sha256")), "release_metadata_invalid")
     require(re.fullmatch(r"[0-9a-f]{40}", release.get("application_sha", "")), "release_identity_invalid")
     require(re.fullmatch(r"[0-9a-f]{64}", release.get("manifest_sha256", "")), "release_anchor_invalid")
     require(release.get("budget_policy_version") == 2 and release.get("recovery_policy_version") == 1, "recovery_image_incompatible")
@@ -150,8 +178,8 @@ def frozen_source(source):
             snapshot = c.execute(text("SELECT pg_export_snapshot()")).scalar()
             require(sorted(inspect(c).get_table_names()) == names, "source_schema_changed")
             revisions = list(c.execute(text("SELECT version_num FROM alembic_version")).scalars())
-            require(len(revisions) == 1 and revisions[0] in ("0047_workspace_ownership_transfers", "0048_agent_run_controls"), "recovery_schema_unsupported")
-            require(revisions[0] != "0048_agent_run_controls" or "agent_run_controls" in names, "recovery_schema_unsupported")
+            require(len(revisions) == 1, "recovery_schema_unsupported")
+            _require_reviewed_schema(c, revisions[0], names)
             yield c, snapshot, names
     finally:
         engine.dispose()
@@ -209,7 +237,10 @@ def create(source, *, out_dir, checkpoint_database_url, release, ledger, ledger_
     with frozen_source(source) as (c, snapshot, names), tempfile.TemporaryDirectory(prefix="a4m-qualified-") as work:
         require(E.active_jobs(source.database_url) == 0, "jobs_active")
         _completeness(c, source, names)
+        source_revision = c.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
+        require(RECOVERY_REVISIONS.index(source_revision) <= RECOVERY_REVISIONS.index(release["migration_head"]), "recovery_release_schema_incompatible")
         schema = schema_objects(c)
+        extended_schema = extended_schema_objects(c)
         content = database_content_fingerprint(c, names)
         # Opening an index must never rewrite the source's HNSW files.
         index = Path(work) / "index"
@@ -218,12 +249,12 @@ def create(source, *, out_dir, checkpoint_database_url, release, ledger, ledger_
         def before_publish(manifest):
             require(fingerprints == [file_tree(p) for p in roots], "source_changed_during_backup")
             with c.engine.connect() as fresh:
-                require(schema_objects(fresh) == schema and sorted(inspect(fresh).get_table_names()) == names, "source_schema_changed")
+                require(schema_objects(fresh) == schema and extended_schema_objects(fresh) == extended_schema and sorted(inspect(fresh).get_table_names()) == names, "source_schema_changed")
             require(manifest["consistency"]["consistent"] and manifest["knowledge"]["consistent"], "inconsistent_recovery_point")
             X.require_head(ledger, ledger_head, ledger_key)
             manifest[QUALIFIED] = {"format": FORMAT, "release": release, "schema_objects_sha256": schema,
                                    "checkpoint_placement": "shared_public_database", "erasure_head": ledger_head,
-                                   "database_content_sha256": content, "money_sha256": money_fingerprint(source.database_url), "producer_drain_attested": True,
+                                   "database_content_sha256": content, "extended_schema_sha256": extended_schema, "money_sha256": money_fingerprint(source.database_url), "producer_drain_attested": True,
                                    "consistency": "exported PostgreSQL snapshot + table write locks + content fingerprints"}
         result = E.create_set(staged, out_dir=out, execute=True, api_env="staging", encryption_key=encryption_key,
                               signing_key=signing_key, pg_dump_bin=pg_dump_bin, pg_snapshot=snapshot, private_probe=True,
@@ -275,8 +306,13 @@ def restore(set_dir, *, target_root, target_database_url, anchor, ledger, ledger
     require(encryption_key != ledger_key, "independent_ledger_key_required")
     X.require_head(ledger, ledger_head, ledger_key, minimum_seq=q["erasure_head"]["seq"])
     require(expected_release is not None and expected_release == q["release"], "recovery_release_mismatch")
+    source_revision = m["database"]["schema_revision"]
+    release_revision = expected_release.get("migration_head")
+    require(source_revision in RECOVERY_REVISIONS and release_revision in RELEASE_REVISIONS, "recovery_schema_unsupported")
+    require(RECOVERY_REVISIONS.index(source_revision) <= RECOVERY_REVISIONS.index(release_revision), "recovery_release_schema_incompatible")
+    require(source_revision != RECOVERY_REVISIONS[2] or re.fullmatch(r"[0-9a-f]{64}", q.get("extended_schema_sha256", "")), "recovery_schema_evidence_missing")
     require(m["set_id"] in ledger.registered_sets(), "unregistered_backup_set")
-    require(m["database"]["schema_revision"] == expected_release["migration_head"] or upgrade_to_head is True, "controlled_upgrade_required")
+    require(source_revision == release_revision or upgrade_to_head is True, "controlled_upgrade_required")
     identity(target_database_url)
     require(not E._pg_target_problems(target_database_url), "restore_target_refused")
     root = Path(target_root)
@@ -297,6 +333,8 @@ def restore(set_dir, *, target_root, target_database_url, anchor, ledger, ledger
         try:
             with engine.connect() as c:
                 require(schema_objects(c) == q["schema_objects_sha256"], "restored_schema_objects_mismatch")
+                if "extended_schema_sha256" in q:
+                    require(extended_schema_objects(c) == q["extended_schema_sha256"], "restored_extended_schema_mismatch")
                 require(database_content_fingerprint(c, sorted(inspect(c).get_table_names())) == q["database_content_sha256"], "restored_database_content_mismatch")
         finally:
             engine.dispose()
@@ -316,7 +354,7 @@ def restore(set_dir, *, target_root, target_database_url, anchor, ledger, ledger
             import os
             import sys
             env = {**os.environ, "DATABASE_URL": target_database_url, "PYTHON_DOTENV_DISABLED": "1", "ASK4MO_PROVIDER_MODE": "offline", "AI_BUDGET_KILL": "true"}
-            upgraded = subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], env=env, cwd=Path(__file__).resolve().parents[2], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+            upgraded = subprocess.run([sys.executable, "-m", "alembic", "upgrade", expected_release["migration_head"]], env=env, cwd=Path(__file__).resolve().parents[2], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
             require(upgraded.returncode == 0 and E.schema_revision(target_database_url) == expected_release["migration_head"], "controlled_upgrade_failed")
         from src.llm.budget.ledger import DbBudgetLedger
         from src.persistence import make_session_factory
