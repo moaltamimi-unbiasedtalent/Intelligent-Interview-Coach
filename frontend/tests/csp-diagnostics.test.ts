@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { BrowserDiagnostics, consoleClassification, DIAGNOSTIC_LIMIT, observeBaselineOperation, safePageErrorKind, safeSource, safeViolationSnapshot } from "../csp/diagnostics";
+import { BrowserDiagnostics, consoleClassification, DIAGNOSTIC_LIMIT, observeBaselineOperation, safePageErrorKind, safeSource, safeViolationSnapshot, loginRequestFacts, loginResponseFacts } from "../csp/diagnostics";
 
 const privateText = "candidate-canary@example.invalid password-canary cookie-canary token-canary private-candidate-answer";
 const privateUrl = `https://user:password-canary@app.staging.example.com/private-candidate-answer?token=token-canary#cookie-canary`;
@@ -97,7 +97,7 @@ describe("CSP evidence privacy boundary", () => {
     d.request("http_error", { url: privateUrl, method: "POST", resourceType: "fetch", status: 401 }, "sign_in_form");
     d.request("external_request", { url: privateUrl, method: "GET", resourceType: "image" }, "/history");
     expect(d.snapshot().console_counts).toEqual({ inline_refusal: 1, expected_401: 1, unexpected: 1 });
-    expect(d.snapshot().counts).toEqual({ console: 3, page_error: 0, request_failed: 0, http_error: 1, external_request: 1, asset_response: 0 });
+    expect(d.snapshot().counts).toEqual({ console: 3, page_error: 0, request_failed: 0, http_error: 1, external_request: 1, asset_response: 0, login_request: 0, login_response: 0 });
   });
 
   it("records journey-relative time and safe locations, and snapshots cannot mutate counters", () => {
@@ -163,6 +163,33 @@ describe("baseline operation evidence", () => {
     d.pageError("original_bootstrap_refusal", error);
     expect(safePageErrorKind(null)).toBe("unknown");
     expect(d.snapshot().events.map(event => event.error_kind)).toEqual(["TypeError", "other"]);
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
+  });
+});
+
+
+describe("synthetic login diagnostic privacy", () => {
+  it("projects request presence, types and lengths without values", () => {
+    const d = new BrowserDiagnostics();
+    d.loginRequest(JSON.stringify({ email: privateText, password: privateText }), "application/json; charset=utf-8", "sign_in_form");
+    d.loginRequest(JSON.stringify({ email: 1 }), "text/plain", "sign_in_form");
+    expect(d.snapshot().events[0]).toMatchObject({ json_content_type: true, email_present: true, password_present: true, email_string: true, password_string: true });
+    expect(d.snapshot().events[1]).toMatchObject({ json_content_type: false, email_present: true, password_present: false, email_string: false, password_string: false });
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
+    expect(loginRequestFacts("{", "application/json").email_present).toBe(false);
+    expect(loginRequestFacts("x".repeat(8193), "application/json").password_present).toBe(false);
+  });
+  it("classifies only established safe 422 envelopes", () => {
+    const envelope = (code: string, message: string, details?: unknown) => JSON.stringify({ error: { code, message, request_id: privateText, details, extra: privateText } });
+    expect(loginResponseFacts(422, envelope("invalid_request", "Request validation failed.", []))).toEqual({ classification: "request_schema_envelope", envelope: true });
+    expect(loginResponseFacts(422, envelope("validation_error", "Enter a valid email address."))).toEqual({ classification: "email_validation_envelope", envelope: true });
+    expect(loginResponseFacts(422, envelope("validation_error", privateText))).toEqual({ classification: "application_validation_envelope", envelope: true });
+    for (const raw of [privateText, "{}", envelope("unknown", privateText), "x".repeat(4097)]) expect(loginResponseFacts(422, raw)).toEqual({ classification: "unknown", envelope: false });
+    expect(loginResponseFacts(200, envelope("invalid_request", privateText, []))).toEqual({ classification: "unknown", envelope: false });
+    const d = new BrowserDiagnostics();
+    for (let i = 0; i < DIAGNOSTIC_LIMIT + 5; i++) d.loginResponse(422, envelope("validation_error", privateText), "sign_in_form");
+    expect(d.snapshot().retained_events).toBe(DIAGNOSTIC_LIMIT);
+    expect(d.snapshot().dropped_events).toBe(5);
     for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
   });
 });

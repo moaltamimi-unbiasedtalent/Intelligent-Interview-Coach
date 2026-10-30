@@ -6,8 +6,8 @@ const stages = new Set(["sign_in_document", "original_bootstrap_refusal", "sign_
 const routes = new Set(["/sign-in", "/account", "/history", "/opportunities", "/api/v1/auth/login", "/api/v1/auth/me", "/api/v1/auth/logout", "/api/v1/history/interviews", "/api/v1/opportunities", "/api/v1/health"]);
 const resources = new Set(["document", "stylesheet", "image", "media", "font", "script", "xhr", "fetch", "other", "websocket", "manifest", "texttrack", "eventsource"]);
 const networkCodes = new Set(["ERR_ABORTED", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_CERT_AUTHORITY_INVALID", "ERR_FAILED", "ERR_CONNECTION_RESET", "ERR_TIMED_OUT", "ERR_HTTP2_PROTOCOL_ERROR", "ERR_INCOMPLETE_CHUNKED_ENCODING", "ERR_CONNECTION_CLOSED", "ERR_CONTENT_DECODING_FAILED", "ERR_CONTENT_LENGTH_MISMATCH", "ERR_EMPTY_RESPONSE", "ERR_INVALID_RESPONSE"]);
-type Kind = "console" | "page_error" | "request_failed" | "http_error" | "external_request" | "asset_response";
-type Fields = Record<string, string | number>;
+type Kind = "console" | "page_error" | "request_failed" | "http_error" | "external_request" | "asset_response" | "login_request" | "login_response";
+type Fields = Record<string, string | number | boolean>;
 type Event = Fields & { event_id: string; group_id: string; kind: Kind; stage: string; elapsed_ms: number };
 
 export function safeSource(raw = "") {
@@ -58,12 +58,36 @@ export function safeViolationSnapshot(): string[] {
   return (window as unknown as {cspEvents: string[]}).cspEvents.slice(0, 100).map(value => allowed.has(value) ? value : "other");
 }
 
+/** Fixed projections only. Payloads are inspected in memory and never retained. */
+export function loginRequestFacts(raw: string | null, contentType: string) {
+  let body: unknown;
+  try { body = raw !== null && raw.length <= 8192 ? JSON.parse(raw) : null; } catch { body = null; }
+  const obj = body !== null && typeof body === "object" && !Array.isArray(body) ? body as Record<string, unknown> : {};
+  const email = obj.email, password = obj.password;
+  return { json_content_type: /^application\/json(?:\s*;|$)/i.test(contentType), email_present: Object.hasOwn(obj, "email"), password_present: Object.hasOwn(obj, "password"), email_string: typeof email === "string", password_string: typeof password === "string", email_length_valid: typeof email === "string" && email.length >= 3 && email.length <= 320, password_length_valid: typeof password === "string" && password.length >= 1 && password.length <= 200 };
+}
+
+export function loginResponseFacts(status: number, raw: string | null) {
+  if (status !== 422 || raw === null || raw.length > 4096) return { classification: "unknown", envelope: false };
+  try {
+    const body: unknown = JSON.parse(raw);
+    if (!body || typeof body !== "object" || Array.isArray(body)) return { classification: "unknown", envelope: false };
+    const error = (body as Record<string, unknown>).error;
+    if (!error || typeof error !== "object" || Array.isArray(error)) return { classification: "unknown", envelope: false };
+    const e = error as Record<string, unknown>;
+    if (typeof e.message !== "string" || typeof e.request_id !== "string") return { classification: "unknown", envelope: false };
+    if (e.code === "invalid_request" && Array.isArray(e.details)) return { classification: "request_schema_envelope", envelope: true };
+    if (e.code === "validation_error") return { classification: e.message === "Enter a valid email address." ? "email_validation_envelope" : "application_validation_envelope", envelope: true };
+  } catch { /* Unknown response: retain no body or exception. */ }
+  return { classification: "unknown", envelope: false };
+}
+
 export class BrowserDiagnostics {
   private readonly started: number;
   private readonly events: Event[] = [];
   private readonly groups = new Map<string, { group_id: string; count: number }>();
   private readonly sources = new Map<string, string>();
-  private readonly totals: Record<Kind, number> = { console: 0, page_error: 0, request_failed: 0, http_error: 0, external_request: 0, asset_response: 0 };
+  private readonly totals: Record<Kind, number> = { console: 0, page_error: 0, request_failed: 0, http_error: 0, external_request: 0, asset_response: 0, login_request: 0, login_response: 0 };
   private consoleCounts = { inline_refusal: 0, expected_401: 0, unexpected: 0 };
   private total = 0;
   private ungrouped = 0;
@@ -116,6 +140,14 @@ export class BrowserDiagnostics {
     if (source.origin !== "app" || source.path !== "next_static_asset" || request.resourceType !== "script") return;
     const status = Number.isInteger(request.status) && request.status >= 100 && request.status <= 599 ? request.status : -1;
     this.add("asset_response", stage, { ...this.source(request.url), resource_type: "script", status });
+  }
+
+  loginRequest(raw: string | null, contentType: string, stage: unknown) {
+    this.add("login_request", stage, loginRequestFacts(raw, contentType));
+  }
+
+  loginResponse(status: number, raw: string | null, stage: unknown) {
+    this.add("login_response", stage, loginResponseFacts(status, raw));
   }
 
   snapshot() {
