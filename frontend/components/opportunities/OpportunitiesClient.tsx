@@ -9,7 +9,7 @@
  * no em dash.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -30,23 +30,28 @@ export function OpportunitiesClient() {
   const [items, setItems] = useState<Opportunity[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const latestLoad = useRef(0);
   // P10B-W9.4: Home's "Create an opportunity" CTA deep-links here with ?create=1 to open the
   // EXISTING inline create flow directly (no second creation implementation).
   const [creating, setCreating] = useState(searchParams.get("create") === "1");
 
   const load = useCallback(async () => {
+    const request = ++latestLoad.current;
     setError(null);
     try {
       const res = await api.opportunities.list(showArchived);
-      setItems(res.opportunities);
+      if (request === latestLoad.current) setItems(res.opportunities);
     } catch (err) {
+      if (request !== latestLoad.current) return;
       setItems([]);
       setError(err instanceof ApiError ? err.message : t("opportunity.errorLoad"));
     }
   }, [showArchived, t]);
 
   useEffect(() => {
+    const generation = latestLoad;
     void load();
+    return () => { generation.current++; };
   }, [load]);
 
   if (creating) {
@@ -54,6 +59,12 @@ export function OpportunitiesClient() {
       <OpportunityCreate
         onCancel={() => setCreating(false)}
         onCreated={() => {
+          // The deep link opens the wizard once; do not reopen it on reload.
+          const url = new URL(window.location.href);
+          if (url.searchParams.get("create") === "1") {
+            url.searchParams.delete("create");
+            window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+          }
           setCreating(false);
           void load();
         }}
