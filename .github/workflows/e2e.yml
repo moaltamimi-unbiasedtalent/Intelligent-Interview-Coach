@@ -88,3 +88,28 @@ jobs:
         env:
           CI: "true"
         run: npm test
+
+  connected-admin-users:
+    name: Connected Admin user lifecycle (synthetic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install isolated test dependencies
+        run: |
+          pip install -e ".[dev]"
+          cd frontend
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run connected synthetic Admin journey
+        env:
+          CI: "true"
+        run: python scripts/e2e/admin_users_connected.py run

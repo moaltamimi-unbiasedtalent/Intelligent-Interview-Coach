@@ -61,7 +61,7 @@ function Detail({ d, reload }: { d: AdminUserDetail; reload: () => void }) {
 
       <Panel title="Account">
         <KeyValue rows={[
-          ["Email", a.email ?? "none"], ["Account id", a.user_id], ["Status", a.status], ["Legacy tier (display only)", a.tier],
+          ["Email", a.email ?? "none"], ["Account id", a.user_id], ["Account revision", typeof d.revision === "string" && /^[0-9a-f]{16}$/.test(d.revision) ? d.revision : "Not available"], ["Status", a.status], ["Legacy tier (display only)", a.tier],
           ["Onboarding", a.onboarding_completed ? "Completed" : "Pending"], ["Interface language", a.interface_locale],
           ["Email verified", a.email_verified ? "Yes" : "No"], ["Created", a.created_at ?? "unknown"], ["Updated", a.updated_at ?? "unknown"],
         ]} />
