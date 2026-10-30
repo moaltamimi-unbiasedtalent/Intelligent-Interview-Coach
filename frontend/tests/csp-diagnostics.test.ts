@@ -50,6 +50,22 @@ describe("CSP evidence privacy boundary", () => {
     expect(d.snapshot().events[0].failure).toBe("ERR_CONNECTION_REFUSED");
   });
 
+  it("records only bounded static script response metadata and allowlisted network failures", () => {
+    const d = new BrowserDiagnostics();
+    const url = `https://app.staging.example.com/_next/static/${privateText}.js?token=token-canary`;
+    d.assetResponse({ url, resourceType: "script", status: 503 }, "sign_in_form");
+    d.assetResponse({ url: privateUrl, resourceType: "script", status: 200 }, "sign_in_form");
+    d.assetResponse({ url, resourceType: "image", status: 200 }, "sign_in_form");
+    d.request("request_failed", { url, method: "GET", resourceType: "script", error: "net::ERR_HTTP2_PROTOCOL_ERROR" }, "sign_in_form");
+    d.request("request_failed", { url, method: "GET", resourceType: "script", error: `net::ERR_FAILED ${privateText}` }, "sign_in_form");
+    const result = d.snapshot();
+    expect(result.counts.asset_response).toBe(1);
+    expect(result.events[0]).toMatchObject({ path: "next_static_asset", status: 503 });
+    expect(result.events[1].failure).toBe("ERR_HTTP2_PROTOCOL_ERROR");
+    expect(result.events[2].failure).toBe("redacted");
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(result)).not.toContain(canary);
+  });
+
   it("distinguishes repeated messages and source identities using only opaque references", () => {
     const d = new BrowserDiagnostics();
     for (const text of [privateText, privateText, "a different private message"]) d.console(text, { url: privateUrl }, "/history", "unexpected");
@@ -81,7 +97,7 @@ describe("CSP evidence privacy boundary", () => {
     d.request("http_error", { url: privateUrl, method: "POST", resourceType: "fetch", status: 401 }, "sign_in_form");
     d.request("external_request", { url: privateUrl, method: "GET", resourceType: "image" }, "/history");
     expect(d.snapshot().console_counts).toEqual({ inline_refusal: 1, expected_401: 1, unexpected: 1 });
-    expect(d.snapshot().counts).toEqual({ console: 3, page_error: 0, request_failed: 0, http_error: 1, external_request: 1 });
+    expect(d.snapshot().counts).toEqual({ console: 3, page_error: 0, request_failed: 0, http_error: 1, external_request: 1, asset_response: 0 });
   });
 
   it("records journey-relative time and safe locations, and snapshots cannot mutate counters", () => {

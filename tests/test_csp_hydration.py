@@ -217,3 +217,24 @@ def test_csp_database_revision_is_bound_to_reviewed_manifest():
 def test_csp_refuses_missing_malformed_or_mismatched_reviewed_head(manifest):
     with pytest.raises(ValueError, match="invalid_manifest_schema"):
         Q.expected_database_head(manifest)
+
+
+def test_lifecycle_diagnostics_project_only_safe_status_and_survive_probe_failure(monkeypatch, tmp_path):
+    c = Q.Check(args(tmp_path))
+    c.compose = lambda *a, **k: SimpleNamespace(stdout=b"private-container-id")
+    calls = 0
+
+    def inspect(command, **kwargs):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise ValueError("private-secret-canary")
+        return SimpleNamespace(stdout=json.dumps([{"State": {"Status": "running", "Health": {"Status": "healthy"}}, "Config": {"Env": ["private-secret-canary"]}}]).encode())
+
+    monkeypatch.setattr(Q, "run", inspect)
+    c.lifecycle_snapshot("hardened_ready")
+    snapshot = c.summary["lifecycle_diagnostics"][0]
+    assert snapshot["services"]["api"] == {"available": True, "status": "running", "health": "healthy"}
+    assert snapshot["services"]["web"] == {"available": False}
+    assert snapshot["services"]["caddy"] == {"available": True, "status": "running", "health": "healthy"}
+    assert "private" not in json.dumps(snapshot)

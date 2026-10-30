@@ -341,6 +341,27 @@ class Check:
             resolved["networks"]["default"]["internal"], "internal_network_required"
         )
 
+    def lifecycle_snapshot(self, label):
+        # Optional diagnostics only: never retain inspect output, IDs, logs or errors.
+        snapshot = {"label": label, "services": {}}
+        for role in ("api", "web", "caddy"):
+            evidence = {"available": False}
+            try:
+                cid = self.compose("ps", "-q", role, timeout=8).stdout.decode().strip()
+                info = json.loads(run(["docker", "inspect", cid], timeout=8).stdout)[0]
+                state = info.get("State", {})
+                status = state.get("Status")
+                health = (state.get("Health") or {}).get("Status", "none")
+                evidence = {
+                    "available": True,
+                    "status": status if status in {"created", "running", "restarting", "exited", "dead", "paused"} else "unknown",
+                    "health": health if health in {"starting", "healthy", "unhealthy", "none"} else "unknown",
+                }
+            except (ValueError, KeyError, IndexError, TypeError, OSError, subprocess.SubprocessError):
+                pass
+            snapshot["services"][role] = evidence
+        self.summary.setdefault("lifecycle_diagnostics", []).append(snapshot)
+
     def ready(self):
         # Poll from the actual Caddy container on its own private network.
         for _ in range(90):
@@ -418,7 +439,9 @@ class Check:
         self.summary["phase"] = "start_disposable_auth_topology"
         self.created = True
         self.compose("up", "-d", "caddy", timeout=180)
+        self.lifecycle_snapshot("baseline_started")
         self.ready()
+        self.lifecycle_snapshot("baseline_ready")
         self.summary["phase"] = "seed_synthetic_invited_account"
         credentials = self.compose(
             "exec", "-T", "api", "python", "/fixture/seed.py"
@@ -433,7 +456,9 @@ class Check:
         (self.out / "private/Caddyfile").write_text(self.after_caddy)
         self.write_profile()
         self.compose("up", "-d", "--force-recreate", "web", "caddy")
+        self.lifecycle_snapshot("hardened_started")
         self.ready()
+        self.lifecycle_snapshot("hardened_ready")
         after_passed = self.browser("after")
         require(
             before_passed and after_passed, "before_after_browser_qualification_failed"

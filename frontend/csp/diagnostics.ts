@@ -5,8 +5,8 @@ export const DIAGNOSTIC_LIMIT = 100;
 const stages = new Set(["sign_in_document", "original_bootstrap_refusal", "sign_in_form", "authenticated_account", "/history", "/opportunities", "nonce_rotation_and_spoof_refusal", "negative_injection", "logout_request", "logout_redirect_and_revocation", "complete"]);
 const routes = new Set(["/sign-in", "/account", "/history", "/opportunities", "/api/v1/auth/login", "/api/v1/auth/me", "/api/v1/auth/logout", "/api/v1/history/interviews", "/api/v1/opportunities", "/api/v1/health"]);
 const resources = new Set(["document", "stylesheet", "image", "media", "font", "script", "xhr", "fetch", "other", "websocket", "manifest", "texttrack", "eventsource"]);
-const networkCodes = new Set(["ERR_ABORTED", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_CERT_AUTHORITY_INVALID", "ERR_FAILED", "ERR_CONNECTION_RESET", "ERR_TIMED_OUT"]);
-type Kind = "console" | "page_error" | "request_failed" | "http_error" | "external_request";
+const networkCodes = new Set(["ERR_ABORTED", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_CERT_AUTHORITY_INVALID", "ERR_FAILED", "ERR_CONNECTION_RESET", "ERR_TIMED_OUT", "ERR_HTTP2_PROTOCOL_ERROR", "ERR_INCOMPLETE_CHUNKED_ENCODING", "ERR_CONNECTION_CLOSED", "ERR_CONTENT_DECODING_FAILED", "ERR_CONTENT_LENGTH_MISMATCH", "ERR_EMPTY_RESPONSE", "ERR_INVALID_RESPONSE"]);
+type Kind = "console" | "page_error" | "request_failed" | "http_error" | "external_request" | "asset_response";
 type Fields = Record<string, string | number>;
 type Event = Fields & { event_id: string; group_id: string; kind: Kind; stage: string; elapsed_ms: number };
 
@@ -63,7 +63,7 @@ export class BrowserDiagnostics {
   private readonly events: Event[] = [];
   private readonly groups = new Map<string, { group_id: string; count: number }>();
   private readonly sources = new Map<string, string>();
-  private readonly totals: Record<Kind, number> = { console: 0, page_error: 0, request_failed: 0, http_error: 0, external_request: 0 };
+  private readonly totals: Record<Kind, number> = { console: 0, page_error: 0, request_failed: 0, http_error: 0, external_request: 0, asset_response: 0 };
   private consoleCounts = { inline_refusal: 0, expected_401: 0, unexpected: 0 };
   private total = 0;
   private ungrouped = 0;
@@ -104,11 +104,18 @@ export class BrowserDiagnostics {
   request(kind: "request_failed" | "http_error" | "external_request", request: { url: string; method: string; resourceType: string; error?: string; status?: number }, stage: unknown) {
     const fields: Fields = { ...this.source(request.url), method: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].includes(request.method) ? request.method : "other", resource_type: resources.has(request.resourceType) ? request.resourceType : "other" };
     if (kind === "request_failed") {
-      const code = request.error?.match(/^(?:net::)?(ERR_[A-Z_]+)$/)?.[1];
+      const code = request.error?.match(/^(?:net::)?(ERR_[A-Z0-9_]+)$/)?.[1];
       fields.failure = code && networkCodes.has(code) ? code : "redacted";
     }
     if (kind === "http_error") fields.status = Number.isInteger(request.status) && request.status! >= 400 && request.status! <= 599 ? request.status! : -1;
     this.add(kind, stage, fields);
+  }
+
+  assetResponse(request: { url: string; resourceType: string; status: number }, stage: unknown) {
+    const source = safeSource(request.url);
+    if (source.origin !== "app" || source.path !== "next_static_asset" || request.resourceType !== "script") return;
+    const status = Number.isInteger(request.status) && request.status >= 100 && request.status <= 599 ? request.status : -1;
+    this.add("asset_response", stage, { ...this.source(request.url), resource_type: "script", status });
   }
 
   snapshot() {
