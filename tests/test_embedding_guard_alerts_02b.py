@@ -4,6 +4,7 @@ path. Offline: real Chroma on a temp directory, offline stand-in embedders, no p
 from __future__ import annotations
 
 import json
+from datetime import datetime
 
 import pytest
 from sqlalchemy import select
@@ -122,6 +123,41 @@ def test_hosted_missing_manifest_is_unproven_and_blocks(tmp_path, monkeypatch):
         p.close()
 
 
+def _assert_safe_embedding_mismatch_report(report, *, private_path: str) -> None:
+    """Validate every field before exempting only the operational timestamp from the dimension check."""
+    assert isinstance(report, dict)
+    assert set(report) == {"environment", "enforced", "mode", "serving_allowed", "checked_at", "findings", "embedding_check"}
+    assert report["environment"] == "staging"
+    assert report["enforced"] is True and report["mode"] == "enforced"
+    assert report["serving_allowed"] is False
+    timestamp = report["checked_at"]
+    assert isinstance(timestamp, str)
+    try:
+        parsed = datetime.fromisoformat(timestamp)
+    except ValueError as exc:
+        raise AssertionError("invalid checked_at timestamp") from exc
+    assert parsed.tzinfo is not None and parsed.utcoffset() is not None
+    findings = report["findings"]
+    assert isinstance(findings, list)
+    for finding in findings:
+        assert isinstance(finding, dict) and set(finding) == {"code", "severity", "message", "fields"}
+        assert all(isinstance(finding[key], str) for key in ("code", "severity", "message"))
+        assert isinstance(finding["fields"], list) and all(isinstance(field, str) for field in finding["fields"])
+    mismatch = [finding for finding in findings if finding["code"] == "index_embedder_mismatch"]
+    assert len(mismatch) == 1
+    assert mismatch[0]["severity"] == "block" and set(mismatch[0]["fields"]) == {"model", "dimensions"}
+    embedding = report["embedding_check"]
+    assert isinstance(embedding, dict) and set(embedding) == {"checked", "differing_fields"}
+    assert embedding["checked"] is True
+    assert isinstance(embedding["differing_fields"], list)
+    assert set(embedding["differing_fields"]) == {"model", "dimensions"}
+    full = json.dumps(report)
+    for leaked in ("leaky-model-name", "fake-semantic-test", private_path, "test-key-not-real", "postgresql"):
+        assert leaked not in full, leaked
+    without_timestamp = {key: value for key, value in report.items() if key != "checked_at"}
+    assert "256" not in json.dumps(without_timestamp)
+
+
 def test_guard_report_names_fields_without_leaking_configuration(tmp_path, monkeypatch):
     hosted_temp(monkeypatch)
     p = Process(tmp_path / "env", environment="staging")
@@ -129,12 +165,60 @@ def test_guard_report_names_fields_without_leaking_configuration(tmp_path, monke
         p.worker.run_once()
         p.to_active()
         swap(p, Fake(model="leaky-model-name", dimensions=256))
-        dump = json.dumps(p.guard.check(fresh=True).to_dict())
-        assert "dimensions" in dump and "model" in dump                                          # field NAMES are present
-        for leaked in ("leaky-model-name", "fake-semantic-test", "256", str(tmp_path), "test-key-not-real", "postgresql"):
-            assert leaked not in dump, leaked
+        report = p.guard.check(fresh=True)
+        assert not report.serving_allowed
+        _assert_safe_embedding_mismatch_report(report.to_dict(), private_path=str(tmp_path))
     finally:
         p.close()
+
+
+@pytest.fixture
+def safe_mismatch_report():
+    from src.knowledge_admin.environment import Finding, GuardReport, MESSAGES
+
+    return GuardReport(environment="staging", enforced=True, checked_at="2026-10-30T17:29:38.256320+00:00",
+                       findings=(Finding("index_embedder_mismatch", "block", MESSAGES["index_embedder_mismatch"],
+                                         ("model", "dimensions")),),
+                       embedding_checked=True, embedding_fields=("model", "dimensions")).to_dict()
+
+
+def test_guard_report_accepts_valid_timestamp_with_dimension_digits(safe_mismatch_report):
+    assert "256" in safe_mismatch_report["checked_at"]
+    _assert_safe_embedding_mismatch_report(safe_mismatch_report, private_path="/synthetic-private-path")
+
+
+@pytest.mark.parametrize("mutation", ["number_field", "string_field", "nested_field", "nested_embedding_field", "model", "version",
+                                      "path", "key", "database", "dimension_message", "invalid_timestamp", "naive_timestamp",
+                                      "missing_finding", "wrong_severity", "missing_field", "serving_allowed"])
+def test_guard_report_assertion_rejects_leaks_and_invalid_state(safe_mismatch_report, mutation):
+    report = safe_mismatch_report
+    finding = report["findings"][0]
+    values = {"model": "leaky-model-name", "version": "fake-semantic-test", "path": "/synthetic-private-path",
+              "key": "test-key-not-real", "database": "postgresql", "dimension_message": "256"}
+    if mutation == "number_field":
+        report["dimension"] = 256
+    elif mutation == "string_field":
+        report["dimension"] = "256"
+    elif mutation == "nested_field":
+        finding["extra"] = {"secret": "leaky-model-name"}
+    elif mutation == "nested_embedding_field":
+        report["embedding_check"]["extra"] = {"dimension": 256}
+    elif mutation in values:
+        finding["message"] += " " + values[mutation]
+    elif mutation == "invalid_timestamp":
+        report["checked_at"] = "not-a-timestamp-256"
+    elif mutation == "naive_timestamp":
+        report["checked_at"] = "2026-10-30T17:29:38.256320"
+    elif mutation == "missing_finding":
+        report["findings"] = []
+    elif mutation == "wrong_severity":
+        finding["severity"] = "warn"
+    elif mutation == "missing_field":
+        finding["fields"] = ["model"]
+    else:
+        report["serving_allowed"] = True
+    with pytest.raises(AssertionError):
+        _assert_safe_embedding_mismatch_report(report, private_path="/synthetic-private-path")
 
 
 # ------------------------------------------------------------------ guard: development warns, store still refuses a provable mismatch
