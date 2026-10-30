@@ -30,6 +30,34 @@ export function consoleClassification(text: string) {
   return { classification: "unclassified_error", text: "[redacted console error]" };
 }
 
+
+/** Fixed operation labels and outcomes only; never serialize caught errors or inputs. */
+export type BaselineOperation = "inline_refusal" | "policy" | "field_visibility" | "email_fill" | "password_fill" | "submit_click" | "zero_login" | "no_account" | "violation_snapshot";
+type BaselineEvidence = { operation: BaselineOperation; outcome: "started" | "passed" | "timeout" | "failed" };
+export async function observeBaselineOperation<T>(target: Record<string, unknown>, operation: BaselineOperation, action: () => Promise<T> | T): Promise<T> {
+  const evidence: BaselineEvidence = { operation, outcome: "started" };
+  target.baseline_operation = evidence;
+  try {
+    const value = await action();
+    evidence.outcome = "passed";
+    return value;
+  } catch (error) {
+    evidence.outcome = error instanceof Error && error.name === "TimeoutError" ? "timeout" : "failed";
+    throw error;
+  }
+}
+
+export function safePageErrorKind(error: unknown): string {
+  if (!(error instanceof Error)) return "unknown";
+  return ["Error", "TypeError", "ReferenceError", "SyntaxError", "RangeError"].includes(error.name) ? error.name : "other";
+}
+
+/** Run inside the page: export only a bounded allowlisted CSP-violation projection. */
+export function safeViolationSnapshot(): string[] {
+  const allowed = new Set(["script-src:inline", "script-src-elem:inline", "script-src-attr:inline", "script-src:eval", "script-src-elem:eval", "script-src-attr:eval"]);
+  return (window as unknown as {cspEvents: string[]}).cspEvents.slice(0, 100).map(value => allowed.has(value) ? value : "other");
+}
+
 export class BrowserDiagnostics {
   private readonly started: number;
   private readonly events: Event[] = [];
@@ -71,7 +99,7 @@ export class BrowserDiagnostics {
     this.add("console", stage, { type: "error", bucket, ...consoleClassification(text), ...this.source(location.url), line: integer(location.lineNumber), column: integer(location.columnNumber) }, text);
   }
 
-  pageError(stage: unknown) { this.add("page_error", stage, { text: "[redacted page error]" }); }
+  pageError(stage: unknown, error?: unknown) { this.add("page_error", stage, { text: "[redacted page error]", error_kind: safePageErrorKind(error) }); }
 
   request(kind: "request_failed" | "http_error" | "external_request", request: { url: string; method: string; resourceType: string; error?: string; status?: number }, stage: unknown) {
     const fields: Fields = { ...this.source(request.url), method: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].includes(request.method) ? request.method : "other", resource_type: resources.has(request.resourceType) ? request.resourceType : "other" };

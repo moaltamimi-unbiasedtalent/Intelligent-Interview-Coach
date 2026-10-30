@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { BrowserDiagnostics, consoleClassification, DIAGNOSTIC_LIMIT, safeSource } from "../csp/diagnostics";
+import { BrowserDiagnostics, consoleClassification, DIAGNOSTIC_LIMIT, observeBaselineOperation, safePageErrorKind, safeSource, safeViolationSnapshot } from "../csp/diagnostics";
 
 const privateText = "candidate-canary@example.invalid password-canary cookie-canary token-canary private-candidate-answer";
 const privateUrl = `https://user:password-canary@app.staging.example.com/private-candidate-answer?token=token-canary#cookie-canary`;
@@ -106,5 +106,47 @@ describe("CSP evidence privacy boundary", () => {
     }).toThrow();
     expect(evidence!.console_counts.unexpected).toBe(1);
     expect(evidence!.events[0].stage).toBe("nonce_rotation_and_spoof_refusal");
+  });
+});
+
+
+describe("baseline operation evidence", () => {
+  it("bounds and allowlists violation snapshots without exposing canary content", () => {
+    (window as unknown as {cspEvents: string[]}).cspEvents = ["script-src-elem:inline", privateText, ...Array(110).fill(privateText)];
+    const snapshot = safeViolationSnapshot();
+    expect(snapshot).toHaveLength(100);
+    expect(snapshot[0]).toBe("script-src-elem:inline");
+    expect(snapshot[1]).toBe("other");
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(snapshot)).not.toContain(canary);
+  });
+  it("records the selected operation and preserves its result", async () => {
+    const result: Record<string, unknown> = {};
+    const value = await observeBaselineOperation(result, "field_visibility", async () => true);
+    expect(value).toBe(true);
+    expect(result.baseline_operation).toEqual({ operation: "field_visibility", outcome: "passed" });
+  });
+  it.each(["email_fill", "password_fill", "submit_click", "zero_login", "no_account"] as const)("retains only bounded failure metadata for %s and rethrows", async operation => {
+    const result: Record<string, unknown> = {};
+    const error = new Error(privateText);
+    error.name = "TimeoutError";
+    await expect(observeBaselineOperation(result, operation, () => { throw error; })).rejects.toBe(error);
+    expect(result.baseline_operation).toEqual({ operation, outcome: "timeout" });
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(result)).not.toContain(canary);
+  });
+  it("does not turn unexpected failures into success", async () => {
+    const result: Record<string, unknown> = {};
+    const error = new Error(privateText);
+    await expect(observeBaselineOperation(result, "submit_click", () => { throw error; })).rejects.toBe(error);
+    expect(result.baseline_operation).toEqual({ operation: "submit_click", outcome: "failed" });
+  });
+  it("keeps page-error types allowlisted and never serializes messages or custom names", () => {
+    const d = new BrowserDiagnostics();
+    const error = new TypeError(privateText);
+    d.pageError("original_bootstrap_refusal", error);
+    error.name = privateText;
+    d.pageError("original_bootstrap_refusal", error);
+    expect(safePageErrorKind(null)).toBe("unknown");
+    expect(d.snapshot().events.map(event => event.error_kind)).toEqual(["TypeError", "other"]);
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
   });
 });

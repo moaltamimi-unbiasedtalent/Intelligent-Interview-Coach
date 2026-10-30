@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { version as playwrightVersion } from "@playwright/test/package.json";
-import { BrowserDiagnostics } from "./diagnostics";
+import { BrowserDiagnostics, observeBaselineOperation, safeViolationSnapshot } from "./diagnostics";
 const account = JSON.parse(readFileSync(process.env.CSP_CREDENTIALS!, "utf8"));
 const api = "https://api.staging.example.com/api/v1";
 const before = process.env.CSP_PHASE === "before";
@@ -22,7 +22,7 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     return route.continue(); // Real API and every image request remain untouched.
   });
   page.on("request", request => { if (request.url() === api + "/auth/login") loginRequests++; });
-  page.on("pageerror", () => { pageErrors.length++; diagnostics.pageError(result.stage); });
+  page.on("pageerror", error => { pageErrors.length++; diagnostics.pageError(result.stage, error); });
   page.on("requestfailed", request => diagnostics.request("request_failed", { url: request.url(), method: request.method(), resourceType: request.resourceType(), error: request.failure()?.errorText }, result.stage));
   page.on("response", response => {
     if (response.status() >= 400) diagnostics.request("http_error", { url: response.url(), method: response.request().method(), resourceType: response.request().resourceType(), status: response.status() }, result.stage);
@@ -57,21 +57,27 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     for (const d of ["object-src 'none'", "form-action 'self'", "frame-ancestors 'none'"]) expect(policy).toContain(d);
     if (before) {
       result.stage = "original_bootstrap_refusal";
+      result.baseline_operation = { operation: "inline_refusal", outcome: "started" };
       await expect.poll(() => inlineRefusals).toBeGreaterThan(0);
+      result.baseline_operation = { operation: "policy", outcome: "started" };
       expect(policy).toContain("script-src 'self';");
       expect(policy).not.toContain("'nonce-");
-      const fieldsVisible = await page.getByLabel("Email", {exact: true}).isVisible() && await page.getByLabel("Password", {exact: true}).isVisible();
+      result.baseline_operation = { operation: "violation_snapshot", outcome: "started" };
+      result.baseline_violation_snapshot = await page.evaluate(safeViolationSnapshot);
+      const fieldsVisible = await observeBaselineOperation(result, "field_visibility", async () => await page.getByLabel("Email", {exact: true}).isVisible() && await page.getByLabel("Password", {exact: true}).isVisible());
       result.form_fields_visible = fieldsVisible;
       if (fieldsVisible) {
-        await page.getByLabel("Email", {exact: true}).fill(account.email);
-        await page.getByLabel("Password", {exact: true}).fill(account.password);
-        await page.getByRole("button", {name: /^sign in$/i}).click();
+        await observeBaselineOperation(result, "email_fill", () => page.getByLabel("Email", {exact: true}).fill(account.email));
+        await observeBaselineOperation(result, "password_fill", () => page.getByLabel("Password", {exact: true}).fill(account.password));
+        await observeBaselineOperation(result, "submit_click", () => page.getByRole("button", {name: /^sign in$/i}).click());
       }
+      result.baseline_operation = { operation: "zero_login", outcome: "started" };
       expect(loginRequests).toBe(0);
+      result.baseline_operation = { operation: "no_account", outcome: "started" };
       expect(await page.getByRole("heading", {name: "Your account"}).count()).toBe(0);
       result.hydrated_sign_in = false;
       result.bootstrap_inline_refusals = inlineRefusals;
-      result.violation_events = await page.evaluate(() => (window as unknown as {cspEvents: string[]}).cspEvents);
+      result.violation_events = await observeBaselineOperation(result, "violation_snapshot", () => page.evaluate(() => (window as unknown as {cspEvents: string[]}).cspEvents));
     } else {
     result.stage = "sign_in_form";
     await page.getByLabel("Email", {exact: true}).fill(account.email);
@@ -166,6 +172,12 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     result.expected_unauthenticated_http_errors = expectedUnauthenticatedErrors;
     result.page_error_count = pageErrors.length;
     result.passed = true;
+  } catch (error) {
+    if (before && result.baseline_operation && typeof result.baseline_operation === "object") {
+      const current = result.baseline_operation as { operation: string; outcome: string };
+      if (current.outcome === "started") current.outcome = error instanceof Error && error.name === "TimeoutError" ? "timeout" : "failed";
+    }
+    throw error;
   } finally {
     result.diagnostics = diagnostics.snapshot();
     result.observed_external_attempts = external.length;
