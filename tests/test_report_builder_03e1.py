@@ -860,14 +860,91 @@ def test_every_export_is_audited_without_data_and_before_sending(world):
         assert needle not in dump                                                                           # who / report / window / count only, no data
 
 
+def _assert_audit_failure_response(response, *, export_events_before: int, export_events_after: int) -> None:
+    """The correlation UUID is opaque metadata; everything else must be a fixed safe error."""
+    assert response.status_code == 503
+    assert response.headers["content-type"].split(";", 1)[0].lower() == "application/json"
+    assert "content-disposition" not in response.headers
+    assert "x-export-rows" not in response.headers
+    body = response.json()
+    assert isinstance(body, dict) and set(body) == {"error"}
+    error = body["error"]
+    assert isinstance(error, dict) and set(error) == {"code", "message", "request_id"}
+    assert error["code"] == "http_error"
+    assert error["message"] == "The export could not be audited, so nothing was exported."
+    request_id = error["request_id"]
+    assert isinstance(request_id, str) and re.fullmatch(r"[0-9a-f]{32}", request_id)
+    assert uuid.UUID(hex=request_id).version == 4
+    assert response.headers["x-request-id"] == request_id
+    # Remove exactly the validated opaque identifier, not arbitrary response data.
+    assert response.text.count(request_id) == 1
+    non_identifier_text = response.text.replace(request_id, "", 1)
+    non_identifier_headers = json.dumps({key: value for key, value in response.headers.items() if key.lower() != "x-request-id"})
+    for forbidden in ("agent", "metric_id", "840"):
+        assert forbidden not in non_identifier_text
+        assert forbidden not in non_identifier_headers
+    assert export_events_after == export_events_before
+
+
+def _export_audit_event_count(world) -> int:
+    with world.sf() as session:
+        return session.scalar(select(func.count()).select_from(AuditEvent).where(AuditEvent.event_type == "admin.report_exported"))
+
+
 def test_an_export_that_cannot_be_audited_is_not_sent(world, monkeypatch):
     from src.auth_repository import AuditRepository
 
     def boom(self, **kw):
         raise RuntimeError("audit down")
     monkeypatch.setattr(AuditRepository, "record", boom)
+    before = _export_audit_event_count(world)
     r = export(world, format="csv", definition=definition_dict(group_by="workflow"))
-    assert r.status_code == 503 and "agent" not in r.text and "metric_id" not in r.text and "840" not in r.text
+    _assert_audit_failure_response(r, export_events_before=before, export_events_after=_export_audit_event_count(world))
+
+
+def test_audit_failure_response_allows_uuid_containing_report_value(world, monkeypatch):
+    from src.auth_repository import AuditRepository
+
+    def boom(self, **kw):
+        raise RuntimeError("audit down")
+    monkeypatch.setattr(AuditRepository, "record", boom)
+    # UUID v4, deliberately containing the synthetic report value that formerly collided.
+    monkeypatch.setattr("src.api.middleware.uuid.uuid4", lambda: uuid.UUID("08400000-0000-4000-8000-000000000000"))
+    before = _export_audit_event_count(world)
+    response = export(world, format="csv", definition=definition_dict(group_by="workflow"))
+    assert "840" in response.json()["error"]["request_id"]
+    _assert_audit_failure_response(response, export_events_before=before, export_events_after=_export_audit_event_count(world))
+
+
+@pytest.mark.parametrize("mutation", ["report_value", "business_field", "outside_field", "invalid_id", "mismatched_id", "attachment", "export_rows", "header_leak", "audit_committed"])
+def test_audit_failure_response_rejects_leaks_and_invalid_metadata(mutation):
+    import httpx
+
+    request_id = "08400000000040008000000000000000"
+    body = {"error": {"code": "http_error", "message": "The export could not be audited, so nothing was exported.", "request_id": request_id}}
+    headers = {"x-request-id": request_id}
+    after = 0
+    if mutation == "report_value":
+        body["error"]["message"] += " 840"
+    elif mutation == "business_field":
+        body["error"]["metric_id"] = "agent"
+    elif mutation == "outside_field":
+        body["rows"] = [{"value": "840"}]
+    elif mutation == "invalid_id":
+        body["error"]["request_id"] = "invalid"
+    elif mutation == "mismatched_id":
+        headers["x-request-id"] = "12345678901240008000000000000000"
+    elif mutation == "attachment":
+        headers["content-disposition"] = "attachment; filename=report.csv"
+    elif mutation == "export_rows":
+        headers["x-export-rows"] = "1"
+    elif mutation == "header_leak":
+        headers["x-unexpected"] = "agent"
+    else:
+        after = 1
+    response = httpx.Response(503, json=body, headers=headers)
+    with pytest.raises(AssertionError):
+        _assert_audit_failure_response(response, export_events_before=0, export_events_after=after)
 
 
 def test_commercial_exports_need_the_commercial_permission(world):
