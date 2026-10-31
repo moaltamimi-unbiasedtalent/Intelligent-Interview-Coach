@@ -88,5 +88,36 @@ test("captured invitation link enforces verified recipient, expiry, revocation a
     await recipient.getByRole("link", { name: "Open the workspace" }).click(); await recipient.reload();
     expect((await request(recipient, `/workspaces/${wid}`)).json.my_role).toBe("workspace_member");
     for (const page of [wrong, unverified, expired, revoked]) expect((await request(page, `/workspaces/${wid}`)).status).toBe(404);
+
+    // A second verified invitee declines the unmodified captured email link.
+    const declinedInvite = await request(owner, `/workspaces/${wid}/invite`, "POST", { email: accounts.wrong.email });
+    expect(declinedInvite.status).toBe(200);
+    expect(declinedInvite.json.email_delivery).toBe("submitted");
+    expect(JSON.stringify(declinedInvite.json)).not.toMatch(/token|secret|code/i);
+    const declineLink = linkFor("wrong");
+    expect(new URL(declineLink).origin === new URL(process.env.BASE_URL!).origin).toBe(true);
+    const declineToken = new URL(declineLink).searchParams.get("token")!;
+    // The existing member cannot use an invitation addressed to another account.
+    expect((await request(recipient, "/workspaces/invitations/preview", "POST", { token: declineToken })).status).toBe(403);
+    expect((await request(recipient, "/workspaces/invitations/decline", "POST", { token: declineToken })).status).toBe(403);
+    const declinePreview = wrong.waitForResponse(r => new URL(r.url()).pathname === "/api/v1/workspaces/invitations/preview" && r.request().method() === "POST");
+    await openCapturedLink(wrong, declineLink);
+    expect((await declinePreview).status()).toBe(200);
+    await expect(wrong.getByText("Synthetic link team")).toBeVisible();
+    expect((await request(wrong, `/workspaces/${wid}`)).status).toBe(404);
+    expect((await request(wrong, `/stories/${sid}`)).status).toBe(404);
+    const decline = wrong.waitForResponse(r => new URL(r.url()).pathname === "/api/v1/workspaces/invitations/decline" && r.request().method() === "POST");
+    await wrong.getByRole("button", { name: "Decline invitation" }).click();
+    expect((await decline).status()).toBe(200);
+    await expect(wrong.getByText(/Invitation declined\. Nothing was shared/i)).toBeVisible();
+    expect((await request(wrong, `/workspaces/${wid}`)).status).toBe(404);
+    expect((await request(wrong, `/stories/${sid}`)).status).toBe(404);
+    expect((await request(wrong, `/shares/resource/story/${sid}`)).status).toBe(404);
+    expect((await request(wrong, "/workspaces/invitations/accept", "POST", { token: declineToken })).status).toBe(409);
+    expect((await request(wrong, "/workspaces/invitations/decline", "POST", { token: declineToken })).status).toBe(409);
+    const afterReload = wrong.waitForResponse(r => new URL(r.url()).pathname === "/api/v1/workspaces/invitations/preview" && r.request().method() === "POST");
+    await wrong.reload();
+    expect((await afterReload).status()).toBe(409);
+    expect((await request(wrong, `/workspaces/${wid}`)).status).toBe(404);
   } finally { await Promise.all(contexts.map(ctx => ctx.close())); }
 });

@@ -149,7 +149,7 @@ def run(args: argparse.Namespace) -> int:
                         audit = db.execute("SELECT event_type, actor_user_id, context FROM audit_events WHERE event_type LIKE 'workspace.%'").fetchall()
                     ids = json.loads((state / "accounts.json").read_text())
                     expected_members = {(ids["owner"]["id"], "workspace_owner"), (ids["recipient"]["id"], "workspace_member")}
-                    if set(members) != expected_members or len(members) != 2 or sorted(row[1] for row in invitations) != ["accepted", "expired", "pending", "revoked"]:
+                    if set(members) != expected_members or len(members) != 2 or sorted(row[1] for row in invitations) != ["accepted", "declined", "expired", "pending", "revoked"]:
                         raise AssertionError("refused invitations changed membership or invitation state")
                     if any(len(row[2]) != 64 or not re.fullmatch(r"[0-9a-f]{64}", row[2]) for row in invitations):
                         raise AssertionError("invitation token hashes invalid")
@@ -158,6 +158,9 @@ def run(args: argparse.Namespace) -> int:
                     accepted = [(event, actor) for event, actor, _ in audit if event == "workspace.invite_accepted"]
                     if accepted != [("workspace.invite_accepted", ids["recipient"]["id"])]:
                         raise AssertionError("unexpected successful acceptance audit")
+                    declined = [(event, actor) for event, actor, _ in audit if event == "workspace.invite_declined"]
+                    if declined != [("workspace.invite_declined", ids["wrong"]["id"])]:
+                        raise AssertionError("unexpected invitation decline audit")
                     # Never print or retain mail payloads, raw links or audit records.
                     for path in state.glob("mail-*.json"):
                         token = parse_qs(urlsplit(json.loads(path.read_text())["link"]).query)["token"][0]
