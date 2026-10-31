@@ -1,5 +1,6 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type TestInfo } from "@playwright/test";
 
+import { WorkspaceDeletionDiagnostics } from "./fixtures/workspaceDeletionDiagnostics";
 import { BRAND_SLOGAN } from "../lib/brand";
 import { ACTIVE_CANDIDATE_LOCALES, APP_LOCALES, type AppLocale } from "../lib/i18n/locales";
 import { T, expectNoEnglishLeak, expectNoOverflow, installSweepMock } from "./fixtures/journey06b";
@@ -145,7 +146,7 @@ async function storyBankJourney(page: Page, ui: string) {
 }
 
 /** Workspaces: create, invite, verified accept, share with consent, revoke, remove member, delete. */
-async function workspaceJourney(page: Page, ui: string) {
+async function workspaceJourney(page: Page, ui: string, testInfo: TestInfo) {
   const t = (k: string, v?: Record<string, string | number>) => T(ui, k, v);
   const f = freshWs();
   await installWorkspaceMock(page, f, ui);
@@ -230,8 +231,35 @@ async function workspaceJourney(page: Page, ui: string) {
   await del.getByRole("button", { name: t("wsMgmt.deleteConfirm") }).click();
   expect(f.ws).not.toBeNull();                                                                // refused client side, nothing sent
   await del.getByLabel(t("wsMgmt.confirmNameLabel")).fill("Team Alpha");
-  await del.getByRole("button", { name: t("wsMgmt.deleteConfirm") }).click();
-  await expect(page).toHaveURL(/\/workspaces$/);
+  const diag = new WorkspaceDeletionDiagnostics();
+  const enabled = ui === "nl";
+  const markUrl = () => { const path = new URL(page.url()).pathname; diag.record(path === "/workspaces" ? "url_list" : path === "/workspaces/7" ? "url_detail" : "url_other"); };
+  if (enabled) {
+    diag.record((await del.getByLabel(t("wsMgmt.confirmNameLabel")).inputValue()).trim() === f.ws?.name ? "confirm_matches" : "confirm_mismatch");
+    page.on("request", req => { const path = new URL(req.url()).pathname; if (path === "/api/v1/workspaces/7/delete" && req.method() === "POST") diag.record("delete_request"); else if (path === "/workspaces" && req.headers()["rsc"] === "1") diag.record("route_data_request"); });
+    page.on("response", res => { const path = new URL(res.url()).pathname; if (path === "/api/v1/workspaces/7/delete" && res.request().method() === "POST") diag.record(res.status() === 200 && f.ws === null ? "delete_200_fake_absent" : "delete_other"); else if (path === "/workspaces" && res.request().headers()["rsc"] === "1") diag.record(res.status() === 200 ? "route_data_200" : "route_data_other"); });
+    page.on("framenavigated", frame => { if (frame === page.mainFrame()) markUrl(); });
+    page.on("console", msg => { if (msg.type() === "error") diag.record(/^Failed to load resource: the server responded with a status of [1-5]\d{2}/.test(msg.text()) ? "console_http_error" : "console_other"); });
+    page.on("pageerror", () => diag.record("page_error"));
+    markUrl();
+  }
+  try {
+    await del.getByRole("button", { name: t("wsMgmt.deleteConfirm") }).click();
+    await expect(page).toHaveURL(/\/workspaces$/);
+    if (enabled) diag.record("assertion_passed");
+  } catch (error) {
+    if (enabled) diag.record("assertion_failed");
+    throw error;
+  } finally {
+    if (enabled) {
+      markUrl();
+      diag.record(await del.isVisible() ? "dialog_visible" : "dialog_hidden");
+      diag.record(await page.getByRole("heading", { level: 1, name: "Team Alpha" }).isVisible() ? "detail_visible" : "detail_hidden");
+      const evidence = JSON.stringify(diag.snapshot());
+      console.log("workspace-deletion-diagnostics " + evidence); // Fixed event labels and bounded timings only.
+      await testInfo.attach("workspace-deletion-diagnostics", { body: evidence, contentType: "application/json" });
+    }
+  }
   await expect(page.getByText(t("workspaces.emptyWorkspaces"))).toBeVisible();
   expect(f.ws).toBeNull();
 }
@@ -410,8 +438,8 @@ for (const ui of LOCALES) {
       await expectNoOverflow(page, ui, "story editor");
     });
 
-    test("Workspaces journey: create, invite, verified accept, share with consent, revoke, remove member, delete", async ({ page }) => {
-      await workspaceJourney(page, ui);
+    test("Workspaces journey: create, invite, verified accept, share with consent, revoke, remove member, delete", async ({ page }, testInfo) => {
+      await workspaceJourney(page, ui, testInfo);
     });
 
     test("Workspaces: a missing workspace and a server error are explained in the interface language; dialogs trap focus", async ({ page }) => {
