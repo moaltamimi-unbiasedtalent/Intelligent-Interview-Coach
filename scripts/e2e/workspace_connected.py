@@ -104,28 +104,42 @@ def run(args: argparse.Namespace) -> int:
                         return result
                     # Inspect only this runner's disposable DB, and never print row contents.
                     with sqlite3.connect(f"file:{state / 'journey.db'}?mode=ro", uri=True) as db:
-                        grants = db.execute("SELECT permission, status FROM share_grants").fetchall()
+                        grants = db.execute("SELECT owner_user_id, permission, status FROM share_grants").fetchall()
                         invitations = db.execute("SELECT status, length(token_hash) FROM workspace_invitations").fetchall()
-                        members = db.execute("SELECT count(*) FROM workspace_memberships WHERE status = 'active'").fetchone()[0]
+                        members = db.execute("SELECT user_id, role, status FROM workspace_memberships").fetchall()
                         stories = db.execute("SELECT count(*) FROM candidate_stories").fetchone()[0]
-                        audit = db.execute("SELECT event_type, actor_user_id, context FROM audit_events WHERE event_type LIKE 'workspace.%' OR event_type LIKE 'share.%'").fetchall()
+                        audit = db.execute("SELECT event_type, actor_user_id, context, target_id FROM audit_events WHERE event_type LIKE 'workspace.%' OR event_type LIKE 'share.%'").fetchall()
                     required = {"workspace.created", "workspace.invite_created", "workspace.invite_accepted", "share.created", "share.revoked"}
-                    if grants != [("view", "revoked")] or invitations != [("accepted", 64)] or members != 2 or stories != 2:
-                        raise AssertionError("disposable Workspace state did not match the accepted journey")
                     if not required.issubset({row[0] for row in audit}):
                         raise AssertionError("required Workspace audit events missing")
                     account_ids = json.loads((state / "accounts.json").read_text())
                     owner_id, recipient_id = account_ids["owner"]["id"], account_ids["other"]["id"]
+                    if sorted(grants) != sorted([(owner_id, "view", "revoked"), (owner_id, "view", "active"), (recipient_id, "view", "revoked")]):
+                        raise AssertionError("share revocation scope did not match member removal")
+                    if sorted(members) != sorted([(owner_id, "workspace_owner", "active"), (recipient_id, "workspace_member", "removed")]):
+                        raise AssertionError("member removal state did not match")
+                    if invitations != [("accepted", 64)] or stories != 4:
+                        raise AssertionError("invitation or original resources not preserved")
+                    removed = [(actor, json.loads(context), target) for event, actor, context, target in audit if event == "workspace.member_removed"]
+                    if len(removed) != 1 or removed[0][0] != owner_id:
+                        raise AssertionError("removal audit actor or count invalid")
+                    actor, context, target = removed[0]
+                    if context.get("target") != str(recipient_id) or context.get("target_role") != "workspace_member" or context.get("shares_revoked") != 1:
+                        raise AssertionError("removal audit context invalid")
+                    with sqlite3.connect(f"file:{state / 'journey.db'}?mode=ro", uri=True) as db:
+                        workspace_ids = db.execute("SELECT id FROM workspaces").fetchall()
+                    if len(workspace_ids) != 1 or target != str(workspace_ids[0][0]):
+                        raise AssertionError("removal audit workspace invalid")
                     expected_actors = {"workspace.created": owner_id, "workspace.invite_created": owner_id,
                                        "workspace.invite_accepted": recipient_id, "share.created": owner_id, "share.revoked": owner_id}
-                    if any(not any(event == kind and actor == uid for event, actor, _ in audit) for kind, uid in expected_actors.items()):
+                    if any(not any(event == kind and actor == uid for event, actor, _, _ in audit) for kind, uid in expected_actors.items()):
                         raise AssertionError("Workspace audit attribution did not match synthetic actors")
-                    share_context = next(json.loads(context) for event, _, context in audit if event == "share.created")
+                    share_context = next(json.loads(context) for event, _, context, _ in audit if event == "share.created")
                     if share_context.get("consent") is not True or share_context.get("resource_type") != "story":
                         raise AssertionError("share audit consent metadata missing")
                     if any(word in json.dumps(audit).lower() for word in ("@example", "synthetic team", "synthetic shared", "token")):
                         raise AssertionError("private synthetic data appeared in Workspace audit metadata")
-                    print("Disposable database: one revoked VIEW grant, one hashed accepted invitation, two active members, two stories; required bounded audit events present.")
+                    print("Disposable database: scoped VIEW grants, hashed invitation, owner and removed member, four stories; required bounded audit events present.")
                     return 0
         finally:
             stack._stop(web)
