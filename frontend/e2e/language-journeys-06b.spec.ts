@@ -145,10 +145,25 @@ async function storyBankJourney(page: Page, ui: string) {
   await expect(page.getByText(t("storyBank.empty"))).toBeVisible();
 }
 
+/** Test-only browser response wrapper: retain the real Next router and forward its call unchanged. */
+async function observeRealWorkspaceRouter(page: Page) {
+  await page.route("**/_next/static/chunks/app/workspaces/**/page-*.js", async route => {
+    if (!new URL(route.request().url()).pathname.includes("/%5Bid%5D/") && !new URL(route.request().url()).pathname.includes("/[id]/")) return route.continue();
+    const response = await route.fetch();
+    const source = await response.text();
+    const pattern = /await\s+([\w$]+(?:\.[\w$]+)*)\.workspaces\.remove\(([\w$]+)\.id,([\w$]+)\.trim\(\)\),([\w$]+)\.push\("\/workspaces"\)/g;
+    const matches = [...source.matchAll(pattern)];
+    if (matches.length !== 1) throw new Error("Expected exactly one observable Workspace delete navigation");
+    const transformed = source.replace(pattern, (_match, api, workspace, typed, router) => `await ${api}.workspaces.remove(${workspace}.id,${typed}.trim()),(console.info("ask4mo_router_push_workspaces"),${router}.push("/workspaces"))`);
+    await route.fulfill({ response, body: transformed });
+  });
+}
+
 /** Workspaces: create, invite, verified accept, share with consent, revoke, remove member, delete. */
 async function workspaceJourney(page: Page, ui: string, testInfo: TestInfo) {
   const t = (k: string, v?: Record<string, string | number>) => T(ui, k, v);
   const f = freshWs();
+  if (ui === "nl" && process.env.ASK4MO_ROUTER_OBSERVE === "1") await observeRealWorkspaceRouter(page);
   await installWorkspaceMock(page, f, ui);
   const storyLabel = `${t("wsMgmt.typeStory")} #5`;
 
@@ -239,7 +254,7 @@ async function workspaceJourney(page: Page, ui: string, testInfo: TestInfo) {
     page.on("request", req => { const path = new URL(req.url()).pathname; if (path === "/api/v1/workspaces/7/delete" && req.method() === "POST") diag.record("delete_request"); else if (path === "/workspaces" && req.headers()["rsc"] === "1") diag.record("route_data_request"); });
     page.on("response", res => { const path = new URL(res.url()).pathname; if (path === "/api/v1/workspaces/7/delete" && res.request().method() === "POST") diag.record(res.status() === 200 && f.ws === null ? "delete_200_fake_absent" : "delete_other"); else if (path === "/workspaces" && res.request().headers()["rsc"] === "1") diag.record(res.status() === 200 ? "route_data_200" : "route_data_other"); });
     page.on("framenavigated", frame => { if (frame === page.mainFrame()) markUrl(); });
-    page.on("console", msg => { if (msg.type() === "error") diag.record(/^Failed to load resource: the server responded with a status of [1-5]\d{2}/.test(msg.text()) ? "console_http_error" : "console_other"); });
+    page.on("console", msg => { if (msg.type() === "info" && msg.text() === "ask4mo_router_push_workspaces") diag.record("router_push_invoked"); if (msg.type() === "error") diag.record(/^Failed to load resource: the server responded with a status of [1-5]\d{2}/.test(msg.text()) ? "console_http_error" : "console_other"); });
     page.on("pageerror", () => diag.record("page_error"));
     markUrl();
   }
@@ -468,3 +483,43 @@ for (const ui of LOCALES) {
     });
   });
 }
+
+
+test("router minimal: synthetic Workspace delete using real Next router", async ({ page }, testInfo) => {
+  test.skip(process.env.ASK4MO_ROUTER_OBSERVE !== "1", "requires isolated router observation build");
+  const ui = "nl", t = (k: string) => T(ui, k);
+  const f = freshWs();
+  f.ws = { id: 7, name: "Team Alpha", status: "active", owner: "A" };
+  f.members = [{ who: "A", role: "workspace_owner" }];
+  await observeRealWorkspaceRouter(page);
+  await installWorkspaceMock(page, f, ui);
+  const diag = new WorkspaceDeletionDiagnostics();
+  page.on("console", msg => { if (msg.type() === "info" && msg.text() === "ask4mo_router_push_workspaces") diag.record("router_push_invoked"); else if (msg.type() === "error") diag.record("console_other"); });
+  page.on("pageerror", () => diag.record("page_error"));
+  page.on("request", req => { const path = new URL(req.url()).pathname; if (path === "/api/v1/workspaces/7/delete" && req.method() === "POST") diag.record("delete_request"); else if (path === "/workspaces" && req.headers()["rsc"] === "1") diag.record("route_data_request"); });
+  page.on("response", res => { const path = new URL(res.url()).pathname; if (path === "/api/v1/workspaces/7/delete" && res.request().method() === "POST") diag.record(res.status() === 200 && f.ws === null ? "delete_200_fake_absent" : "delete_other"); else if (path === "/workspaces" && res.request().headers()["rsc"] === "1") diag.record(res.status() === 200 ? "route_data_200" : "route_data_other"); });
+  const markUrl = () => { const path = new URL(page.url()).pathname; diag.record(path === "/workspaces" ? "url_list" : path === "/workspaces/7" ? "url_detail" : "url_other"); };
+  page.on("framenavigated", frame => { if (frame === page.mainFrame()) markUrl(); });
+  await page.goto("/workspaces/7");
+  await page.getByRole("button", { name: t("wsMgmt.deleteAction") }).click();
+  const dialog = page.getByRole("alertdialog");
+  await dialog.getByLabel(t("wsMgmt.confirmNameLabel")).fill("Team Alpha");
+  diag.record((await dialog.getByLabel(t("wsMgmt.confirmNameLabel")).inputValue()).trim() === f.ws?.name ? "confirm_matches" : "confirm_mismatch");
+  const response = page.waitForResponse(r => new URL(r.url()).pathname === "/api/v1/workspaces/7/delete" && r.request().method() === "POST");
+  try {
+    await dialog.getByRole("button", { name: t("wsMgmt.deleteConfirm") }).click();
+    expect((await response).status()).toBe(200);
+    await expect(page).toHaveURL(/\/workspaces$/);
+    diag.record("assertion_passed");
+    expect(f.ws).toBeNull();
+    expect(diag.snapshot().events.some(e => e.event === "router_push_invoked")).toBe(true);
+  } catch (error) { diag.record("assertion_failed"); throw error; }
+  finally {
+    markUrl();
+    diag.record(await dialog.isVisible() ? "dialog_visible" : "dialog_hidden");
+    diag.record(await page.getByRole("heading", { level: 1, name: "Team Alpha" }).isVisible() ? "detail_visible" : "detail_hidden");
+    const evidence = JSON.stringify(diag.snapshot());
+    console.log("workspace-router-minimal-diagnostics " + evidence);
+    await testInfo.attach("workspace-router-minimal-diagnostics", { body: evidence, contentType: "application/json" });
+  }
+});
