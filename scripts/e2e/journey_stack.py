@@ -171,6 +171,24 @@ def _stop(proc: subprocess.Popen | None) -> None:
         proc.kill()
 
 
+def _stop_owned_process_group(proc: subprocess.Popen | None) -> None:
+    """Stop only the new session created for the focused local web process."""
+    if proc is None:
+        return
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    try:
+        proc.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        proc.wait(timeout=10)
+
+
 def run(args: argparse.Namespace) -> int:
     langs = [x.strip() for x in args.languages.split(",") if x.strip()]
     if args.focused_start and args.keep:
@@ -206,7 +224,8 @@ def run(args: argparse.Namespace) -> int:
                     raise AssertionError("disposable interview baseline not empty")
         if not args.skip_build:
             subprocess.run(["npm", "run", "build"], cwd=str(frontend), env=web_env, check=True, stdout=(state / "web-build.log").open("w"), stderr=subprocess.STDOUT)
-        web = subprocess.Popen(["npx", "next", "start", "-p", str(args.web_port)], cwd=str(frontend), env=web_env, stdout=(state / "web.log").open("w"), stderr=subprocess.STDOUT)
+        web = subprocess.Popen(["npx", "next", "start", "-p", str(args.web_port)], cwd=str(frontend), env=web_env, stdout=(state / "web.log").open("w"), stderr=subprocess.STDOUT,
+                               start_new_session=args.focused_start)
         _wait(f"http://localhost:{args.web_port}/", 60, "web")
         pw_env = dict(api_env, JOURNEY_MODE="real", JOURNEY_VARIANT=args.variant, BASE_URL=f"http://localhost:{args.web_port}", JOURNEY_API_URL=f"http://localhost:{args.api_port}/api/v1",
                       JOURNEY_INVITATIONS_FILE=str(state / "invitations.json"), JOURNEY_LANGUAGES=",".join(langs), E2E_PORT=str(args.web_port))
@@ -228,7 +247,10 @@ def run(args: argparse.Namespace) -> int:
                     raise AssertionError("disposable interview persistence did not match the scenario")
                 print(f"Focused connected Start Interview: 1 PASS; variant={args.variant}; locale={langs[0]}; disposable persistence PASS")
     finally:
-        _stop(web)
+        if args.focused_start:
+            _stop_owned_process_group(web)
+        else:
+            _stop(web)
         _stop(api)
         if args.keep:
             print(f"kept {state}")

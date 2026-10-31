@@ -239,5 +239,5 @@ jobs:
           CI: "true"
         run: |
           python scripts/e2e/journey_stack.py run --focused-start --languages en --variant keyless
-          python scripts/e2e/journey_stack.py run --focused-start --languages en --variant provider_down --skip-build
-          python scripts/e2e/journey_stack.py run --focused-start --languages en --variant healthy --skip-build
+          python scripts/e2e/journey_stack.py run --focused-start --languages en --variant provider_down --web-port 3143 --skip-build
+          python scripts/e2e/journey_stack.py run --focused-start --languages en --variant healthy --web-port 3144 --skip-build
