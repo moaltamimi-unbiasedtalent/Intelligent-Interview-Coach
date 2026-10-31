@@ -241,3 +241,28 @@ jobs:
           python scripts/e2e/journey_stack.py run --focused-start --languages en --variant keyless
           python scripts/e2e/journey_stack.py run --focused-start --languages en --variant provider_down --web-port 3143 --skip-build
           python scripts/e2e/journey_stack.py run --focused-start --languages en --variant healthy --web-port 3144 --skip-build
+
+  connected-story-practice-consent:
+    name: Connected Story Bank Practice consent (synthetic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install isolated test dependencies
+        run: |
+          pip install -e ".[dev]"
+          cd frontend
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run connected synthetic story Practice consent journey
+        env:
+          CI: "true"
+        run: python scripts/e2e/story_practice_connected.py run
