@@ -12,6 +12,7 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
   const diagnostics = new BrowserDiagnostics();
   result.tooling = { node: process.version, playwright: playwrightVersion, browser: context.browser()?.version() ?? "unavailable" };
   let inlineRefusals = 0, loginRequests = 0, expectedUnauthenticatedErrors = 0;
+  const loginEvidence: Promise<void>[] = [];
   await context.route("**/*", route => {
     const url = new URL(route.request().url());
     if (!["https://app.staging.example.com", "https://api.staging.example.com"].includes(url.origin)) {
@@ -21,10 +22,21 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     }
     return route.continue(); // Real API and every image request remain untouched.
   });
-  page.on("request", request => { if (request.url() === api + "/auth/login") loginRequests++; });
+  page.on("request", request => { if (request.url() === api + "/auth/login") { loginRequests++; if (loginRequests === 1) diagnostics.loginRequest(request.postData(), request.headers()["content-type"] ?? "", result.stage); } });
   page.on("pageerror", error => { pageErrors.length++; diagnostics.pageError(result.stage, error); });
   page.on("requestfailed", request => diagnostics.request("request_failed", { url: request.url(), method: request.method(), resourceType: request.resourceType(), error: request.failure()?.errorText }, result.stage));
   page.on("response", response => {
+    if (response.url() === api + "/auth/login" && response.request().method() === "POST" && loginEvidence.length === 0) {
+      const stage = result.stage;
+      loginEvidence.push((async () => {
+        try {
+          const length = Number(response.headers()["content-length"]);
+          const raw = response.status() === 422 && Number.isSafeInteger(length) && length > 0 && length <= 4096 ? await response.text() : null;
+          diagnostics.loginResponse(response.status(), raw, stage);
+        } catch { diagnostics.loginResponse(response.status(), null, stage); }
+      })());
+    }
+    diagnostics.assetResponse({ url: response.url(), resourceType: response.request().resourceType(), status: response.status() }, result.stage);
     if (response.status() >= 400) diagnostics.request("http_error", { url: response.url(), method: response.request().method(), resourceType: response.request().resourceType(), status: response.status() }, result.stage);
   });
   page.on("console", message => {
@@ -179,6 +191,7 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     }
     throw error;
   } finally {
+    await Promise.all(loginEvidence);
     result.diagnostics = diagnostics.snapshot();
     result.observed_external_attempts = external.length;
     result.observed_expected_unauthenticated_http_errors = expectedUnauthenticatedErrors;
