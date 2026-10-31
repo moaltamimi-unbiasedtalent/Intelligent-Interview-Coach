@@ -270,3 +270,7 @@ jobs:
         env:
           CI: "true"
         run: python scripts/e2e/story_deletion_connected.py run
+      - name: Run connected synthetic story feedback journey
+        env:
+          CI: "true"
+        run: python scripts/e2e/story_feedback_connected.py run
