@@ -37,6 +37,7 @@ import json
 import os
 import shutil
 import signal
+import sqlite3
 import socket
 import subprocess
 import sys
@@ -172,6 +173,10 @@ def _stop(proc: subprocess.Popen | None) -> None:
 
 def run(args: argparse.Namespace) -> int:
     langs = [x.strip() for x in args.languages.split(",") if x.strip()]
+    if args.focused_start and args.keep:
+        raise SystemExit("focused qualification must not retain credentials or browser artifacts")
+    if args.focused_start and len(langs) != 1:
+        raise SystemExit("focused start qualification requires exactly one locale")
     if any(x not in ALL_LANGUAGES for x in langs):
         raise SystemExit(f"languages must be among {', '.join(ALL_LANGUAGES)}")
     _check_ports(args.api_port, args.web_port)
@@ -180,21 +185,48 @@ def run(args: argparse.Namespace) -> int:
     api = web = None
     code = 1
     try:
-        api_env = dict(os.environ)
+        if args.focused_start:
+            # Explicit allowlist: no inherited credentials or real private configuration.
+            api_env = {k: os.environ[k] for k in ("PATH", "HOME", "TMPDIR", "PLAYWRIGHT_BROWSERS_PATH") if k in os.environ}
+            api_env.update(PYTHON_DOTENV_DISABLED="1", PYTHONDONTWRITEBYTECODE="1")
+        else:
+            api_env = dict(os.environ)
         api = subprocess.Popen([sys.executable, str(Path(__file__)), "serve", "--state-dir", str(state), "--variant", args.variant, "--api-port", str(args.api_port),
                                 "--web-port", str(args.web_port), "--invitations", str(len(langs) + 1)],
                                cwd=str(ROOT), env=api_env, stdout=(state / "api.log").open("w"), stderr=subprocess.STDOUT)
         _wait(f"http://127.0.0.1:{args.api_port}/api/v1/health", 90, "API")
-        web_env = dict(os.environ, NEXT_PUBLIC_API_BASE_URL=f"http://localhost:{args.api_port}/api/v1", NEXT_DIST_DIR=".next-journey", NEXT_TELEMETRY_DISABLED="1",
+        web_env = dict(api_env, NEXT_PUBLIC_API_BASE_URL=f"http://localhost:{args.api_port}/api/v1", NEXT_DIST_DIR=".next-journey", NEXT_TELEMETRY_DISABLED="1",
                        OPENROUTER_API_KEY=KEY_CANARY)      # a canary the key-hazard guard (e2e/key-hazard-04d.spec.ts) must NOT find in the browser output
+        if args.focused_start:
+            font = state / "font.cjs"
+            font.write_text("module.exports = new Proxy({}, {get: () => `/* latin */\\n@font-face { font-family: 'Inter'; font-style: normal; font-weight: 100 900; src: url(mock.woff2) format('woff2'); }`});\n", encoding="utf-8")
+            web_env["NEXT_FONT_GOOGLE_MOCKED_RESPONSES"] = str(font)
+            with sqlite3.connect(f"file:{state / 'journey.db'}?mode=ro", uri=True) as db:
+                if any(db.execute(f"SELECT count(*) FROM {table}").fetchone()[0] for table in ("interview_sessions", "interviews", "reports")):
+                    raise AssertionError("disposable interview baseline not empty")
         if not args.skip_build:
             subprocess.run(["npm", "run", "build"], cwd=str(frontend), env=web_env, check=True, stdout=(state / "web-build.log").open("w"), stderr=subprocess.STDOUT)
         web = subprocess.Popen(["npx", "next", "start", "-p", str(args.web_port)], cwd=str(frontend), env=web_env, stdout=(state / "web.log").open("w"), stderr=subprocess.STDOUT)
         _wait(f"http://localhost:{args.web_port}/", 60, "web")
-        pw_env = dict(os.environ, JOURNEY_MODE="real", JOURNEY_VARIANT=args.variant, BASE_URL=f"http://localhost:{args.web_port}", JOURNEY_API_URL=f"http://localhost:{args.api_port}/api/v1",
+        pw_env = dict(api_env, JOURNEY_MODE="real", JOURNEY_VARIANT=args.variant, BASE_URL=f"http://localhost:{args.web_port}", JOURNEY_API_URL=f"http://localhost:{args.api_port}/api/v1",
                       JOURNEY_INVITATIONS_FILE=str(state / "invitations.json"), JOURNEY_LANGUAGES=",".join(langs), E2E_PORT=str(args.web_port))
-        result = subprocess.run(["npx", "playwright", "test", "--config", "playwright.journey-real.config.ts"], cwd=str(frontend), env=pw_env)
+        if args.focused_start:
+            pw_env["JOURNEY_OUTPUT_DIR"] = str(state / "playwright-results")
+        config = "playwright.start-interview-connected.config.ts" if args.focused_start else "playwright.journey-real.config.ts"
+        result = subprocess.run(["npx", "playwright", "test", "--config", config], cwd=str(frontend), env=pw_env,
+                                capture_output=args.focused_start)
         code = result.returncode
+        if args.focused_start:
+            if code:
+                print("Focused connected Start Interview: FAIL (raw browser output withheld for privacy)")
+            else:
+                with sqlite3.connect(f"file:{state / 'journey.db'}?mode=ro", uri=True) as db:
+                    counts = {table: db.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+                              for table in ("interview_sessions", "interviews", "reports")}
+                expected = {"interview_sessions": 1 if args.variant == "healthy" else 0, "interviews": 0, "reports": 0}
+                if counts != expected:
+                    raise AssertionError("disposable interview persistence did not match the scenario")
+                print(f"Focused connected Start Interview: 1 PASS; variant={args.variant}; locale={langs[0]}; disposable persistence PASS")
     finally:
         _stop(web)
         _stop(api)
@@ -217,6 +249,7 @@ def main(argv: list[str] | None = None) -> int:
         if name == "run":
             s.add_argument("--languages", default=",".join(ALL_LANGUAGES))
             s.add_argument("--keep", action="store_true")
+            s.add_argument("--focused-start", action="store_true")
             s.add_argument("--skip-build", action="store_true")
         else:
             s.add_argument("--state-dir", required=True)

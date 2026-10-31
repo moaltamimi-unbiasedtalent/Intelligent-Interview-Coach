@@ -213,3 +213,31 @@ jobs:
         env:
           CI: "true"
         run: python scripts/e2e/workspace_email_link.py run
+
+  connected-interview-start-failures:
+    name: Connected Candidate interview start (synthetic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install isolated test dependencies
+        run: |
+          pip install -e ".[dev]"
+          cd frontend
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Qualify real synthetic interview start variants
+        env:
+          CI: "true"
+        run: |
+          python scripts/e2e/journey_stack.py run --focused-start --languages en --variant keyless
+          python scripts/e2e/journey_stack.py run --focused-start --languages en --variant provider_down --skip-build
+          python scripts/e2e/journey_stack.py run --focused-start --languages en --variant healthy --skip-build
