@@ -567,8 +567,8 @@ def get_workspace_service(
     from src.application.workspace_service import WorkspaceService
     from src.mail.service import EmailAttemptRepository, EmailService
 
-    base = getattr(getattr(request.app.state, "settings", None), "app_base_url", None) \
-        or "https://app.ask4mo.local"
+    # Reuse the same configured origin used by account verification links.
+    base = get_auth_config(request).app_base_url
     mail = email if isinstance(email, EmailService) else EmailService(email, EmailAttemptRepository(workspaces.session_factory))
     return WorkspaceService(workspaces=workspaces, accounts=accounts, audit=audit,
                            email=mail, app_base_url=base)
