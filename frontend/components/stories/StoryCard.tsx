@@ -141,7 +141,7 @@ export function StoryCard({
       {showShare && !archived ? <StoryShare storyId={story.id} /> : null}
 
       <ConfirmDialog
-        open={confirmDelete} title={t("storyBank.deleteTitle")} confirmLabel={t("storyBank.delete")} busy={busy}
+        open={confirmDelete} title={`${t("storyBank.deleteTitle")} ${story.title}`} confirmLabel={t("storyBank.delete")} busy={busy}
         onConfirm={() => void remove()} onCancel={() => setConfirmDelete(false)} testId={`delete-story-${story.id}`}
       >
         <p>{t("storyBank.deleteBody")}</p>
