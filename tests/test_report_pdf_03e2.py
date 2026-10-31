@@ -10,8 +10,10 @@ import csv
 import io
 import json
 import re
+import uuid
 from datetime import datetime, timezone
 
+import httpx
 import pytest
 from pypdf import PdfReader
 from pypdf.generic import ContentStream, DictionaryObject, IndirectObject
@@ -22,7 +24,9 @@ from src.persistence import AuditEvent
 from src.reporting import report_builder as RB
 from src.reporting import report_pdf as PDF
 from tests import _admin_matrix as M
-from tests.test_report_builder_03e1 import API, CAPI, DENIED, PW, create_saved, definition_dict, export, seed, World  # noqa: F401  (World and seed back the fixtures below)
+from tests.test_report_builder_03e1 import (
+    API, CAPI, DENIED, PW, World, _assert_audit_failure_response, create_saved, definition_dict, export, seed,
+)  # noqa: F401  (World and seed back the fixtures below)
 
 
 @pytest.fixture(scope="module")
@@ -201,15 +205,72 @@ def test_an_anonymous_caller_gets_no_pdf(world):
 
 
 # ------------------------------------------------------------------------------------------------------------------------------ audit failure, bounds
+def _assert_pdf_audit_failure(response, *, export_events_before: int, export_events_after: int) -> None:
+    assert not response.content.startswith(b"%PDF")
+    _assert_audit_failure_response(response, export_events_before=export_events_before, export_events_after=export_events_after)
+
+
 def test_a_pdf_that_cannot_be_audited_is_not_sent(world, monkeypatch):
     from src.auth_repository import AuditRepository
 
     def boom(self, **kw):
         raise RuntimeError("audit down")
     monkeypatch.setattr(AuditRepository, "record", boom)
-    r = export(world, format="pdf", definition=DEFS["ai_workflow"])
-    assert r.status_code == 503 and r.headers["content-type"].startswith("application/json")
-    assert not r.content.startswith(b"%PDF") and b"agent" not in r.content and b"840" not in r.content and "nothing was exported" in r.json()["error"]["message"]
+    before = audit_count(world)
+    response = export(world, format="pdf", definition=DEFS["ai_workflow"])
+    _assert_pdf_audit_failure(response, export_events_before=before, export_events_after=audit_count(world))
+
+
+def test_pdf_audit_failure_allows_correlation_id_containing_report_value(world, monkeypatch):
+    from src.auth_repository import AuditRepository
+
+    def boom(self, **kw):
+        raise RuntimeError("audit down")
+    monkeypatch.setattr(AuditRepository, "record", boom)
+    monkeypatch.setattr("src.api.middleware.uuid.uuid4", lambda: uuid.UUID("08400000-0000-4000-8000-000000000000"))
+    before = audit_count(world)
+    response = export(world, format="pdf", definition=DEFS["ai_workflow"])
+    assert "840" in response.json()["error"]["request_id"]
+    _assert_pdf_audit_failure(response, export_events_before=before, export_events_after=audit_count(world))
+
+
+@pytest.mark.parametrize("mutation", [
+    "numeric_value", "string_value", "report_field", "nested_field", "invalid_id", "mismatched_header",
+    "wrong_code", "wrong_message", "malformed_envelope", "pdf_content", "attachment", "audit_committed",
+])
+def test_pdf_audit_failure_assertion_rejects_leaks_and_invalid_metadata(mutation):
+    request_id = "08400000000040008000000000000000"
+    body = {"error": {"code": "http_error", "message": "The export could not be audited, so nothing was exported.", "request_id": request_id}}
+    headers = {"x-request-id": request_id}
+    after = 0
+    if mutation == "numeric_value":
+        body["error"]["value"] = 840
+    elif mutation == "string_value":
+        body["error"]["value"] = "840"
+    elif mutation == "report_field":
+        body["error"]["metric_id"] = "agent"
+    elif mutation == "nested_field":
+        body["rows"] = [{"value": "840"}]
+    elif mutation == "invalid_id":
+        body["error"]["request_id"] = "invalid"
+    elif mutation == "mismatched_header":
+        headers["x-request-id"] = "12345678901240008000000000000000"
+    elif mutation == "wrong_code":
+        body["error"]["code"] = "other"
+    elif mutation == "wrong_message":
+        body["error"]["message"] = "other"
+    elif mutation == "malformed_envelope":
+        body["error"] = []
+    elif mutation == "attachment":
+        headers["content-disposition"] = "attachment; filename=report.pdf"
+    elif mutation == "audit_committed":
+        after = 1
+    if mutation == "pdf_content":
+        response = httpx.Response(503, content=b"%PDF-1.7 synthetic", headers={**headers, "content-type": "application/json"})
+    else:
+        response = httpx.Response(503, json=body, headers=headers)
+    with pytest.raises(AssertionError):
+        _assert_pdf_audit_failure(response, export_events_before=0, export_events_after=after)
 
 
 def test_a_refused_pdf_is_never_audited(world, monkeypatch):
