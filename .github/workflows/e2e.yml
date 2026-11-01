@@ -278,3 +278,28 @@ jobs:
         env:
           CI: "true"
         run: python scripts/e2e/data_export_connected.py run
+
+  connected-privacy-request:
+    name: Connected Candidate privacy request (synthetic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install isolated test dependencies
+        run: |
+          pip install -e ".[dev]"
+          cd frontend
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run connected synthetic privacy request journey
+        env:
+          CI: "true"
+        run: python scripts/e2e/privacy_request_connected.py run
