@@ -1,5 +1,6 @@
 import { noPrivateFields } from "./privacy-assertions";
-import { readFileSync, existsSync } from "node:fs";
+import { assessRefusal, type RefusalFacts } from "./auth-refusal";
+import { readFileSync, existsSync, appendFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import fixtures from "../e2e/journey/fixtures.json";
@@ -22,6 +23,19 @@ async function request(page: Page, path: string, method = "GET", body?: object) 
     const r = await fetch(base + path, { method, credentials: "include", headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
     return { status: r.status, json: await r.json() };
   }, { base: api, path, method, body });
+}
+async function refusal(page: Page, scenario: "anonymous" | "logged_out", logoutSuccess: boolean | null) {
+  const result = await page.evaluate(async (base) => {
+    try {
+      const response = await fetch(base + "/auth/account/export", { credentials: "include" });
+      let body: unknown = null;
+      try { body = await response.json(); } catch { /* invalid JSON is an assertion failure */ }
+      return { status: response.status, contentType: response.headers.get("content-type"), attachment: response.headers.get("content-disposition"), body };
+    } catch { return { status: 0, contentType: null, attachment: null, body: null }; }
+  }, api);
+  const facts: RefusalFacts = assessRefusal({ scenario, ...result, logoutSuccess });
+  appendFileSync(join(process.env.STORY_OUTPUT_DIR!, "auth-refusal-facts.jsonl"), JSON.stringify(facts) + "\n", { mode: 0o600 });
+  check(facts.passed, `${scenario} authentication refusal failed`);
 }
 async function login(page: Page, email: string) {
   await page.goto("/sign-in"); await page.locator("#email").fill(email); await page.locator("#password").fill(password);
@@ -120,12 +134,16 @@ test("real account download exports only caller-owned records despite VIEW acces
     check(Array.isArray(exportedB.interviews) && exportedB.interviews.length === 0 && Array.isArray(exportedB.data?.interviews) && exportedB.data.interviews.length === 0, "foreign completed history control");
     const hinted = await request(a, `/auth/account/export?user_id=${accounts.other.id}`);
     check(hinted.status === 200 && hinted.json.account.user_id === accounts.owner.id && !JSON.stringify(hinted.json).includes(markers[2]), "owner selector ignored");
-    await guest.goto("/sign-in"); const noAuth = await request(guest, "/auth/account/export");
-    check(noAuth.status !== 200 && noAuth.json.format !== "ask4mo.candidate-export.v1", "anonymous refusal");
+    await guest.goto("/sign-in"); await refusal(guest, "anonymous", null);
     check(await snapshot() === before, "export changed source state");
     await b.goto("/account");
+    check((await request(b, "/auth/me")).status === 200, "pre-logout authentication");
     const logoutResponse = b.waitForResponse(r => new URL(r.url()).pathname === "/api/v1/auth/logout" && r.request().method() === "POST");
-    await b.getByRole("button", { name: /sign out|log out/i }).first().click(); await logoutResponse;
-    const loggedOut = await request(b, "/auth/account/export"); check(loggedOut.status !== 200 && loggedOut.json.format !== "ask4mo.candidate-export.v1", "logged out refusal");
+    await b.getByRole("button", { name: /sign out|log out/i }).first().click();
+    const logout = await logoutResponse;
+    let logoutBody: { message?: string } = {};
+    try { logoutBody = await logout.json(); } catch { /* malformed logout is not success */ }
+    const logoutSuccess = logout.status() === 200 && logoutBody.message === "Signed out.";
+    await refusal(b, "logged_out", logoutSuccess);
   } finally { await owner.close(); await other.close(); await anon.close(); }
 });

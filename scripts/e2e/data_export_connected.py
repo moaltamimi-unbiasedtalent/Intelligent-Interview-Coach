@@ -67,6 +67,29 @@ def serve(args: argparse.Namespace) -> int:
     return story.serve(args)
 
 
+def refusal_evidence(path: Path) -> list[dict]:
+    """Accept only bounded allowlisted observation facts; never emit response data."""
+    if not path.is_file() or path.stat().st_size > 2048:
+        return []
+    try:
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+    except (ValueError, OSError):
+        return []
+    keys = {"scenario", "status", "classification", "envelope_valid", "export_absent", "attachment_absent", "logout_success", "passed"}
+    if len(rows) > 2:
+        return []
+    for row in rows:
+        if not isinstance(row, dict) or set(row) != keys or row["scenario"] not in ("anonymous", "logged_out"):
+            return []
+        if type(row["status"]) is not int or not 0 <= row["status"] <= 599 or row["classification"] not in ("unauthorized", "unexpected"):
+            return []
+        if any(type(row[k]) is not bool for k in ("envelope_valid", "export_absent", "attachment_absent", "passed")):
+            return []
+        if row["logout_success"] is not None and type(row["logout_success"]) is not bool:
+            return []
+    return rows
+
+
 def run(args: argparse.Namespace) -> int:
     stack._check_ports(args.api_port, args.web_port)
     api = web = None
@@ -92,6 +115,15 @@ def run(args: argparse.Namespace) -> int:
                     pw_env = dict(env, BASE_URL=f"http://localhost:{args.web_port}", STORY_API_URL=f"http://localhost:{args.api_port}/api/v1",
                                   STORY_ACCOUNTS_FILE=str(state / "accounts.json"), STORY_OUTPUT_DIR=str(state / "playwright-results"))
                     result = subprocess.run(["npx", "playwright", "test", "--config", "playwright.data-export-connected.config.ts", "--reporter=json"], cwd=frontend, env=pw_env, capture_output=True)
+                    refusal_facts = refusal_evidence(state / "playwright-results" / "auth-refusal-facts.jsonl")
+                    print("Export refusal bounded facts: " + json.dumps(refusal_facts, sort_keys=True))
+                    if not result.returncode and (len(refusal_facts) != 2 or
+                            {x["scenario"] for x in refusal_facts} != {"anonymous", "logged_out"} or
+                            not all(x["passed"] and x["status"] == 401 and x["classification"] == "unauthorized" and
+                                    x["envelope_valid"] and x["export_absent"] and x["attachment_absent"] and
+                                    (x["logout_success"] is None if x["scenario"] == "anonymous" else x["logout_success"] is True)
+                                    for x in refusal_facts)):
+                        raise AssertionError("missing or invalid bounded refusal evidence")
                     if result.returncode:
                         # Emit only numeric source locations from the structured reporter; never raw error text.
                         try:
