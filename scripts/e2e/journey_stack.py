@@ -68,6 +68,15 @@ def _check_ports(*ports: int) -> None:
 
 # ------------------------------------------------------------------ the API process (internal subcommand: serve)
 
+def _prepare_test_database(engine, state: Path, args: argparse.Namespace) -> None:
+    """Initialize fixture data only on the existing fresh-start path."""
+    if not getattr(args, "resume_existing", False):
+        from src.persistence import Base, make_session_factory
+
+        Base.metadata.create_all(engine)
+        _issue_invitations(make_session_factory(engine), state, args.invitations)
+
+
 def serve(args: argparse.Namespace) -> int:
     """Run the real FastAPI app in this process with fixture model replies. Isolation first: no .env, no Streamlit secrets, temp-only databases."""
     import tests.conftest  # noqa: F401  (isolation: scrubs provider env, disables .env, refuses non-temp engines)
@@ -90,11 +99,10 @@ def serve(args: argparse.Namespace) -> int:
         os.environ["ASK4MO_PROVIDER_MODE"] = "offline"            # the offline guard also refuses every non-loopback request
     (state / "data").mkdir(parents=True, exist_ok=True)
 
-    from src.persistence import Base, make_engine, make_session_factory
+    from src.persistence import make_engine
 
     engine = make_engine(os.environ["DATABASE_URL"])
-    Base.metadata.create_all(engine)
-    _issue_invitations(make_session_factory(engine), state, args.invitations)
+    _prepare_test_database(engine, state, args)
 
     from src.demo_live.guard import ProviderControl
 
