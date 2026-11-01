@@ -274,3 +274,7 @@ jobs:
         env:
           CI: "true"
         run: python scripts/e2e/story_feedback_connected.py run
+      - name: Run connected synthetic Candidate data export journey
+        env:
+          CI: "true"
+        run: python scripts/e2e/data_export_connected.py run
