@@ -37,6 +37,12 @@ def valid_facts(value):
             and all(type(value[k]) is type(v) and value[k] == v for k, v in expected.items()))
 
 
+def valid_browser_stats(stats):
+    return (isinstance(stats, dict) and type(stats.get("expected")) is int and stats["expected"] == 2
+            and type(stats.get("unexpected")) is int and stats["unexpected"] == 0
+            and type(stats.get("skipped")) is int and stats["skipped"] == 0)
+
+
 def stable_snapshot(state):
     with sqlite3.connect(f"file:{state / 'journey.db'}?mode=ro", uri=True) as db:
         users = db.execute("SELECT id,subject,provider,display_name,email,platform_role,status,email_verified,onboarding_completed_at,onboarding_step FROM users ORDER BY id").fetchall()
@@ -89,6 +95,12 @@ def run(args):
                             pass
                         print("Privacy request connected: FAIL (raw browser output withheld)")
                         return result.returncode
+                    try:
+                        stats = json.loads(result.stdout)["stats"]
+                    except (ValueError, KeyError, TypeError):
+                        raise AssertionError("missing browser test summary") from None
+                    if not valid_browser_stats(stats):
+                        raise AssertionError("incomplete browser test summary")
                     facts_path = out / "privacy-facts.json"
                     if not facts_path.is_file() or facts_path.stat().st_size > 1024:
                         raise AssertionError("missing bounded facts")
@@ -104,7 +116,7 @@ def run(args):
                         raise AssertionError("disposable persistence or job state mismatch")
                     if stable_snapshot(state) != before:
                         raise AssertionError("account, profile, content, or job state changed")
-                    print("Privacy request connected: 1 PASS; 2 submissions; 6 refusals; owner isolation, reload, fresh session and disposable persistence PASS")
+                    print("Privacy request connected: 2 PASS (1 journey, 1 locator control); 2 submissions; 6 refusals; owner isolation, reload, fresh session and disposable persistence PASS")
                     return 0
         finally:
             stack._stop_owned_process_group(web)

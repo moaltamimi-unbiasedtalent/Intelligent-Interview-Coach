@@ -42,7 +42,7 @@ test("correction intake persists and remains owner scoped", async ({browser}) =>
       const response=p.waitForResponse(r => new URL(r.url()).pathname === "/api/v1/privacy/requests" && r.request().method() === "POST");
       await panel.getByRole("button", {name:"Send request"}).click();
       const r=await response; check(r.status()===201,"create status"); const item=await r.json(); check(validView(item),"candidate projection and state"); refs.push(item.public_id);
-      await expect(panel.getByRole("status")).toContainText(item.public_id);
+      await expect(panel.getByRole("form", {name:"Privacy requests"}).getByRole("status")).toContainText(item.public_id);
       await expect(panel.locator("ul").getByText(item.public_id, {exact:false})).toBeVisible();
     }
     check(posts===2 && refs[0]!==refs[1],"single creation per account");
@@ -68,4 +68,18 @@ test("correction intake persists and remains owner scoped", async ({browser}) =>
     observations.submissions=2; observations.owner_isolation=true; observations.reload=true; observations.fresh_session=true; observations.refusals=6; observations.unchanged=true;
     writeFileSync(join(process.env.STORY_OUTPUT_DIR!,"privacy-facts.json"),JSON.stringify(observations),{mode:0o600});
   } finally { await owner.close(); await other.close(); await anon.close(); }
+});
+
+// Synthetic control: list loading may expose another status outside the form.
+test("acknowledgement reference remains scoped to the request form", async ({page}) => {
+  const ref = "a".repeat(32);
+  await page.setContent(`<div data-testid="dp-privacy-requests"><form aria-label="Privacy requests"><p role="status">Your request was recorded. Reference: ${ref}</p></form><div role="status">Loading</div></div>`);
+  const panel = page.getByTestId("dp-privacy-requests");
+  const formStatus = panel.getByRole("form", {name:"Privacy requests"}).getByRole("status");
+  await expect(panel.getByRole("status")).toHaveCount(2);
+  await expect(formStatus).toHaveCount(1);
+  await expect(formStatus).toContainText(ref);
+  await expect(formStatus).not.toContainText("b".repeat(32));
+  await page.locator("form [role=status]").evaluate(node => node.remove());
+  await expect(formStatus).toHaveCount(0);
 });
