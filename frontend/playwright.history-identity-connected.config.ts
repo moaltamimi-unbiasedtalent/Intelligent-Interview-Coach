@@ -1,0 +1,3 @@
+import { defineConfig, devices } from "@playwright/test";
+if (!process.env.BASE_URL || !process.env.STORY_API_URL || !process.env.STORY_ACCOUNTS_FILE || !process.env.HISTORY_STATE_DIR || !["complete", "read"].includes(process.env.HISTORY_PHASE || "")) throw new Error("Disposable History harness required");
+export default defineConfig({ testDir:"./history_identity_connected_e2e", outputDir:process.env.HISTORY_STATE_DIR + "/results", workers:1, retries:0, timeout:90_000, expect:{timeout:10_000}, use:{baseURL:process.env.BASE_URL, trace:"off", screenshot:"off", video:"off"}, projects:[{name:"chromium",use:{...devices["Desktop Chrome"]}}] });
