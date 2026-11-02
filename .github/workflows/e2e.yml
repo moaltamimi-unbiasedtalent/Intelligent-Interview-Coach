@@ -353,3 +353,35 @@ jobs:
         env:
           CI: "true"
         run: python scripts/e2e/history_identity_connected.py run
+
+  connected-mo-stop:
+    name: Connected Mo Stop (synthetic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install isolated test dependencies
+        run: |
+          pip install -e ".[dev]"
+          cd frontend
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run connected synthetic Mo Stop journey
+        env:
+          CI: "true"
+          TMPDIR: ${{ runner.temp }}
+        run: python scripts/e2e/mo_stop_connected.py run
+      - name: Retain bounded Mo Stop evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mo-stop-connected-evidence
+          path: ${{ runner.temp }}/ask4mo_mo_stop_evidence_*/summary.json
