@@ -60,12 +60,20 @@ def build_interview_payload(data: SessionData, *, mode: str | None = None) -> di
     # Deep Dive branches — serialise BOTH archived branches and any still-active
     # one, otherwise finished Deep Dives are silently dropped from history.
     base = len(data.questions)
+    parent_positions = {
+        question.question_id: position
+        for position, question in enumerate(data.questions)
+    }
     default_parent = base - 1 if base else None
     position = base
 
     def _branch_records(questions_list, answers, evaluations, parent_id):
         nonlocal position
-        parent_pos = parent_id if isinstance(parent_id, int) else default_parent
+        # Question IDs are not persisted positions and need not be sequential.
+        # Keep the legacy absent-parent fallback, but never invent a link for an
+        # explicit ID that does not identify one of this interview's main questions.
+        parent_pos = (default_parent if parent_id is None else
+                      parent_positions.get(parent_id) if type(parent_id) is int else None)
         for j, branch in enumerate(questions_list):
             answer_text = answers[j] if j < len(answers) else ""
             evaluation = evaluations[j] if j < len(evaluations) else None
