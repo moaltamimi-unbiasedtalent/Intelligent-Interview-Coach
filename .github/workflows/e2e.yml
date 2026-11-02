@@ -418,3 +418,36 @@ jobs:
           name: deep-dive-connected-evidence
           path: ${{ runner.temp }}/ask4mo_deep_dive_evidence_*/summary.json
           if-no-files-found: error
+
+  connected-history-deletion:
+    name: Connected completed-interview deletion (synthetic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install isolated test dependencies
+        run: |
+          pip install -e ".[dev]"
+          cd frontend
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Run connected synthetic completed-interview deletion journey
+        env:
+          CI: "true"
+          TMPDIR: ${{ runner.temp }}
+        run: python scripts/e2e/history_deletion_connected.py run
+      - name: Retain bounded completed-interview deletion evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: completed-interview-deletion-evidence
+          path: ${{ runner.temp }}/ask4mo_history_delete_evidence_*/summary.json
+          if-no-files-found: error
