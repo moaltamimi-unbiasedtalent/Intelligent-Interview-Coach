@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -135,10 +135,34 @@ describe("Practice handoff completion", () => {
     create.mockRejectedValueOnce(missingConfig);
     await startSession();
     await screen.findByText("One last detail before practice");
-    expect(options).toHaveBeenCalled();
     const select = screen.getByLabelText<HTMLSelectElement>("Career level");
     // The options load asynchronously — wait for the returned "executive" option to be
     // rendered rather than reading the select before the promise commits to state.
     expect(await within(select).findByRole("option", { name: "executive" })).toBeInTheDocument();
+    expect(options).toHaveBeenCalled();
+  });
+
+  it("populates API-supplied career levels only after the options response resolves", async () => {
+    type Options = { career_levels: string[]; interview_types: string[] };
+    let resolveOptions: (value: Options) => void = () => {};
+    const response = new Promise<Options>((resolve) => { resolveOptions = resolve; });
+    options.mockReturnValueOnce(response);
+    create.mockRejectedValueOnce(missingConfig);
+
+    await startSession();
+    await screen.findByText("One last detail before practice");
+    await waitFor(() => expect(options).toHaveBeenCalled());
+    const select = screen.getByLabelText<HTMLSelectElement>("Career level");
+    expect(Array.from(select.options, (option) => option.value)).toEqual([""]);
+
+    const careerLevels = ["api-supplied-specialist", "api-supplied-lead"];
+    await act(async () => {
+      resolveOptions({ career_levels: careerLevels, interview_types: ["behavioural"] });
+      await response;
+    });
+
+    expect(await within(select).findByRole("option", { name: careerLevels[0] })).toBeInTheDocument();
+    expect(within(select).getByRole("option", { name: careerLevels[1] })).toBeInTheDocument();
+    expect(Array.from(select.options, (option) => option.value)).toEqual(["", ...careerLevels]);
   });
 });
