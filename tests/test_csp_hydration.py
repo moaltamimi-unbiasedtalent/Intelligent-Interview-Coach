@@ -72,6 +72,7 @@ def test_test_certificates_do_not_rewrite_any_security_or_proxy_directive():
                 "Strict-Transport-Security",
                 "X-Frame-Options",
                 "Permissions-Policy",
+                "Referrer-Policy",
             )
         ):
             assert line in local
@@ -80,6 +81,19 @@ def test_test_certificates_do_not_rewrite_any_security_or_proxy_directive():
             assert line in local
     assert "tls internal" in local
     assert "auto_https disable_redirects" in local
+
+
+def test_frontend_referrer_policy_is_one_explicit_no_referrer_value():
+    source = (Q.ROOT / "deploy/Caddyfile").read_text()
+    policies = [
+        line.strip()
+        for line in source.splitlines()
+        if "Referrer-Policy" in line and not line.lstrip().startswith("#")
+    ]
+    assert policies == ['Referrer-Policy "no-referrer"']
+    frontend = source.split("{$API_DOMAIN} {", 1)[0]
+    assert 'Referrer-Policy "no-referrer"' in frontend
+    assert Q.local_caddy(source).count('Referrer-Policy "no-referrer"') == 1
 
 
 @pytest.mark.parametrize(
@@ -137,19 +151,90 @@ def test_browser_process_output_cannot_persist_form_credentials(
     assert not any(b"canary" in p.read_bytes() for p in c.out.rglob("*") if p.is_file())
 
 
-def test_all_existing_browser_security_assertions_are_preserved():
-    source = (Q.ROOT / "frontend/csp/hydration.spec.ts").read_text()
+_REFERRER_PHASE = 'const expectedReferrerPolicy = before ? "strict-origin-when-cross-origin" : "no-referrer";'
+_REFERRER_SINGLE = 'expect((await response.headersArray()).filter(h => h.name.toLowerCase() === "referrer-policy")).toHaveLength(1);'
+_REFERRER_EXACT = 'expect(response.headers()["referrer-policy"]).toBe(expectedReferrerPolicy);'
+_REFERRER_CURRENT_FRAGMENT = '["referrer-policy", expectedReferrerPolicy]'
+_REFERRER_HISTORICAL_FRAGMENT = '["referrer-policy", "strict-origin-when-cross-origin"]'
+
+
+def _assert_browser_security_assertions_preserved(source):
+    lines = [line.strip() for line in source.splitlines()]
+    # Admit only the reviewed phase-bound referrer expectation and two stronger
+    # checks. Every historical assertion still has its original exact hash.
+    for required in (_REFERRER_PHASE, _REFERRER_SINGLE, _REFERRER_EXACT):
+        assert lines.count(required) == 1
+        assert source.count(required) == 1
+    assert source.count("expectedReferrerPolicy") == 3
+    assert source.count(_REFERRER_CURRENT_FRAGMENT) == 1
+    assert source.count(_REFERRER_HISTORICAL_FRAGMENT) == 0
     assertions = "\n".join(
-        line.strip()
-        for line in source.splitlines()
-        if "expect(" in line or "expect.poll(" in line
+        line.replace(_REFERRER_CURRENT_FRAGMENT, _REFERRER_HISTORICAL_FRAGMENT, 1)
+        for line in lines
+        if ("expect(" in line or "expect.poll(" in line)
+        and line not in (_REFERRER_SINGLE, _REFERRER_EXACT)
     )
     # Reviewed baseline 291eb523: CSP, auth/cookies, nonce/spoof, negative payloads,
     # zero browser errors, external-call refusal and complete logout/revocation.
     assert hashlib.sha256(assertions.encode()).hexdigest() == (
         "74b14cef28c83c9020830613dcff7766beb4689f8b6a7b1fb05fb90a5517ae98"
     )
+
+
+def test_all_existing_browser_security_assertions_are_preserved():
+    source = (Q.ROOT / "frontend/csp/hydration.spec.ts").read_text()
+    _assert_browser_security_assertions_preserved(source)
     assert 'retries: 0' in (Q.ROOT / "frontend/csp/playwright.config.ts").read_text()
+
+
+@pytest.mark.parametrize(
+    ("original", "replacement"),
+    [
+        ('expect(nonce).toMatch(/^[A-Za-z0-9+/]{43}=$/);', 'expect(nonce).toBeTruthy();'),
+        ('expect(nonce).toMatch(/^[A-Za-z0-9+/]{43}=$/);', ''),
+        ('expect(loginRequests).toBe(1);', 'expect(loginRequests).toBe(0);'),
+        ('expect(Boolean(cookie)).toBe(true);', ''),
+        (_REFERRER_PHASE, ''),
+        (_REFERRER_PHASE, _REFERRER_PHASE.replace('"no-referrer"', '"origin"')),
+        (_REFERRER_PHASE, _REFERRER_PHASE + '\n' + _REFERRER_PHASE),
+        (_REFERRER_SINGLE, ''),
+        (_REFERRER_SINGLE, _REFERRER_SINGLE.replace('.toHaveLength(1)', '.toBeGreaterThan(0)')),
+        (_REFERRER_SINGLE, _REFERRER_SINGLE + '\n' + _REFERRER_SINGLE),
+        (_REFERRER_EXACT, ''),
+        (_REFERRER_EXACT, _REFERRER_EXACT.replace('.toBe(', '.toContain(')),
+        (_REFERRER_EXACT, _REFERRER_EXACT + '\n' + _REFERRER_EXACT),
+        (
+            _REFERRER_EXACT,
+            _REFERRER_EXACT + '\nexpect(response.headers()["referrer-policy"]).toContain("no-referrer");',
+        ),
+        (_REFERRER_CURRENT_FRAGMENT, _REFERRER_CURRENT_FRAGMENT + ', ' + _REFERRER_CURRENT_FRAGMENT),
+        (_REFERRER_CURRENT_FRAGMENT, '["referrer-policy", "no-referrer"]'),
+    ],
+    ids=[
+        "altered-nonce-check",
+        "missing-nonce-check",
+        "altered-authentication-count",
+        "missing-session-check",
+        "missing-phase-definition",
+        "weaker-phase-policy",
+        "duplicate-phase-definition",
+        "missing-single-header-check",
+        "weaker-single-header-check",
+        "duplicate-single-header-check",
+        "missing-exact-policy-check",
+        "weaker-exact-policy-check",
+        "duplicate-exact-policy-check",
+        "unapproved-additional-referrer-check",
+        "duplicate-loop-fragment",
+        "non-phase-bound-loop-fragment",
+    ],
+)
+def test_browser_security_assertion_guard_rejects_unapproved_mutations(original, replacement):
+    source = (Q.ROOT / "frontend/csp/hydration.spec.ts").read_text()
+    assert source.count(original) == 1
+    mutated = source.replace(original, replacement, 1)
+    with pytest.raises(AssertionError):
+        _assert_browser_security_assertions_preserved(mutated)
 
 
 def test_failure_finally_retains_bounded_evidence_and_unbounded_error_counts():

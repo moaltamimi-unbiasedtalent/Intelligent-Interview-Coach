@@ -25,39 +25,83 @@
 
 {
 	email {$ACME_EMAIL}
+	# Runtime logs are distinct from optional HTTP access logs. Keep all ordinary
+	# operational records, and route handled HTTP errors through the filtered log
+	# below: Caddy emits successfully handled errors at DEBUG rather than ERROR.
+	log default {
+		output stderr
+		level INFO
+		exclude http.log.error
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp "(?s)[?].*$" ""
+				request>headers delete
+			}
+		}
+	}
+	log operational_http_errors {
+		output stderr
+		level DEBUG
+		include http.log.error
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp "(?s)[?].*$" ""
+				request>headers delete
+			}
+		}
+	}
 	# For local/dry-run testing without hitting Let's Encrypt rate limits, you can
 	# uncomment the staging CA directory below:
 	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
 }
 
 # ----------------------------------------------------------------------------
-# Frontend (Next.js) — serves the pages and owns the page Content-Security-Policy.
-{$APP_DOMAIN} {
-	encode gzip zstd
-
+# Frontend security headers are shared by ordinary and Caddy-generated responses.
+(frontend_security_headers) {
 	header {
 		# HSTS (1 year + preload). Owned by the edge.
 		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
-		Referrer-Policy "strict-origin-when-cross-origin"
+		Referrer-Policy "no-referrer"
 		# Least-privilege browser permissions. `microphone=(self)` is required for
 		# browser speech / realtime voice capture on the app origin ONLY.
 		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
 
 		# Next.js generates the enforced nonce policy before SSR. A second static
 		# policy would intersect it and block hydration. Caddy forwards that policy;
-		# this deferred default covers assets/upstream errors without a page policy.
+		# this deferred default covers assets/proxied responses without a page policy.
+		# The generated-error route sets its own more restrictive static policy.
 		?Content-Security-Policy "default-src 'self'; base-uri 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self' https://{$API_DOMAIN} wss://{$API_DOMAIN}; media-src 'self' blob:; form-action 'self'"
 
 		# Never advertise the upstream server.
 		-Server
 	}
+}
+
+# Frontend (Next.js) — serves the pages and owns the page Content-Security-Policy.
+{$APP_DOMAIN} {
+	encode gzip zstd
+	import frontend_security_headers
 
 	reverse_proxy web:3000 {
 		# Client-supplied values must never select the rendering nonce/policy.
 		header_up -Content-Security-Policy
 		header_up -X-Nonce
+	}
+
+	# Returned handler errors are not proxied HTTP error responses. Preserve the
+	# original status and generated correlation id without exposing request data.
+	handle_errors {
+		import frontend_security_headers
+		header {
+			Content-Security-Policy "default-src 'none'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'; form-action 'none'"
+			Cache-Control "no-store"
+			X-Request-Id "{err.id}"
+		}
+		respond "Request could not be completed." {err.status_code}
 	}
 }
 
