@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from src.api.dependencies import (
     _session_cookie_name,
     get_account_repository,
+    get_auth_config,
     get_current_user_id,
     get_email_sender,
     get_request_id,
@@ -36,7 +37,7 @@ def get_ownership_transfer_service(request: Request, workspaces=Depends(get_work
                                    accounts=Depends(get_account_repository), email=Depends(get_email_sender)):
     from src.mail.service import EmailAttemptRepository, EmailService
 
-    base = getattr(getattr(request.app.state, "settings", None), "app_base_url", None) or "https://app.ask4mo.local"
+    base = get_auth_config(request).app_base_url
     mail = email if isinstance(email, EmailService) else EmailService(email, EmailAttemptRepository(workspaces.session_factory))
     return OwnershipTransferService(workspaces=workspaces, transfers=OwnershipTransferRepository(workspaces.session_factory),
                                     accounts=accounts, email=mail, app_base_url=base)

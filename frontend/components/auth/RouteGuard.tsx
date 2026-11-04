@@ -20,6 +20,32 @@ import { redirectVerified } from "@/lib/auth/redirect";
 import { LoadingState } from "@/components/ui/States";
 import { useT } from "@/components/i18n/I18nProvider";
 
+/** Preserve only the documented transfer token, without broadening return destinations. */
+export function transferReturnDestination(pathname: string, search: string): string {
+  const fallback = returnDestination(pathname.split(/[?#]/, 1)[0]);
+  if (pathname !== "/workspaces/transfer/accept") return fallback;
+
+  try {
+    const query = search.split("#", 1)[0];
+    // Validate raw encoding before URLSearchParams can replace malformed Unicode.
+    // This result is not used: the original query is parsed exactly once below.
+    encodeURIComponent(decodeURIComponent(query));
+    const params = new URLSearchParams(query);
+    const tokens = params.getAll("token");
+    const literalTokenKeys = query.replace(/^\?/, "").split("&")
+      .filter((part) => part.split("=", 1)[0] === "token").length;
+    if (tokens.length !== 1 || literalTokenKeys !== 1) return fallback;
+    const token = tokens[0];
+    if (!token || Array.from(token).length > 512) return fallback;
+
+    const candidate = `${pathname}?${new URLSearchParams({ token }).toString()}`;
+    const validated = returnDestination(candidate);
+    return validated === candidate ? validated : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export function RouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
@@ -38,7 +64,7 @@ export function RouteGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (status === "loading") return;
     if (protectedRoute && status === "unauthenticated") {
-      const next = encodeURIComponent(pathname);
+      const next = encodeURIComponent(transferReturnDestination(pathname, window.location.search));
       return redirectVerified(router, `/sign-in?next=${next}`);
     } else if (authOnly && status === "authenticated") {
       // Read from the location when the effect runs. `useSearchParams` here would suspend the whole boundary during static prerender/hydration, and the shell's Suspense fallback

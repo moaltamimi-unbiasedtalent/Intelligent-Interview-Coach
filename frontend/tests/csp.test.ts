@@ -22,7 +22,7 @@ describe("enforced rendering CSP", () => {
   });
   it.each(["", "attacker", "A".repeat(43) + "; script-src *"])("rejects a malformed nonce", value => expect(() => pagePolicy(value, "https://api.example.com")).toThrow());
   it("replaces forged request values, propagates the rendering policy and never reuses a nonce", () => {
-    const request = new NextRequest("https://app.staging.example.com/account", { headers: {"x-nonce": "attacker", "Content-Security-Policy": "script-src 'unsafe-inline'"} });
+    const request = new NextRequest("https://app.staging.example.com/account", { headers: {"x-nonce": "attacker", "Content-Security-Policy": "script-src 'unsafe-inline'", "Referrer-Policy": "unsafe-url"} });
     const a = middleware(request), b = middleware(request);
     const csp = a.headers.get("Content-Security-Policy")!;
     expect(csp).not.toBe(b.headers.get("Content-Security-Policy"));
@@ -31,6 +31,20 @@ describe("enforced rendering CSP", () => {
     const value = a.headers.get("x-middleware-request-x-nonce")!;
     expect(value).toMatch(/^[A-Za-z0-9+/]{43}=$/);
     expect(csp).toContain(`'nonce-${value}'`);
+    expect(a.headers.get("Referrer-Policy")).toBe("no-referrer");
+    expect(b.headers.get("Referrer-Policy")).toBe("no-referrer");
     expect(a.headers.get("Cache-Control")).toContain("no-store");
+  });
+  it.each(["/sign-in", "/workspaces/transfer/accept", "/account", "/missing-document"])("sets one exact no-referrer policy on matched document path %s", path => {
+    const response = middleware(new NextRequest(`https://app.staging.example.com${path}`));
+    expect([...response.headers.entries()].filter(([name]) => name.toLowerCase() === "referrer-policy")).toEqual([["referrer-policy", "no-referrer"]]);
+    expect(response.headers.get("Cache-Control")).toContain("no-store");
+  });
+  it("retains no-referrer for route data and prefetch responses without changing nonce propagation", () => {
+    const request = new NextRequest("https://app.staging.example.com/workspaces/transfer/accept", {headers: {RSC: "1", "Next-Router-Prefetch": "1", "Referrer-Policy": "origin"}});
+    const response = middleware(request);
+    expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+    expect(response.headers.get("x-middleware-request-content-security-policy")).toBe(response.headers.get("Content-Security-Policy"));
+    expect(response.headers.get("x-middleware-request-x-nonce")).toMatch(/^[A-Za-z0-9+/]{43}=$/);
   });
 });

@@ -64,7 +64,10 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
     result.effective_policy = policy;
     result.security_headers = Object.fromEntries(["strict-transport-security", "permissions-policy", "x-frame-options", "x-content-type-options", "referrer-policy", "cache-control"].map(name => [name, response.headers()[name]]));
     expect((await response.headersArray()).filter(h => h.name.toLowerCase() === "content-security-policy")).toHaveLength(1);
-    for (const [header, value] of [["strict-transport-security", "max-age=31536000; includeSubDomains; preload"], ["permissions-policy", "camera=(), geolocation=(), microphone=(self)"], ["x-frame-options", "DENY"], ["x-content-type-options", "nosniff"], ["referrer-policy", "strict-origin-when-cross-origin"]]) expect(response.headers()[header]).toContain(value);
+    const expectedReferrerPolicy = before ? "strict-origin-when-cross-origin" : "no-referrer";
+    expect((await response.headersArray()).filter(h => h.name.toLowerCase() === "referrer-policy")).toHaveLength(1);
+    expect(response.headers()["referrer-policy"]).toBe(expectedReferrerPolicy);
+    for (const [header, value] of [["strict-transport-security", "max-age=31536000; includeSubDomains; preload"], ["permissions-policy", "camera=(), geolocation=(), microphone=(self)"], ["x-frame-options", "DENY"], ["x-content-type-options", "nosniff"], ["referrer-policy", expectedReferrerPolicy]]) expect(response.headers()[header]).toContain(value);
     expect(policy).toContain("connect-src 'self' https://api.staging.example.com wss://api.staging.example.com");
     for (const d of ["object-src 'none'", "form-action 'self'", "frame-ancestors 'none'"]) expect(policy).toContain(d);
     if (before) {
