@@ -6,11 +6,24 @@ sentinel sweeps."""
 from __future__ import annotations
 
 import json
+import re
+from copy import deepcopy
+from datetime import datetime
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy import func, select
 
 from src import entitlements as E
+from src.api.schemas.admin import PlanDetail, PlanList
+from src.api.schemas.admin_plans_ops import (
+    AssignmentPreview,
+    EntitlementExplanation,
+    PlanComparison,
+    PlanMatrix,
+    SubjectPlanState,
+    VersionAssignmentPage,
+)
 from src.application import admin_audit as A
 from src.application import admin_permissions as perm
 from src.billing import policy as billing_policy
@@ -537,6 +550,71 @@ def _keys(o):
             yield from _keys(v)
 
 
+# These are response-model paths, not exemptions for arbitrary similarly named keys.
+# None matches a list index only. Producers use hexdigest()[:16] and datetime.isoformat().
+_PLAN_METADATA = {
+    PlanList: tuple(("revision", ("items", None, k)) for k in ("revision", "family_revision"))
+              + tuple(("timestamp", ("items", None, k)) for k in ("created_at", "activated_at", "retired_at")),
+    PlanDetail: tuple(("revision", (k,)) for k in ("revision", "family_revision"))
+                + tuple(("timestamp", (k,)) for k in ("created_at", "activated_at", "retired_at")),
+    PlanMatrix: (("revision", ("versions", None, "revision")),),
+    PlanComparison: (),
+    EntitlementExplanation: (),
+    SubjectPlanState: (("revision", ("revision",)),)
+                      + tuple(("timestamp", ("current", k)) for k in ("started_at", "ended_at"))
+                      + tuple(("timestamp", ("history", None, k)) for k in ("started_at", "ended_at")),
+    VersionAssignmentPage: tuple(("timestamp", ("items", None, k)) for k in ("started_at", "ended_at")),
+    AssignmentPreview: (("revision", ("preview_revision",)),),
+}
+
+
+def _assert_private_plan_response(body, model):
+    """Only validated, documented metadata may collide with the numeric amount sentinel."""
+    if model not in _PLAN_METADATA:
+        raise AssertionError("unsupported plan response model")
+    names = list(_keys(body))
+    if not all(type(k) is str for k in names):
+        raise AssertionError("invalid plan response keys")
+    names = [k.lower() for k in names]
+    if [k for k in names if any(b in k for b in BANNED_KEYS)]:
+        raise AssertionError("banned plan response field")
+    try:
+        text = json.dumps(body, allow_nan=False)
+        model.model_validate_json(text, strict=True)
+    except (ValidationError, TypeError, ValueError):
+        raise AssertionError("invalid plan response schema") from None
+    if any(s in text for s in ("EUR", "stripe")):
+        raise AssertionError("commercial value in plan response")
+
+    def project(value, path=()):
+        for kind, expected in _PLAN_METADATA[model]:
+            if len(path) == len(expected) and all(
+                type(actual) is int if part is None else part == actual
+                for part, actual in zip(expected, path)
+            ):
+                if kind == "revision":
+                    if type(value) is not str or re.fullmatch(r"[0-9a-f]{16}", value) is None:
+                        raise AssertionError("invalid plan response revision")
+                elif value is not None:
+                    if type(value) is not str:
+                        raise AssertionError("invalid plan response timestamp")
+                    try:
+                        parsed = datetime.fromisoformat(value)
+                    except ValueError:
+                        raise AssertionError("invalid plan response timestamp") from None
+                    if parsed.isoformat() != value:
+                        raise AssertionError("invalid plan response timestamp")
+                return None
+        if isinstance(value, dict):
+            return {key: project(item, path + (key,)) for key, item in value.items()}
+        if isinstance(value, list):
+            return [project(item, path + (index,)) for index, item in enumerate(value)]
+        return value
+
+    if "1999" in json.dumps(project(body)):
+        raise AssertionError("commercial value in plan response")
+
+
 def test_no_price_currency_or_provider_field_appears_even_when_commercial_terms_exist(env):
     uid, _ = mk(env)
     _, adm = mk(env, "platform_admin")
@@ -545,7 +623,6 @@ def test_no_price_currency_or_provider_field_appears_even_when_commercial_terms_
         s.add(BillingCommercialTerms(public_id="a" * 32, plan_version_id=v["id"], version=1, amount_minor=1999, currency="EUR",
                                      billing_interval="month", trial_days=None, visibility="public", state="active"))
         s.commit()
-    sentinel_values = ("1999", "EUR", "stripe")
     res = []
     res.append(env.c.get(P, cookies=adm).json())
     res.append(env.c.get(f"{P}/{v['id']}", cookies=adm).json())
@@ -555,14 +632,129 @@ def test_no_price_currency_or_provider_field_appears_even_when_commercial_terms_
     res.append(env.c.get(f"{P}/subjects/user/{uid}", cookies=adm).json())
     res.append(env.c.get(f"{P}/versions/{v['id']}/assignments", cookies=adm).json())
     res.append(preview(env, adm, "premium", "user", [uid]).json())
-    for body in res:
-        names = [k.lower() for k in _keys(body)]
-        assert not [k for k in names if any(b in k for b in BANNED_KEYS)], names
-        text = json.dumps(body)
-        assert not any(s in text for s in sentinel_values), text[:200]
+    models = (PlanList, PlanDetail, PlanMatrix, PlanComparison, EntitlementExplanation,
+              SubjectPlanState, VersionAssignmentPage, AssignmentPreview)
+    for body, model in zip(res, models, strict=True):
+        _assert_private_plan_response(body, model)
     # the explanation's billing layer is a label, never a state or a number
     layers = res[4]["layers"]
     assert next(layer for layer in layers if layer["layer"] == "billing_state")["evaluated_here"] is False
+
+
+def test_commercial_projection_accepts_a_real_api_operational_timestamp_collision(env):
+    with env.repo.session_factory() as session:
+        version = E.seed_default_plans(session)["premium"]
+        version.created_at = datetime(2026, 11, 4, 12, 0, 0, 199900)
+        session.commit()
+    test_no_price_currency_or_provider_field_appears_even_when_commercial_terms_exist(env)
+
+
+def _plan_privacy_samples():
+    """Small strict-schema bodies for assertion regressions; no application or database setup."""
+    revision = "0123456789abcdef"
+    stamp = "2026-11-04T12:30:45.123456"
+    subscribers = {"users": 0, "workspaces": 0}
+    head = {"id": 1, "plan_code": "basic", "version": 1, "display_name": "Basic", "status": "active"}
+    dates = {"created_at": stamp, "activated_at": stamp, "retired_at": None}
+    entry = {"plan_code": "basic", "version": 1, "display_name": "Basic", "status": "active",
+             "source": "admin", "started_at": stamp, "ended_at": None}
+    entitlement = {"code": "standard_history", "label": "History", "description": "Synthetic feature",
+                   "type": "boolean", "enabled": True, "limit": None,
+                   "bounds": {"kind": "boolean", "min_limit": None, "max_limit": None, "premium_only": False}}
+    return {
+        PlanList: {"items": [{**head, **dates, "enabled_entitlements": 1, "total_entitlements": 1,
+                               "subscribers": subscribers, "revision": revision, "family_revision": revision}]},
+        PlanDetail: {**head, **dates, "editable": False, "entitlements": [entitlement],
+                     "subscribers": subscribers, "revision": revision, "family_revision": revision},
+        PlanMatrix: {"entitlements": [], "versions": [{**head, "revision": revision,
+                      "values": {"standard_history": {"enabled": True, "limit": None}}}]},
+        PlanComparison: {"left": {**head, "subscribers": subscribers}, "right": {**head, "subscribers": subscribers},
+                         "rows": [], "changed": 0, "note": "Synthetic comparison"},
+        EntitlementExplanation: {"subject_type": "user", "subject_id": 1, "plan_code": "basic", "plan_version": 1,
+                                  "plan_version_status": "active", "source": "subscription", "items": [],
+                                  "layers": [{"layer": "billing_state", "evaluated_here": False, "note": "Not evaluated"}],
+                                  "note": "Synthetic explanation"},
+        SubjectPlanState: {"subject_type": "user", "subject_id": 1, "current": entry,
+                           "history": [deepcopy(entry)], "revision": revision},
+        VersionAssignmentPage: {"plan_code": "basic", "version": 1, "total": 1, "page": 1, "page_size": 25,
+                                "items": [{"subject_type": "user", "subject_id": 1, "status": "active", "source": "admin",
+                                           "started_at": stamp, "ended_at": None}]},
+        AssignmentPreview: {"plan_code": "basic", "target_version": 1, "subject_type": "user", "requested": 1,
+                             "found": 1, "missing": 0, "unchanged": 1, "would_change": 0,
+                             "by_current_plan": {"basic": 1, "premium": 0, "none": 0},
+                             "entitlement_effect": [], "preview_revision": revision},
+    }
+
+
+@pytest.mark.parametrize("model,kind,path", [(model, kind, path) for model, fields in _PLAN_METADATA.items()
+                                           for kind, path in fields])
+def test_plan_response_assertion_accepts_valid_metadata_with_amount_digits(model, kind, path):
+    body = deepcopy(_plan_privacy_samples()[model])
+    target = body
+    for key in path[:-1]:
+        target = target[0 if key is None else key]
+    target[path[-1]] = "1999000000000000" if kind == "revision" else "2026-11-04T12:30:45.199900"
+    original = deepcopy(body)
+    _assert_private_plan_response(body, model)
+    assert body == original
+
+
+@pytest.mark.parametrize("value", [None, 1999, True, "1999", "19990000000000000", "199900000000000G", "199900000000000A"])
+def test_plan_response_assertion_rejects_invalid_revision_metadata(value):
+    body = _plan_privacy_samples()[PlanDetail]
+    body["revision"] = value
+    with pytest.raises(AssertionError):
+        _assert_private_plan_response(body, PlanDetail)
+
+
+@pytest.mark.parametrize("value", [1999, True, {}, "1999", "2026-02-30T12:30:45.199900",
+                                 "2026-11-04", "2026-11-04 12:30:45.199900", "2026-11-04T12:30:45.199900 extra"])
+def test_plan_response_assertion_rejects_invalid_timestamp_metadata(value):
+    body = _plan_privacy_samples()[PlanDetail]
+    body["created_at"] = value
+    with pytest.raises(AssertionError):
+        _assert_private_plan_response(body, PlanDetail)
+
+
+def test_plan_response_assertion_keeps_nullable_and_aware_timestamp_contracts():
+    for model, body in _plan_privacy_samples().items():
+        _assert_private_plan_response(body, model)
+    body = _plan_privacy_samples()[PlanDetail]
+    body["created_at"] = "2026-11-04T12:30:45.199900+00:00"
+    _assert_private_plan_response(body, PlanDetail)
+
+
+@pytest.mark.parametrize("mutation", ["number", "string", "currency", "provider", "copied_revision", "copied_timestamp",
+                                      "nested_field", "nested_unknown_field", "list_value", "dynamic_banned_key", "dynamic_metadata_spoof", "extra_field",
+                                      "extra_metadata_field", "wrong_integer_type"])
+def test_plan_response_assertion_rejects_business_leaks_and_unknown_fields(mutation):
+    model = PlanDetail
+    body = _plan_privacy_samples()[model]
+    if mutation == "number":
+        body["subscribers"]["users"] = 1999
+    elif mutation in ("string", "currency", "provider", "copied_revision", "copied_timestamp"):
+        body["display_name"] = {"string": "1999", "currency": "EUR", "provider": "stripe",
+                                "copied_revision": "1999000000000000",
+                                "copied_timestamp": "2026-11-04T12:30:45.199900"}[mutation]
+    elif mutation == "nested_field":
+        body["entitlements"][0]["details"] = {"amount": 1999}
+    elif mutation == "nested_unknown_field":
+        body["entitlements"][0]["extra"] = {"ordinary": "safe"}
+    elif mutation == "list_value":
+        body["entitlements"][0]["label"] = "stripe"
+    elif mutation in ("dynamic_banned_key", "dynamic_metadata_spoof"):
+        model = PlanMatrix
+        body = _plan_privacy_samples()[model]
+        key = "price" if mutation == "dynamic_banned_key" else "revision"
+        body["versions"][0]["values"][key] = {"enabled": True, "limit": 1999}
+    elif mutation == "extra_field":
+        body["extra"] = {"ordinary": "safe"}
+    elif mutation == "extra_metadata_field":
+        body["extra"] = {"revision": "1999000000000000", "created_at": "2026-11-04T12:30:45.199900"}
+    else:
+        body["id"] = "1"
+    with pytest.raises(AssertionError):
+        _assert_private_plan_response(body, model)
 
 
 def test_new_schemas_are_strict_allowlists_with_no_commercial_or_private_field_names():
