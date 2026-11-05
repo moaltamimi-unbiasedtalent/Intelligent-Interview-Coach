@@ -155,7 +155,8 @@ const es: typeof en = {
     accountConfirmExport: "Descargar primero tus datos",
     accountConfirmKeep: "Conservar mi cuenta",
     accountConfirmDelete: "Eliminar mi cuenta para siempre",
-    accountDeleteFailed: "Tu cuenta no se eliminó. No se cambió nada. Inténtalo de nuevo.",
+    accountDeleteFailed: "No pudimos confirmar que tu cuenta se haya eliminado. Inténtalo de nuevo.",
+    accountDeleteIncomplete: "No se completó la eliminación de tu cuenta. Es posible que ya se hayan eliminado algunos archivos privados. Inténtalo de nuevo para completar la eliminación.",
   },
 };
 

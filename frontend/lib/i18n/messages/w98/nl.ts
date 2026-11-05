@@ -155,7 +155,8 @@ const nl: typeof en = {
     accountConfirmExport: "Eerst uw gegevens downloaden",
     accountConfirmKeep: "Mijn account behouden",
     accountConfirmDelete: "Mijn account voorgoed verwijderen",
-    accountDeleteFailed: "Uw account is niet verwijderd. Er is niets gewijzigd. Probeer het opnieuw.",
+    accountDeleteFailed: "We konden niet bevestigen dat uw account is verwijderd. Probeer het opnieuw.",
+    accountDeleteIncomplete: "Het verwijderen van uw account is niet voltooid. Sommige privébestanden zijn mogelijk al verwijderd. Probeer het opnieuw om het verwijderen te voltooien.",
   },
 };
 

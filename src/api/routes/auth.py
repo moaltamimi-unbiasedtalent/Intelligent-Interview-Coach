@@ -622,9 +622,12 @@ def delete_account(
     try:
         summary = service.delete_account(user_id)
     except DeletionIncomplete:
-        # 05E: a private file could not be deleted, so NOTHING was removed (the files go first, then the rows, in one pass). The account is intact and the same call can be
-        # repeated; the response carries no path, key or error text.
-        exc = HTTPException(status_code=503, detail="Your account could not be deleted completely right now, so nothing was removed. Please try again in a moment.")
+        # SQL rolled back and the account can retry. Files already removed stay removed.
+        # The response carries no path, key or storage error text.
+        exc = HTTPException(
+            status_code=503,
+            detail="Your account deletion did not finish. Some private files may already have been removed. Please try again.",
+        )
         exc.error_code = "deletion_incomplete"  # type: ignore[attr-defined]
         raise exc
     _clear_session_cookie(request, response)

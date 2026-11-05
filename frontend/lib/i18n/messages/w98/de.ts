@@ -155,7 +155,8 @@ const de: typeof en = {
     accountConfirmExport: "Zuerst Ihre Daten herunterladen",
     accountConfirmKeep: "Mein Konto behalten",
     accountConfirmDelete: "Mein Konto endgültig löschen",
-    accountDeleteFailed: "Ihr Konto wurde nicht gelöscht. Nichts wurde geändert. Bitte versuchen Sie es erneut.",
+    accountDeleteFailed: "Wir konnten nicht bestätigen, dass Ihr Konto gelöscht wurde. Bitte versuchen Sie es erneut.",
+    accountDeleteIncomplete: "Die Löschung Ihres Kontos wurde nicht abgeschlossen. Einige private Dateien wurden möglicherweise bereits entfernt. Bitte versuchen Sie es erneut, um die Löschung abzuschließen.",
   },
 };
 

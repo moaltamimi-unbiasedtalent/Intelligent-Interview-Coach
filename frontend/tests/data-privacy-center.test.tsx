@@ -24,6 +24,7 @@ const shareRevoke = vi.fn();
 const wsList = vi.fn();
 const deleteAccount = vi.fn();
 const replace = vi.fn();
+const refresh = vi.fn().mockResolvedValue(undefined);
 
 vi.mock("@/lib/api/client", () => ({
   api: {
@@ -46,13 +47,13 @@ vi.mock("@/lib/api/client", () => ({
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, push: vi.fn() }) }));
 vi.mock("@/components/auth/AuthProvider", () => ({
-  useAuth: () => ({ account: { email: "a@example.com" }, status: "authenticated", refresh: vi.fn().mockResolvedValue(undefined) }),
+  useAuth: () => ({ account: { email: "a@example.com" }, status: "authenticated", refresh }),
   useAuthOptional: () => ({ status: "authenticated" }),
 }));
 
 import { DataPrivacyCenter } from "@/components/account/DataPrivacyCenter";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
-import { ApiError } from "@/lib/api/errors";
+import { ApiError, apiErrorFromBody, unreachableError } from "@/lib/api/errors";
 
 const OPPS = [
   { id: 1, title: "PM at Acme", target_role: "PM", status: "active" },
@@ -215,6 +216,36 @@ describe("Data & Privacy Center", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/sign-in"));
   });
 
+  it.each([
+    { status: 503, code: "deletion_incomplete", messageKey: "dataPrivacy.accountDeleteIncomplete" },
+    { status: 503, code: "service_unavailable", messageKey: "dataPrivacy.accountDeleteFailed" },
+    { status: 500, code: "deletion_incomplete", messageKey: "dataPrivacy.accountDeleteFailed" },
+    { status: 401, code: "unauthenticated", messageKey: "dataPrivacy.accountDeleteFailed" },
+    { status: 409, code: "subscription_resolution_required", messageKey: "billing.closureDeleteBlocked" },
+    { status: null, code: "unreachable", messageKey: "dataPrivacy.accountDeleteFailed" },
+  ])("shows the correct account-deletion guidance for $status $code without retrying or leaving", async ({ status, code, messageKey }) => {
+    const user = userEvent.setup();
+    const responseMessage = "synthetic internal response text";
+    const error = status === null
+      ? unreachableError(true)
+      : apiErrorFromBody(status, { error: { code, message: responseMessage } }, null);
+    deleteAccount.mockRejectedValueOnce(error);
+    render(<DataPrivacyCenter />);
+
+    await user.click(screen.getByTestId("dp-delete-account"));
+    const dialog = screen.getByRole("alertdialog");
+    const confirm = within(dialog).getByRole("button", { name: t("dataPrivacy.accountConfirmDelete") });
+    await user.click(confirm);
+
+    const alert = await within(dialog).findByRole("alert");
+    expect(alert).toHaveTextContent(t(messageKey));
+    expect(alert).not.toHaveTextContent(responseMessage);
+    expect(confirm).toBeEnabled();
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
+    expect(refresh).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
   it("a failed delete shows an error inside the dialog, keeps the item and does not retry", async () => {
     const user = userEvent.setup();
     docRemove.mockRejectedValue(new ApiError({ kind: "unreachable", status: null, code: "x", message: "x", requestId: null, retryAfterMs: null }));
@@ -262,6 +293,22 @@ describe("Data & Privacy copy across all 8 locales", () => {
         expect(translate(locale, "dataPrivacy.title")).not.toBe(translate("en", "dataPrivacy.title"));
       }
       expect(translate(locale, "common.tagline")).toBe(BRAND_SLOGAN);
+    }
+  });
+
+  it("has distinct localized copy for incomplete and unconfirmed account deletion", () => {
+    const incompleteKey = "dataPrivacy.accountDeleteIncomplete";
+    const failedKey = "dataPrivacy.accountDeleteFailed";
+    expect(t(incompleteKey)).toContain("Some private files may already have been removed.");
+    expect(t(failedKey)).toContain("could not confirm");
+    for (const locale of SUPPORTED_LOCALE_CODES) {
+      const incomplete = translate(locale, incompleteKey);
+      const failed = translate(locale, failedKey);
+      expect(incomplete, locale).not.toBe(failed);
+      if (locale !== "en") {
+        expect(incomplete, locale).not.toBe(t(incompleteKey));
+        expect(failed, locale).not.toBe(t(failedKey));
+      }
     }
   });
 

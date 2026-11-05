@@ -146,8 +146,14 @@ export function DataPrivacyCenter() {
       await refresh();
       router.replace("/sign-in");
     } catch (e) {
-      // W12.4D-F1R: an unresolved provider subscription is not a failure to retry: the closure request is recorded and the account stays.
-      setDialogError(e instanceof ApiError && e.code === "subscription_resolution_required" ? t("billing.closureDeleteBlocked") : t("dataPrivacy.accountDeleteFailed"));
+      // W12.4D-F1R: the unresolved subscription blocks closure and records the request.
+      if (e instanceof ApiError && e.code === "subscription_resolution_required") {
+        setDialogError(t("billing.closureDeleteBlocked"));
+      } else if (e instanceof ApiError && e.status === 503 && e.code === "deletion_incomplete") {
+        setDialogError(t("dataPrivacy.accountDeleteIncomplete"));
+      } else {
+        setDialogError(t("dataPrivacy.accountDeleteFailed"));
+      }
       setBusy(false);
     }
   };

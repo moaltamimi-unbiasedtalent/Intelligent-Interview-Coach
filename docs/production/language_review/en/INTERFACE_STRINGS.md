@@ -796,7 +796,7 @@ Appears in: `components/marketing/AiTransparencyContent.tsx`
 | `aiTransparency.whenHeading` | When AI is used versus deterministic logic | `AiTransparencyContent.tsx` |
 | `aiTransparency.whenPolicy` | The choice of model per operation is governed by a central server-side policy; your browser can never choose a raw model. | `AiTransparencyContent.tsx` |
 
-### `dataPrivacy` (170 strings)
+### `dataPrivacy` (171 strings)
 
 Context: Data and privacy controls: export, deletion, retention explanations.
 
@@ -816,7 +816,8 @@ Appears in: `components/account/DataPrivacyCenter.tsx`, `components/account/Priv
 | `dataPrivacy.accountConfirmKeep` | Keep my account | `DataPrivacyCenter.tsx` |
 | `dataPrivacy.accountConfirmKept` | Security records are kept with your identity removed. Backups are not erased instantly. Some preparation-chat working data may remain until it is cleaned up. | `DataPrivacyCenter.tsx` |
 | `dataPrivacy.accountConfirmTitle` | Delete your account? | `DataPrivacyCenter.tsx` |
-| `dataPrivacy.accountDeleteFailed` | Your account was not deleted. Nothing was changed. Please try again. | `DataPrivacyCenter.tsx` |
+| `dataPrivacy.accountDeleteFailed` | We could not confirm that your account was deleted. Please try again. | `DataPrivacyCenter.tsx` |
+| `dataPrivacy.accountDeleteIncomplete` | Account deletion did not finish. Some private files may already have been removed. Please try again to finish deleting your account. | `DataPrivacyCenter.tsx` |
 | `dataPrivacy.accountZoneBody` | Deleting your account is permanent. Use the options above first if you only want to remove some of your data. | `DataPrivacyCenter.tsx` |
 | `dataPrivacy.accountZoneButton` | Delete my account… | `DataPrivacyCenter.tsx` |
 | `dataPrivacy.accountZoneTitle` | Delete your account | `DataPrivacyCenter.tsx` |
