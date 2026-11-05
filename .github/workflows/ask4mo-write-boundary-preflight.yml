@@ -1,0 +1,316 @@
+name: Ask4Mo isolated write boundary
+on:
+  push:
+    branches: [validation/ask4mo-write-boundary-20261105]
+permissions: {}
+jobs:
+  sentinel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Verify mounts and execute one filesystem sentinel
+        shell: bash
+        run: |
+          umask 077
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import platform
+          import re
+          import shutil
+          import subprocess
+          import tempfile
+          import time
+          from pathlib import Path
+
+          IMAGE = "postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97"
+          PGDATA = "/var/lib/postgresql/data"
+          MEMORY = 134217728
+          MAX_PROCESSES = 16
+          evidence = dict(vm="UNAVAILABLE", image="UNAVAILABLE", boundary="INCOMPLETE",
+                          positive="NOT RUN", negative="NOT RUN", inheritance="NOT RUN", cleanup="INCOMPLETE")
+
+          class Stop(Exception):
+              pass
+
+          def require(value, code):
+              if not value:
+                  raise Stop(code)
+
+          def call(args, code, *, timeout=20, capture=False):
+              try:
+                  proc = subprocess.run(args, stdin=subprocess.DEVNULL,
+                                        stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
+                                        stderr=subprocess.DEVNULL, timeout=timeout, check=False)
+              except (OSError, subprocess.TimeoutExpired):
+                  raise Stop(code) from None
+              require(proc.returncode == 0, code)
+              return proc.stdout
+
+          C = r"""
+          #define _GNU_SOURCE
+          #include <errno.h>
+          #include <fcntl.h>
+          #include <stdio.h>
+          #include <string.h>
+          #include <sys/wait.h>
+          #include <unistd.h>
+
+          static int denied(const char *path) {
+              int fd = open(path, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
+              if (fd < 0) return errno == EROFS ? 0 : 2;
+              close(fd);
+              return 1;
+          }
+          int main(int argc, char **argv) {
+              setvbuf(stdout, NULL, _IONBF, 0);
+              if (argc == 4 && !strcmp(argv[1], "child")) {
+                  if (chdir("/work")) return 3;
+                  int code = denied(argv[2]);
+                  if (code != 0) return code;
+                  return denied(argv[3]);
+              }
+              if (argc != 5 || getuid() == 0 || geteuid() == 0) return 3;
+              int fd = open("/work/positive", O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
+              size_t size = strlen(argv[1]);
+              if (fd < 0 || write(fd, argv[1], size) != (ssize_t)size || close(fd)) {
+                  puts("positive=FAIL");
+                  return 3;
+              }
+              puts("positive=PASS");
+              int code = denied(argv[2]);
+              puts(code == 0 ? "negative=DENIED_EROFS" : code == 1 ? "negative=ALLOWED" : "negative=OTHER_ERRNO");
+              if (code != 0) return 4;
+              pid_t pid = fork();
+              if (pid == 0) {
+                  execl("/work/sentinel", "sentinel", "child", argv[3], argv[4], (char *)0);
+                  _exit(3);
+              }
+              int status = 0;
+              if (pid < 0 || waitpid(pid, &status, 0) != pid || !WIFEXITED(status)) {
+                  puts("child=FAILED_TO_WAIT");
+                  return 5;
+              }
+              code = WEXITSTATUS(status);
+              puts(code == 0 ? "child=DENIED_EROFS" : code == 1 ? "child=ALLOWED" : "child=OTHER_FAILURE");
+              return code;
+          }
+          """
+
+          def namespace_check(pid, uid, gid, work, empty_dev):
+              proc = Path("/proc") / str(pid)
+              rows = call(["sudo", "-n", "cat", str(proc / "mountinfo")], "mountinfo_unavailable", capture=True)
+              mounts = {}
+              expected = {"/": (False, None), "/work": (True, None), "/dev": (False, None), "/proc": (False, "proc")}
+              for row in rows.decode("ascii").splitlines():
+                  left, right = row.split(" - ", 1)
+                  fields, fs = left.split(), right.split()
+                  require(len(fields) >= 6 and len(fs) == 3, "invalid_mount_record")
+                  path, flags = fields[4], fields[5].split(",")
+                  require(path in expected and path not in mounts and len(set(flags) & {"ro", "rw"}) == 1, "unexpected_mount")
+                  mounts[path] = ("rw" in flags, fs[0])
+              require(set(mounts) == set(expected), "missing_expected_mount")
+              require(all(mounts[path][0] == rw for path, (rw, _) in expected.items()), "unexpected_writable_root")
+              require(mounts["/proc"][1] == "proc", "incorrect_proc_mount")
+              for guest, host in (("work", work), ("dev", empty_dev)):
+                  actual = call(["sudo", "-n", "stat", "-Lc", "%d:%i", str(proc / "root" / guest)], "mount_identity_unavailable", capture=True)
+                  st = host.stat()
+                  require(actual.strip().decode("ascii") == f"{st.st_dev}:{st.st_ino}", "unexpected_mount_source")
+              values = dict(line.split(":", 1) for line in call(
+                  ["sudo", "-n", "cat", str(proc / "status")], "privilege_evidence_unavailable", capture=True
+              ).decode("ascii").splitlines() if ":" in line)
+              require(values["Uid"].split() == [str(uid)] * 4 and values["Gid"].split() == [str(gid)] * 4,
+                      "unexpected_process_identity")
+              require(values["NoNewPrivs"].strip() == "1" and values["Seccomp"].strip() == "2", "privilege_guard_missing")
+              require(all(int(values[key].strip(), 16) == 0 for key in ("CapInh", "CapPrm", "CapEff", "CapBnd", "CapAmb")),
+                      "unexpected_process_capabilities")
+              for name in ("mnt", "pid", "net", "ipc", "uts"):
+                  actual = call(["sudo", "-n", "readlink", str(proc / "ns" / name)], "namespace_unavailable", capture=True)
+                  parent = os.readlink(f"/proc/self/ns/{name}").encode()
+                  require(actual.strip() != parent, "shared_namespace")
+              netdev = call(["sudo", "-n", "cat", str(proc / "net/dev")], "network_evidence_unavailable", capture=True)
+              require({row.split(":", 1)[0].strip() for row in netdev.decode().splitlines() if ":" in row} == {"lo"},
+                      "unexpected_network_interface")
+              cgroup = (proc / "cgroup").read_text().strip()
+              require(cgroup.startswith("0::/") and "\n" not in cgroup and ".." not in cgroup.split("/"), "unexpected_cgroup")
+              cg = Path("/sys/fs/cgroup") / cgroup[4:]
+              require((cg / "memory.max").read_text().strip() == str(MEMORY)
+                      and (cg / "pids.max").read_text().strip() == str(MAX_PROCESSES), "process_limits_missing")
+              return cg
+
+          def run():
+              stage = "vm_identity"
+              failure = None
+              docker_helper = False
+              created = False
+              child_pid = None
+              cgroup = None
+              version = os.environ.get("ImageVersion", "")
+              job = os.environ.get("GITHUB_RUN_ID", "")
+              require(re.fullmatch(r"[0-9]{8}\.[0-9]+\.[0-9]+", version) and job.isdigit()
+                      and os.environ.get("RUNNER_ARCH") == "X64" and platform.machine() == "x86_64"
+                      and 'VERSION_ID="24.04"' in Path("/etc/os-release").read_text().splitlines(),
+                      "runner_identity_unavailable")
+              evidence.update(vm="VERIFIED", runner_image_version=version, runner_architecture="X64")
+              runc = shutil.which("runc")
+              require(runc and shutil.which("docker") and shutil.which("cc"), "required_preinstalled_tool_unavailable")
+              runc_version = call([runc, "--version"], "runc_identity_unavailable", capture=True).decode().splitlines()[0]
+              require(re.fullmatch(r"runc version [A-Za-z0-9.+~-]{1,60}", runc_version), "runc_identity_invalid")
+              evidence["runtime"] = runc_version
+              uid, gid = os.getuid(), os.getgid()
+              require(uid != 0 and gid != 0, "runner_identity_invalid")
+              name = "ask4mo-boundary-" + job
+              op = Path(tempfile.mkdtemp(prefix="ask4mo-write-boundary-", dir=os.environ["RUNNER_TEMP"])).resolve()
+              work, bundle, empty_dev, export_bind = (op / x for x in ("work", "bundle", "empty-dev", "export-bind"))
+              root = bundle / "rootfs"
+              for path in (work, bundle, empty_dev, export_bind, root, op / "runtime"):
+                  path.mkdir(mode=0o700)
+              prefix = ["sudo", "-n", runc, "--root", str(op / "runtime")]
+              try:
+                  stage = "image_identity"
+                  cached = subprocess.run(["docker", "image", "inspect", IMAGE], stdout=subprocess.DEVNULL,
+                                          stderr=subprocess.DEVNULL, timeout=20).returncode == 0
+                  if not cached:
+                      call(["docker", "pull", "--platform", "linux/amd64", IMAGE], "pinned_image_pull_failed", timeout=150)
+                  image, = json.loads(call(["docker", "image", "inspect", IMAGE], "pinned_image_unavailable", capture=True))
+                  digest = IMAGE.split("@")[1]
+                  require(image["Os"] == "linux" and image["Architecture"] == "amd64"
+                          and any(x in ("postgres@" + digest, "docker.io/library/postgres@" + digest,
+                                        "registry-1.docker.io/library/postgres@" + digest) for x in image.get("RepoDigests", []))
+                          and re.fullmatch(r"sha256:[0-9a-f]{64}", image["Id"]), "image_digest_or_platform_mismatch")
+                  require(set(image["Config"].get("Volumes") or {}) == {PGDATA}, "unexpected_image_volume")
+                  evidence.update(image="DIGEST VERIFIED", image_digest=digest, image_id=image["Id"], image_platform="linux/amd64")
+                  stage = "bundle_preparation"
+                  call(["docker", "create", "--pull", "never", "--name", name + "-export", "--read-only",
+                        "--network", "none", "--ipc", "none", "--user", f"{uid}:{gid}", "--cap-drop", "ALL",
+                        "--security-opt", "no-new-privileges", "--mount",
+                        f"type=bind,src={export_bind},dst={PGDATA},readonly", "--entrypoint", "/bin/false", image["Id"]],
+                       "image_export_container_create_failed")
+                  docker_helper = True
+                  export, = json.loads(call(["docker", "inspect", name + "-export"], "image_export_inspection_failed", capture=True))
+                  require(export["State"]["Status"] == "created" and not export["State"]["Running"]
+                          and export["Image"] == image["Id"] and len(export["Mounts"]) == 1
+                          and export["Mounts"][0]["Destination"] == PGDATA and not export["Mounts"][0]["RW"],
+                          "image_export_identity_or_mount_mismatch")
+                  tarfile = op / "rootfs.tar"
+                  call(["docker", "export", "--output", str(tarfile), name + "-export"], "image_export_failed", timeout=90)
+                  call(["tar", "--extract", "--file", str(tarfile), "--directory", str(root),
+                        "--no-same-owner", "--no-same-permissions"], "image_unpack_failed", timeout=90)
+                  for target in ("work", "proc", "dev", "tmp"):
+                      path = root / target
+                      path.mkdir(mode=0o755, exist_ok=True)
+                      require(path.is_dir() and path.resolve() == path, "unsafe_rootfs_mount_target")
+                  (root / "tmp").chmod(0o1777)
+                  code = op / "sentinel.c"
+                  code.write_text(C, encoding="ascii")
+                  call(["cc", "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror", "-static", str(code),
+                        "-o", str(work / "sentinel")], "sentinel_compile_failed")
+                  (work / "outside").symlink_to("/tmp", target_is_directory=True)
+                  nonce = f"ask4mo-boundary-{job}"
+                  targets = [f"/tmp/{nonce}-parent", f"../tmp/{nonce}-child", f"outside/{nonce}-symlink"]
+                  require(all(not os.path.lexists(root / "tmp" / Path(target).name) for target in targets),
+                          "negative_target_already_exists")
+                  options = ["bind", "nosuid", "nodev"]
+                  seccomp = [{"names": ["unshare", "setns", "mount", "umount2", "pivot_root", "chroot", "open_tree",
+                                        "move_mount", "fsopen", "fsconfig", "fsmount", "fspick", "mount_setattr",
+                                        "open_by_handle_at"],
+                              "action": "SCMP_ACT_ERRNO", "errnoRet": 1},
+                             {"names": ["clone3"], "action": "SCMP_ACT_ERRNO", "errnoRet": 38}]
+                  for flag in (0x00020000, 0x02000000, 0x04000000, 0x08000000, 0x10000000, 0x20000000, 0x40000000):
+                      seccomp.append({"names": ["clone"], "action": "SCMP_ACT_ERRNO", "errnoRet": 1,
+                                      "args": [{"index": 0, "value": flag, "valueTwo": flag, "op": "SCMP_CMP_MASKED_EQ"}]})
+                  spec = {
+                      "ociVersion": "1.0.2", "root": {"path": "rootfs", "readonly": True},
+                      "process": {"terminal": False, "user": {"uid": uid, "gid": gid},
+                                  "args": ["/work/sentinel", nonce, *targets], "env": ["LANG=C"], "cwd": "/work",
+                                  "noNewPrivileges": True,
+                                  "capabilities": dict.fromkeys(("bounding", "effective", "inheritable", "permitted", "ambient"), []),
+                                  "rlimits": [{"type": "RLIMIT_" + kind, "hard": bound, "soft": bound}
+                                              for kind, bound in (("NOFILE", 32), ("FSIZE", 65536), ("CPU", 3), ("CORE", 0))]},
+                      "mounts": [{"destination": "/work", "type": "bind", "source": str(work), "options": [*options, "rw"]},
+                                 {"destination": "/dev", "type": "bind", "source": str(empty_dev), "options": [*options, "ro", "noexec"]},
+                                 {"destination": "/proc", "type": "proc", "source": "proc", "options": ["ro", "nosuid", "nodev", "noexec"]}],
+                      "linux": {"rootfsPropagation": "private", "namespaces": [{"type": kind} for kind in ("mount", "pid", "network", "ipc", "uts")],
+                                "resources": {"memory": {"limit": MEMORY}, "pids": {"limit": MAX_PROCESSES}},
+                                "seccomp": {"defaultAction": "SCMP_ACT_ALLOW", "syscalls": seccomp}},
+                  }
+                  (bundle / "config.json").write_text(json.dumps(spec), encoding="ascii")
+                  stage = "created_container_preflight"
+                  with (work / "capture").open("xb") as capture:
+                      created = True
+                      proc = subprocess.run([*prefix, "create", "--bundle", str(bundle), name], stdout=capture,
+                                            stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, timeout=30)
+                  require(proc.returncode == 0, "oci_container_create_failed")
+                  state = json.loads(call([*prefix, "state", name], "oci_created_state_unavailable", capture=True))
+                  require(state["status"] == "created" and type(state["pid"]) is int and state["pid"] > 1, "unexpected_oci_state")
+                  child_pid = state["pid"]
+                  cgroup = namespace_check(child_pid, uid, gid, work, empty_dev)
+                  evidence.update(mounts={"root": "ro", "work": "rw", "dev": "ro", "proc": "ro",
+                                          "sys": "unmounted", "shm": "unmounted", "runtime_etc": "unmounted"},
+                                  network="isolated_loopback_only", memory_limit_bytes=MEMORY, process_limit=MAX_PROCESSES)
+                  stage = "sentinel"
+                  call([*prefix, "start", name], "oci_sentinel_start_failed")
+                  deadline = time.monotonic() + 12
+                  while time.monotonic() < deadline:
+                      state = json.loads(call([*prefix, "state", name], "oci_terminal_state_unavailable", capture=True, timeout=3))
+                      if state["status"] == "stopped":
+                          break
+                      time.sleep(0.2)
+                  require(state["status"] == "stopped", "sentinel_timeout")
+                  result_path = work / "capture"
+                  require(result_path.stat().st_size <= 160, "invalid_sentinel_output")
+                  rows = result_path.read_text(encoding="ascii").splitlines()
+                  if rows and rows[0] == "positive=PASS":
+                      positive = work / "positive"
+                      require(positive.is_file() and not positive.is_symlink() and positive.read_bytes() == nonce.encode(),
+                              "positive_sentinel_readback_failed")
+                      evidence["positive"] = "PASS"
+                  else:
+                      evidence["positive"] = "FAIL"
+                      raise Stop("positive_sentinel_failed")
+                  negative = rows[1] if len(rows) > 1 else ""
+                  evidence["negative"] = {"negative=DENIED_EROFS": "DENIED", "negative=ALLOWED": "ALLOWED"}.get(negative, "INCOMPLETE")
+                  require(negative == "negative=DENIED_EROFS", "negative_sentinel_allowed" if evidence["negative"] == "ALLOWED" else "negative_sentinel_errno_unverified")
+                  evidence["negative_errno"] = "EROFS"
+                  inherited = rows[2:] == ["child=DENIED_EROFS"]
+                  evidence["inheritance"] = "PASS" if inherited else "FAIL"
+                  require(inherited, "child_boundary_not_verified")
+                  evidence["boundary"] = "PASS"
+              except Stop as exc:
+                  failure = str(exc)
+                  if stage == "sentinel":
+                      evidence["boundary"] = "FAIL"
+              except (KeyError, ValueError, OSError, subprocess.TimeoutExpired):
+                  failure = stage + "_unverified"
+              finally:
+                  try:
+                      if created:
+                          call([*prefix, "delete", "--force", name], "oci_cleanup_failed")
+                          listed = json.loads(call([*prefix, "list", "--format", "json"], "oci_cleanup_unverified", capture=True))
+                          require(not any(item["id"] == name for item in (listed or [])), "oci_container_still_present")
+                          require(cgroup is None or not cgroup.exists(), "oci_cgroup_still_present")
+                          require(child_pid is None or not Path(f"/proc/{child_pid}").exists(), "oci_process_still_present")
+                      if docker_helper:
+                          call(["docker", "rm", name + "-export"], "stopped_image_export_cleanup_failed")
+                      shutil.rmtree(op)
+                      require(not op.exists(), "operation_root_cleanup_unverified")
+                      evidence["cleanup"] = "PASS"
+                  except (Stop, ValueError, OSError):
+                      evidence["cleanup"] = "FAIL"
+                      if failure is None:
+                          failure = "operation_cleanup_failed"
+              if failure is not None:
+                  raise Stop(failure)
+
+          try:
+              run()
+          except Stop as exc:
+              evidence["failure"] = str(exc)
+          except (KeyError, ValueError, OSError, subprocess.TimeoutExpired):
+              evidence["failure"] = "initial_configuration_unverified"
+          encoded = json.dumps(evidence, sort_keys=True, separators=(",", ":"))
+          print("ASK4MO_BOUNDARY_EVIDENCE " + encoded, flush=True)
+          print("ASK4MO_BOUNDARY_EVIDENCE_SHA256 " + hashlib.sha256(encoded.encode()).hexdigest(), flush=True)
+          raise SystemExit(0 if evidence["boundary"] == "PASS" and evidence["cleanup"] == "PASS" and "failure" not in evidence else 1)
+          PY
