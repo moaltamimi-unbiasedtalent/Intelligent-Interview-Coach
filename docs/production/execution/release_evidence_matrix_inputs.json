@@ -24,7 +24,7 @@
    "acceptance_artefacts": []
   },
   "00B": {
-   "engineering": "DELIVERED as a proposal (PRs #211, #212)",
+   "engineering": "PARTIAL: nine owner-approved moves recorded and BL-9 retained in R1.0 pending OD-RECLASS",
    "ci": "main aedbef3d documentation CI SUCCESS; owner decision OPEN",
    "live_staging": {
     "state": "NOT IN LEDGER",
@@ -33,12 +33,12 @@
    },
    "human_qualification": {
     "state": "NOT IN LEDGER",
-    "description": "Owner disposition of the ten reclassifications (OPEN)",
+    "description": "Final owner disposition for BL-9 (OD-RECLASS OPEN)",
     "evidence": []
    },
    "gate_acceptance": {
     "state": "NOT IN LEDGER",
-    "description": "PG-11 PASS (machine-checked); no reclassification applied",
+    "description": "PG-11 PASS (machine-checked)",
     "evidence": []
    },
    "merge_sha": "",

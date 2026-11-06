@@ -1,5 +1,7 @@
 # Production Master Roadmap V2.2 (corrected)
 
+> 6 November 2026 reconciliation update. The [00B written disposition and audit](execution/00B_OWNER_DISPOSITION_2026_11_06.md) record nine approved moves and BL-9 held in R1.0. The current R1.0 allocation is 79 fixes and 74 verifications. The October totals below are historical. Full S1, the 40/45 engineering count and the release gates retain their standing status.
+
 > Delivery update, 23 October 2026: **40/45** engineering packages merged at `aedbef3d`, including PR #265. Main CI SUCCESS; Browser E2E success is on the identical PR tree, not a main-SHA run. 00A/00B/07B/07C/08A remain open or incomplete. Current evidence: [post-merge release status](execution/POST_PR265_RELEASE_STATUS.md). No gate or language approval is added.
 
 **Status:** corrected 2026-10-21 against the owner's authoritative requirements, which were recovered from a separate owner conversation and recorded in [`OWNER_REQUIREMENTS_SOURCE_OF_TRUTH_V2_2.md`](OWNER_REQUIREMENTS_SOURCE_OF_TRUTH_V2_2.md). This supersedes the first version of this roadmap (PR #211 at `4084eb9`), which had substituted engineering-observed findings for the reviewer findings and left the owner-requested capabilities as placeholder decisions. Dispositions are PROPOSED for owner review; no owner approval was invented. **Planning only: no production code, database change, paid call, Stripe activation, deployment, feature activation or rewriting of historical results.**

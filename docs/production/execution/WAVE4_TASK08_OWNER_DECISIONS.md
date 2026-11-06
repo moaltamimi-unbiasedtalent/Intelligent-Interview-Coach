@@ -220,6 +220,8 @@ Each card explicitly records required decision, proposal, available/missing evid
 
 ## G02 — Disposition of ten reclassification proposals and full S1 scope
 
+> 6 November 2026 update. The [written item decisions](00B_OWNER_DISPOSITION_2026_11_06.md) approve nine exact placements and keep BL-9 in R1.0. G02 remains open for BL-9 and supplies no gate or deployment authority. The original planning entry follows.
+
 - **Decision ID:** 00B / OD-RECLASS / OD-SCOPE-01. **Authorization:** OPEN / NOT AUTHORIZED.
 - **Required / proposed:** Disposition of ten reclassification proposals and full S1 scope. PROPOSED keep all S1 obligations pending explicit item-level owner disposition; no deadline-driven scope cut.
 - **Evidence available:** S1 approved; 452 issues reconciled with zero unmapped and historical failed gates retained. **Missing evidence:** Explicit item-level decisions if any change requested; owner confirmation of all unresolved product policies.

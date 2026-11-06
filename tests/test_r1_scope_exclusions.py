@@ -91,13 +91,19 @@ def test_e_speech_the_frontend_has_no_server_transcription_client_and_gates_are_
     assert policy.SERVER_SPEECH_PROVIDERS_AUTHORIZED is False and policy.WHISPER_API_TRANSPORT_AUTHORIZED is False and policy.MODEL_DOWNLOADS_AUTHORIZED is False
 
 
-def test_the_proposal_is_not_applied_and_the_two_failed_proofs_stay_in_r1_0():
+def test_the_held_and_withdrawn_moves_stay_in_r1_0():
     sp = RECON["scope_proposals"]
-    assert sp["applied"] is False and len(sp["reclassification"]) == 10 and set(sp["withdrawn"]) == {"BL-6.6", "BL-7"}
+    assert sp["applied"] is True and len(sp["reclassification"]) == 10
+    assert set(sp["withdrawn"]) == {"BL-6.6", "BL-7"}
+    decisions = sp["owner_disposition"]["decisions"]
+    assert set(decisions) == set(sp["reclassification"])
+    assert decisions["BL-9"] == {"decision": "DEFER", "approved_release": None}
     by = {r["id"]: r for r in RECON["items"]}
-    assert all(by[k]["disposition"] == "FIX BEFORE R1.0" and by[k]["release"] == "R1.0" for k in list(sp["reclassification"]) + list(sp["withdrawn"]))
+    for key in ("BL-9", "BL-6.6", "BL-7"):
+        assert (by[key]["disposition"], by[key]["release"]) == ("FIX BEFORE R1.0", "R1.0")
+    assert by["BL-9"]["dependencies"] == "BL-5, BL-6, BL-8; blocks 12"
     assert all(v["proposed_release"] in ("R1.4", "R1.5", "R1.6") for v in sp["reclassification"].values())
-    assert all(h in by for h in sp["reclassification"])                                           # historical IDs preserved
+    assert set(sp["reclassification"]) <= set(by)  # historical IDs preserved
 
 
 def test_limit_of_the_proof_curated_us_sources_remain_in_the_candidate_corpus():
@@ -105,6 +111,20 @@ def test_limit_of_the_proof_curated_us_sources_remain_in_the_candidate_corpus():
     from src.copilot.knowledge import manifest as km
 
     ids = {e.source_id for e in km.load_manifest()}
-    assert {"onet", "bls_ooh"} <= ids or any(i.startswith("bls") for i in ids)
+    assert {"onet", "bls_ooh", "bls_oews"} <= ids
     doc = (ROOT / "docs/production/execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md").read_text(encoding="utf-8")
     assert "02D" in doc and "OD-US-CONTENT" in doc and "NOT excluded" in doc
+
+def test_held_bl9_leaves_legacy_source_metadata_visible_in_candidate_catalog():
+    from tests.test_admin_foundation_w10_1 import Env
+
+    env = Env()
+    try:
+        _, cookies = env.user("user")
+        response = env.c.get("/api/v1/knowledge/sources", cookies=cookies)
+        assert response.status_code == 200
+        ids = {source["source_id"] for source in response.json()["sources"]}
+        assert {"bls_oews", "bls_ooh", "onet"} <= ids
+        assert "us_soc_2018" not in ids
+    finally:
+        env.close()

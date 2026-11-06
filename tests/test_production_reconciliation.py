@@ -167,8 +167,60 @@ def test_the_owner_scope_decision_s1_is_recorded_and_genuinely_open_decisions_ar
     assert "OWNER-APPROVED" in register and "S2 (restricted free private beta) and S3 (minimum safe beta) are rejected" in register
 
 
-def test_the_reclassification_proposal_stays_unapplied_after_the_sign_off():
+def test_only_the_nine_individually_approved_scope_placements_are_applied():
     doc = committed()
-    assert doc["scope_proposals"]["applied"] is False and doc["summary"]["proposed_reclassification"]["applied"] is False
+    owner = doc["scope_proposals"]["owner_disposition"]
+    approved = {
+        "BL-5": "R1.6", "BL-6": "R1.5", "BL-6.1": "R1.5", "BL-6.2": "R1.5",
+        "BL-6.3": "R1.5", "BL-6.4": "R1.5", "BL-6.5": "R1.5", "BL-12": "R1.6", "W12.4E-12": "R1.4",
+    }
+    assert owner["date"] == "2026-11-06" and owner["baseline_main"] == "0e8d686f5fc8d71e46bcf2090cd527d4a65e4cd3"
+    assert (R.OUT / owner["reference"]).is_file()
+    assert owner["decisions"] == {
+        **{key: {"decision": "APPROVE", "approved_release": release} for key, release in approved.items()},
+        "BL-9": {"decision": "DEFER", "approved_release": None},
+    }
+    rows = {r["id"]: r for r in doc["items"]}
+    assert {r["id"]: r["release"] for r in rows.values() if r["rule_id"] == "D-00B"} == approved
+    for key, release in approved.items():
+        r = rows[key]
+        assert (r["disposition"], r["release"]) == ("DEFER TO NAMED RELEASE", release)
+        assert r["current_status"] == r["historical"]["status"] and r["dependencies"] == r["historical"]["dependencies"]
+        assert r["release_basis"] == "OWNER_DISPOSITION_00B"
+    s = doc["summary"]
+    assert (s["r1_0_must_fix"], s["r1_0_must_verify"], s["r1_0_total_work"]) == (79, 74, 153)
+    assert len(rows) == 452 and s["unmapped_issues"] == 0
+    assert s["by_release_total"]["R1.0"] == 188
+    assert s["deferred_by_release"] == {
+        "R1.1": 88, "R1.2": 18, "R1.3": 3, "R1.4": 24, "R1.5": 13, "R1.6": 4, "R1.7": 1, "R2.0": 1,
+    }
+    proposal = s["proposed_reclassification"]
+    assert proposal["applied"] is True and proposal["applied_count"] == 9 and proposal["held_count"] == 1
+
+
+def test_unauthorized_scope_moves_missing_alias_decision_and_dependency_changes_fail_closed():
+    doc = committed()
     by = {r["id"]: r for r in doc["items"]}
-    assert all(by[k]["disposition"] == "FIX BEFORE R1.0" and by[k]["release"] == "R1.0" for k in doc["scope_proposals"]["reclassification"])
+    by["BL-9"].update(disposition="DEFER TO NAMED RELEASE", release="R1.5", feature_gate="assumed inaccessible")
+    by["BL-9"]["dependencies"] = "BL-6, BL-8"
+    by["BL-5"]["release"] = "R1.5"
+    del doc["scope_proposals"]["owner_disposition"]["decisions"]["BL-6.5"]
+    problems = R.validate(doc)
+    assert any("owner authorization" in e for e in problems)
+    assert any("BL-9: placement" in e for e in problems)
+    assert any("BL-9: owner placement must preserve dependencies" in e for e in problems)
+    assert any("BL-5: placement" in e for e in problems)
+
+
+def test_generate_scope_preserves_the_curated_owner_and_acceptance_records(tmp_path, monkeypatch):
+    monkeypatch.setattr(R, "OUT", tmp_path)
+    monkeypatch.setattr(R, "RECON", tmp_path / R.RECON.name)
+    evidence = tmp_path / R.SCOPE_DECISION_REFERENCE
+    evidence.parent.mkdir()
+    evidence.write_text("synthetic evidence reference", encoding="utf-8")
+    records = (tmp_path / "OWNER_DECISION_REGISTER.md", tmp_path / "PRODUCTION_ACCEPTANCE_MATRIX.md")
+    for p in records:
+        p.write_text("retained evidence", encoding="utf-8")
+    assert R.main(["reconcile_issues.py", "generate-scope"]) == 0
+    assert all(p.read_text(encoding="utf-8") == "retained evidence" for p in records)
+    assert R.main(["reconcile_issues.py", "check"]) == 0

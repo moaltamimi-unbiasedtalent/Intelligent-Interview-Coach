@@ -1,6 +1,6 @@
 # Release Blocker Dashboard (R1.0, 30 November 2026, free private beta)
 
-**Status:** corrected 2026-10-21 against the owner's authoritative requirements. Counts come from `PRODUCTION_ISSUE_RECONCILIATION.json` and are checked by `scripts/production/reconcile_issues.py check`. Dispositions remain PROPOSED for owner review.
+**Status:** corrected 2026-10-21 against the owner's authoritative requirements. Counts come from `PRODUCTION_ISSUE_RECONCILIATION.json` and are checked by `scripts/production/reconcile_issues.py check`. The nine written 00B placements are recorded below. Other proposed placements retain their prior status.
 
 ## Totals
 
@@ -15,11 +15,11 @@
 | Traced rows in total | 452 |
 | Earlier alias merges recorded in the register | 18 |
 | Duplicates reconciled this pass (by meaning, IDs kept) | 6 |
-| **R1.0 must-fix** | **88** |
+| **R1.0 must-fix** | **79** |
 | **R1.0 must-verify** | **74** |
 | Items with an OWNER DECISION disposition | 95 (of which unscheduled 15, academic-only 6) |
 | Genuinely open owner decisions in the register | 18 new, plus the 72 historical |
-| Deferred | R1.1: 88, R1.2: 18, R1.3: 3, R1.4: 23, R1.5: 7, R1.6: 2, R1.7: 1, R2.0: 1 |
+| Deferred | R1.1: 88, R1.2: 18, R1.3: 3, R1.4: 24, R1.5: 13, R1.6: 4, R1.7: 1, R2.0: 1 |
 | Unmapped issues | **0** |
 
 ## Change since the previous reconciliation (PR #211 at `4084eb9`)
@@ -28,10 +28,10 @@
 |---|---|---|---|
 | Traced rows | 433 | 452 | +19 |
 | New items | 39 | 58 | +19 |
-| R1.0 must-fix | 70 | 88 | +18 |
+| R1.0 must-fix | 70 | 79 | +9 |
 | R1.0 must-verify | 74 | 74 | +0 |
 | OWNER DECISION disposition | 91 | 95 | +4 |
-| Deferred | 146 | 143 | -3 |
+| Deferred | 146 | 152 | +6 |
 
 Why the numbers moved, not forced to match the old totals:
 
@@ -41,21 +41,21 @@ Why the numbers moved, not forced to match the old totals:
 - Six historical capstone-submission tasks were reclassified ACADEMIC_ONLY and moved to OWNER DECISION (UNSCHEDULED) pending confirmation of retirement; they no longer count as production work.
 - Deferrals were re-routed from the earlier invented R1.1 to R2.0 themes onto the agreed train: commercial to R1.1, speech to R1.4, additional-country evidence to R1.5, compensation to R1.6, with items that fit no agreed theme placed in R1.1 (R1.2 for Admin) as a proposal.
 
-## Proposed R1.0 scope reclassification (PROPOSED, NOT APPLIED)
+## 00B item-level scope reclassification
 
-10 of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; 2 fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be 78 and fix plus verify 152. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied: the owner retains every R1.0 obligation until an item-level disposition is explicitly approved (OD-RECLASS).
+The owner approved 9 of the 10 proposed moves. BL-9 remains in R1.0 and has no R1.5 milestone. The 2 withdrawn candidates BL-6.6 and BL-7 stay in R1.0. The current totals are 79 fixes and 153 fix/verify obligations. See the [dated decision and count audit](execution/00B_OWNER_DISPOSITION_2026_11_06.md). OD-RECLASS stays open for BL-9.
 
 ## Totals by release (all dispositions)
 
 | Release | Items | Theme |
 |---|---|---|
-| R1.0 | 197 | 30 November 2026: free, invitation-only private production beta; seven languages each subject to individual qu |
+| R1.0 | 188 | 30 November 2026: free, invitation-only private production beta; seven languages each subject to individual qu |
 | R1.1 | 132 | Indicative December 2026: paid beta and plan expansion (Stripe and subscription lifecycle after provider/legal |
 | R1.2 | 19 | Indicative December 2026 to January 2027: advanced Admin and automation (scheduled reporting, advanced analyti |
 | R1.3 | 3 | Indicative January to February 2027: Mandarin, Hindi, Arabic (new locale, prompt, safety, retrieval, accessibi |
-| R1.4 | 23 | Indicative February 2027: voice interview experience (qualified STT, TTS and live voice practice; licensing an |
-| R1.5 | 7 | Indicative February to March 2027: global career intelligence (additional countries, qualified occupational so |
-| R1.6 | 2 | Indicative March 2027: Compensation Intelligence V2 (qualified salary datasets, geographic comparison, freshne |
+| R1.4 | 24 | Indicative February 2027: voice interview experience (qualified STT, TTS and live voice practice; licensing an |
+| R1.5 | 13 | Indicative February to March 2027: global career intelligence (additional countries, qualified occupational so |
+| R1.6 | 4 | Indicative March 2027: Compensation Intelligence V2 (qualified salary datasets, geographic comparison, freshne |
 | R1.7 | 1 | After R1.6, date not committed: teams and enterprise (enterprise Workspaces, organization subscriptions, SSO a |
 | R2.0 | 1 | Evidence-led, subsequent: expanded intelligent career platform (personalized guidance, agentic workflows, deep |
 | UNSCHEDULED | 15 | owner decisions with no release yet |
@@ -66,8 +66,8 @@ Why the numbers moved, not forced to match the old totals:
 | Priority | Items |
 |---|---|
 | P0 | 12 |
-| P1 | 86 |
-| P2 | 53 |
+| P1 | 78 |
+| P2 | 52 |
 | P3 | 11 |
 
 ## R1.0 work by work package
@@ -79,13 +79,13 @@ Why the numbers moved, not forced to match the old totals:
 | WP-03 Identity, email and access | 2 | 3 | 1 |
 | WP-04 Privacy, data rights and legal | 8 | 8 | 15 |
 | WP-05 AI security and grounding policy | 1 | 14 | 0 |
-| WP-06 Knowledge sources and retrieval (seven markets) | 19 | 7 | 20 |
+| WP-06 Knowledge sources and retrieval (seven markets) | 11 | 7 | 20 |
 | WP-07 Candidate journeys, Mo and Practice quality | 1 | 4 | 4 |
 | WP-08 Multilingual programme (seven languages) | 15 | 5 | 3 |
 | WP-09 Story Bank, Workspaces and shared reports | 2 | 2 | 2 |
 | WP-10 Admin 2.0 (English-only): users, plans, reports, knowledge, navigation | 5 | 1 | 2 |
 | WP-11 Commercial and billing (gated) | 1 | 0 | 23 |
-| WP-12 Speech and realtime voice (gated) | 2 | 1 | 1 |
+| WP-12 Speech and realtime voice (gated) | 1 | 1 | 1 |
 | WP-13 External integrations | 2 | 3 | 0 |
 | WP-14 Human validation and native review | 2 | 5 | 1 |
 | WP-15 Quality engineering, accessibility and technical debt | 3 | 2 | 18 |
@@ -94,7 +94,7 @@ Why the numbers moved, not forced to match the old totals:
 
 ## Capacity warning
 
-162 items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. The owner selected S1, the full scope (OD-SCOPE-01 resolved) and decided that the deadline never overrides a mandatory gate, so the date follows the gates: see `execution/STAFFING_AND_CRITICAL_PATH_PLAN.md` for the staffing and critical-path plan.
+153 items must be fixed or verified before R1.0 on 30 November 2026. The date is the owner's target; safety, privacy, licensing and operational gates are not waived to meet it. Many items need people not yet named (reviewers, native reviewers, legal qualifiers) or an authorised hosted environment. The owner selected S1, the full scope (OD-SCOPE-01 resolved) and decided that the deadline never overrides a mandatory gate, so the date follows the gates: see `execution/STAFFING_AND_CRITICAL_PATH_PLAN.md` for the staffing and critical-path plan.
 
 ## R1.0 P0 items
 

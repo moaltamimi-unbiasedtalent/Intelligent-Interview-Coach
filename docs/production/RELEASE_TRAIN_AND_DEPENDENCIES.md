@@ -19,6 +19,8 @@
 
 R1.1 holds the agreed paid-beta content plus items that fit no agreed theme (placement proposed, OD-DEFER-PLACEMENT); R1.2 additionally holds Admin items with no theme. R1.7 and R2.0 hold only the owner-stated scope rows, because no historical issue belongs there. Russian is excluded from R1.0 and is **not** an automatic R2.0 commitment.
 
+**6 November 2026 allocation update.** The agreed train and windows above are retained. Current totals are R1.0 188, R1.4 24, R1.5 13 and R1.6 4. All other release totals remain as shown above. The held BL-9 promotion has no R1.5 milestone and retains its BL-5, BL-6 and BL-8 prerequisites. BL-12 retains its separate runtime authorization and BL-9 dependency. [Owner disposition and full audit](execution/00B_OWNER_DISPOSITION_2026_11_06.md)
+
 ## 2. Dependency graph (R1.0)
 
 ```

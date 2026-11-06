@@ -32,7 +32,7 @@ A package is finished only when all five layers are. The layers are never merged
 | Package | 1 Engineering | 2 CI | 3 Live staging | 4 Human qualification | 5 Production-gate acceptance |
 |---|---|---|---|---|---|
 | 00A | PARTIAL: Phase 00 sign-off recorded (PRs #211, #212, #213) | main aedbef3d documentation CI SUCCESS; owner decision OPEN | n/a | Owner names reviewers, counsel and legal qualifiers (OPEN) | PG-07 BLOCKED until reviewers are named |
-| 00B | DELIVERED as a proposal (PRs #211, #212) | main aedbef3d documentation CI SUCCESS; owner decision OPEN | n/a | Owner disposition of the ten reclassifications (OPEN) | PG-11 PASS (machine-checked); no reclassification applied |
+| 00B | PARTIAL: nine owner-approved moves recorded and BL-9 retained in R1.0 pending OD-RECLASS | main aedbef3d documentation CI SUCCESS; owner decision OPEN | n/a | Final owner disposition for BL-9 (OD-RECLASS OPEN) | PG-11 PASS (machine-checked) |
 | 01A | MERGED (PR #223, merge 7549973) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | NOT RUN (injection screen on hosted stack) | Human security review (9 questions); independent held-out author (OPEN) | PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS) |
 | 01D | MERGED (PR #248 merge c5e54fd6) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | n/a | Security review of tool authorization | PG-03 (REVIEW-01 R4/R5) |
 | 01B0 | MERGED (PR #217, merge 0d75acd) | main aedbef3d CI SUCCESS (run 40006938765); PR #265 Browser SUCCESS on identical tree; no main E2E run | n/a | none | PG-12 IN PROGRESS |
