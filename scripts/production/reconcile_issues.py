@@ -1,9 +1,10 @@
 """Production roadmap V2.2: reconcile the deferred-issue register into release dispositions.
 
     python scripts/production/reconcile_issues.py generate   write docs/production/PRODUCTION_ISSUE_RECONCILIATION.json, MASTER_REQUIREMENTS_TRACEABILITY.md, RELEASE_BLOCKER_DASHBOARD.md
-    python scripts/production/reconcile_issues.py check      fail unless the committed JSON is internally valid AND matches the register (no unmapped active issue, no rewritten history)
+    python scripts/production/reconcile_issues.py generate-scope   regenerate the reconciliation JSON, traceability and blocker dashboard only
+    python scripts/production/reconcile_issues.py check      verify the committed reconciliation and scope views against the source records
 
-Everything here is a PROPOSED disposition computed by documented rules (``RULES``); no historical status, gate result or closure evidence is changed. The register file
+The rules produce proposed dispositions except for the exact owner-approved 00B placements. Historical status, gate results and closure evidence are retained. The register file
 ``docs/capstone/post_submission_deferred_issues.json`` is read, never written. No provider is contacted.
 """
 
@@ -105,7 +106,7 @@ ACADEMIC_ONLY = {  # historical capstone-submission tasks that are not productio
     "G-WALK-ENV": "the capstone Admin walkthrough used a development server and seeded data",
 }
 
-# Phase 00 review: proposed R1.0 scope reclassification (PROPOSED ONLY, NOT APPLIED: item dispositions above stay as generated until the owner confirms).
+# Historical Phase 00 proposal. The later item-level owner decisions are recorded separately.
 # An item is proposed only if the capability it concerns is provably inaccessible in the R1.0 Candidate API and UI. Evidence keys are verified by
 # tests/test_r1_scope_exclusions.py. Two of the twelve candidates failed the proof and are withdrawn.
 EVIDENCE = {
@@ -127,6 +128,22 @@ RECLASSIFICATION_PROPOSAL = {
     "BL-9": ("R1.5", "Promotion of us_soc_2018 and bls_oews into the persistent source registry", ["E-IMPORT", "E-ROUTES", "E-READY", "E-REGISTER"]),
     "BL-12": ("R1.6", "Runtime authorisation and deployment review for Compensation V2", ["E-IMPORT", "E-ROUTES", "E-UI", "E-READY", "E-REGISTER"]),
     "W12.4E-12": ("R1.4", "Server-side browser recording client (server speech)", ["E-SPEECH"]),
+}
+# Written owner disposition on 6 November 2026, including each individual alias.
+SCOPE_DECISION_DATE = "2026-11-06"
+SCOPE_DECISION_MAIN = "0e8d686f5fc8d71e46bcf2090cd527d4a65e4cd3"
+SCOPE_DECISION_REFERENCE = "execution/00B_OWNER_DISPOSITION_2026_11_06.md"
+SCOPE_DECISIONS = {
+    "BL-5": ("APPROVE", "R1.6"),
+    "BL-6": ("APPROVE", "R1.5"),
+    "BL-6.1": ("APPROVE", "R1.5"),
+    "BL-6.2": ("APPROVE", "R1.5"),
+    "BL-6.3": ("APPROVE", "R1.5"),
+    "BL-6.4": ("APPROVE", "R1.5"),
+    "BL-6.5": ("APPROVE", "R1.5"),
+    "BL-9": ("DEFER", None),
+    "BL-12": ("APPROVE", "R1.6"),
+    "W12.4E-12": ("APPROVE", "R1.4"),
 }
 RECLASSIFICATION_WITHDRAWN = {
     "BL-6.6": "Data Analyst and Product Manager remain unresolved: the register states it affects 13 of the 26 insufficient coverage cases (ambiguous titles), i.e. the enabled role-resolution and abstention behaviour Candidates use today; the proof fails, so it stays in R1.0 (package 02E)",
@@ -539,6 +556,41 @@ def cross_check(register: list[dict]) -> tuple[list[dict], list[dict]]:
     return rows, new
 
 
+def scope_proposals() -> dict:
+    return dict(
+        applied=any(decision == "APPROVE" for decision, _ in SCOPE_DECISIONS.values()),
+        evidence=EVIDENCE,
+        reclassification={
+            key: dict(proposed_release=release, capability=capability, evidence=evidence)
+            for key, (release, capability, evidence) in RECLASSIFICATION_PROPOSAL.items()
+        },
+        withdrawn=RECLASSIFICATION_WITHDRAWN,
+        owner_disposition=dict(
+            date=SCOPE_DECISION_DATE, baseline_main=SCOPE_DECISION_MAIN, reference=SCOPE_DECISION_REFERENCE,
+            decisions={
+                key: dict(decision=decision, approved_release=release)
+                for key, (decision, release) in SCOPE_DECISIONS.items()
+            },
+        ),
+    )
+
+
+def scope_placement(item_id: str) -> dict:
+    decision, release = SCOPE_DECISIONS[item_id]
+    if decision != "APPROVE":
+        return dict(disposition="FIX BEFORE R1.0", release="R1.0")
+    _, _, evidence = RECLASSIFICATION_PROPOSAL[item_id]
+    exclusion = "Candidate V2 runtime import, API and UI exclusion"
+    if item_id == "W12.4E-12":
+        exclusion = " + ".join(FEATURE_GATES["speech"])
+    return dict(
+        disposition="DEFER TO NAMED RELEASE", release=release, rule_id="D-00B",
+        reason=f"Owner approved this placement on {SCOPE_DECISION_DATE} in {SCOPE_DECISION_REFERENCE}",
+        feature_gate=exclusion + ". REQ-DEFER-01 evidence: " + ", ".join(evidence),
+        release_basis="OWNER_DISPOSITION_00B",
+    )
+
+
 def build() -> dict:
     raw, register = load_register()
     # duplicate groups by meaning (lexical, same category, high overlap); IDs are never removed
@@ -596,16 +648,21 @@ def build() -> dict:
     for r in items + newreq:
         r["release_basis"] = ("AGREED_RELEASE_TRAIN" if r["rule_id"].split("+")[0] in ("D-COM", "D-FL", "D-SPEECH", "D-INTL", "B1", "B2", "B3", "S1", "M1", "NEW", "C0", "O0", "U-RU", "A0") or r["origin"] == "NEW"
                               else "PROPOSED_PLACEMENT (no agreed theme; owner to confirm: OD-DEFER-PLACEMENT)")
+    # Apply explicit approvals after duplicate propagation. An approval belongs only to its named issue.
+    for key, (decision, _) in SCOPE_DECISIONS.items():
+        if decision == "APPROVE":
+            if (byid[key]["disposition"], byid[key]["release"]) != ("FIX BEFORE R1.0", "R1.0"):
+                raise ValueError(f"{key}: owner disposition no longer matches its original R1.0 placement")
+            byid[key].update(scope_placement(key))
     allitems = items + newreq
     summary = summarise(register, items, newreq, xrows)
     return dict(
         generated="2026-10-21", baseline_register=dict(file="docs/capstone/post_submission_deferred_issues.json", generated=raw["generated"], base_main_sha=raw["base_main_sha"], count=raw["count"]),
-        disclaimer="All dispositions, releases, owners and work packages are PROPOSED by documented rules for owner review. No historical status, gate or closure evidence was changed.",
+        disclaimer="Dispositions follow documented rules and exact owner-approved 00B placements. Historical status, gate results and closure evidence are retained.",
         dispositions=list(DISPOSITIONS), releases=list(RELEASES), release_themes=RELEASE_THEMES, work_packages={k: dict(name=v[0], owner_role=v[1]) for k, v in WORK_PACKAGES.items()},
         gate_constants=GATE_NAMES, summary=summary, cross_check=xrows, items=allitems,
         owner_scope_decision=OWNER_SCOPE_DECISION, resolved_decisions=[d[0] for d in RESOLVED_DECISIONS], open_decisions=[d[0] for d in NEW_DECISIONS],
-        scope_proposals=dict(applied=False, evidence=EVIDENCE, reclassification={k: dict(proposed_release=v[0], capability=v[1], evidence=v[2]) for k, v in RECLASSIFICATION_PROPOSAL.items()},
-                             withdrawn=RECLASSIFICATION_WITHDRAWN),
+        scope_proposals=scope_proposals(),
     )
 
 
@@ -618,6 +675,8 @@ def summarise(register, items, newreq, xrows) -> dict:
     for r in allitems:
         by_rel_disp[r["release"]][r["disposition"]] += 1
     dup = sum(1 for r in items if r["duplicate_of"])
+    approved = sum(decision == "APPROVE" for decision, _ in SCOPE_DECISIONS.values())
+    held = len(RECLASSIFICATION_PROPOSAL) - approved
     return dict(
         historical_issues=len(register), historical_closed=sum(1 for i in register if i["status"] == "CLOSED - VERIFIED"), historical_active=len(active),
         historical_production_blockers=sum(1 for i in register if i.get("blocks_production") == "YES"), historical_owner_decisions=sum(1 for i in register if i["status"] == "PENDING OWNER DECISION"),
@@ -638,9 +697,10 @@ def summarise(register, items, newreq, xrows) -> dict:
         r1_0_total_work=sum(1 for r in allitems if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")),
         by_release_total={rel: sum(1 for r in allitems if r["release"] == rel) for rel in list(RELEASES) + [UNSCHEDULED, "n/a"]},
         provenance_counts=dict(Counter(r["provenance"] for r in allitems)), origin_class_counts=dict(Counter(r["origin_class"] for r in allitems)),
-        proposed_reclassification=dict(items=len(RECLASSIFICATION_PROPOSAL), withdrawn=len(RECLASSIFICATION_WITHDRAWN), applied=False,
-                                       r1_0_fix_if_applied=sum(1 for r in allitems if r["disposition"] == "FIX BEFORE R1.0") - len(RECLASSIFICATION_PROPOSAL),
-                                       r1_0_total_if_applied=sum(1 for r in allitems if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")) - len(RECLASSIFICATION_PROPOSAL)),
+        proposed_reclassification=dict(items=len(RECLASSIFICATION_PROPOSAL), withdrawn=len(RECLASSIFICATION_WITHDRAWN),
+                                       applied=bool(approved), applied_count=approved, held_count=held,
+                                       r1_0_fix_if_applied=sum(1 for r in allitems if r["disposition"] == "FIX BEFORE R1.0") - held,
+                                       r1_0_total_if_applied=sum(1 for r in allitems if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")) - held),
         previous_baseline=PREV_BASELINE,
         delta_vs_previous=dict(items=len(allitems) - PREV_BASELINE["items"],
                                r1_0_must_fix=sum(1 for r in allitems if r["disposition"] == "FIX BEFORE R1.0") - PREV_BASELINE["r1_0_must_fix"],
@@ -670,6 +730,8 @@ def validate(doc: dict) -> list[str]:
             errs.append(f"{i['original_id']}: historical record was altered")
         if r["current_status"] != i["status"]:
             errs.append(f"{i['original_id']}: status silently changed")
+        if i["original_id"] in SCOPE_DECISIONS and r.get("dependencies") != i.get("dependencies"):
+            errs.append(f"{i['original_id']}: owner placement must preserve dependencies")
         closed = i["status"] == "CLOSED - VERIFIED"
         if closed and (r["disposition"] != "CLOSE WITH EVIDENCE" or not str(i.get("closure_evidence") or "").strip() or r["evidence_of_closure"] != i.get("closure_evidence")):
             errs.append(f"{i['original_id']}: closed issue lost its disposition or closure evidence")
@@ -727,21 +789,30 @@ def validate(doc: dict) -> list[str]:
     for must in ("OD-RESOURCE", "OD-RECLASS", "OD-US-CONTENT", "OD-GATE-THRESHOLDS", "OD-HOSTED", "OD-BUDGET"):
         if must not in (doc.get("open_decisions") or []):
             errs.append(f"{must} is genuinely unresolved and must stay open")
-    sp = doc.get("scope_proposals") or {}
-    if sp.get("applied") is not False:
-        errs.append("the scope reclassification is a proposal and must be marked not applied")
-    for k, v in (sp.get("reclassification") or {}).items():
-        r = byid.get(k)
+    if doc.get("scope_proposals") != scope_proposals():
+        errs.append("scope proposal or item-level owner authorization does not match the recorded evidence")
+    if set(SCOPE_DECISIONS) != set(RECLASSIFICATION_PROPOSAL):
+        errs.append("every proposed item requires its own owner decision")
+    if not (OUT / SCOPE_DECISION_REFERENCE).is_file():
+        errs.append("missing written owner disposition record")
+    for key, (release, _, evidence) in RECLASSIFICATION_PROPOSAL.items():
+        r = byid.get(key)
         if r is None or r["origin"] != "REGISTER":
-            errs.append(f"proposed reclassification of unknown register item {k}")
+            errs.append(f"proposed reclassification of unknown register item {key}")
             continue
-        if r["disposition"] != "FIX BEFORE R1.0" or r["release"] != "R1.0":
-            errs.append(f"{k}: the proposal must not be applied (disposition changed)")
-        if v["proposed_release"] not in RELEASES[1:] or not v["evidence"] or any(e not in EVIDENCE for e in v["evidence"]):
-            errs.append(f"{k}: proposal lacks a later release or valid evidence")
-    for k in (sp.get("withdrawn") or {}):
-        if byid.get(k) is None or byid[k]["release"] != "R1.0" or k in (sp.get("reclassification") or {}):
-            errs.append(f"{k}: withdrawn item must stay in R1.0 and out of the proposal")
+        if release not in DEFER_RELEASES or not evidence or any(e not in EVIDENCE for e in evidence):
+            errs.append(f"{key}: proposal lacks a later release or valid evidence")
+        if key not in SCOPE_DECISIONS:
+            continue
+        decision, approved_release = SCOPE_DECISIONS[key]
+        if (decision, approved_release) not in {("APPROVE", release), ("DEFER", None), ("REJECT", None)}:
+            errs.append(f"{key}: invalid owner disposition or approved release")
+        if any(r.get(field) != expected for field, expected in scope_placement(key).items()):
+            errs.append(f"{key}: placement does not match the written owner disposition")
+    for key in RECLASSIFICATION_WITHDRAWN:
+        if (byid.get(key) is None or byid[key]["release"] != "R1.0" or byid[key]["disposition"] != "FIX BEFORE R1.0"
+                or key in RECLASSIFICATION_PROPOSAL):
+            errs.append(f"{key}: withdrawn item must stay in R1.0 and out of the proposal")
     for rel in RELEASES[1:]:
         if not any(r["release"] == rel for r in items):
             errs.append(f"release {rel} has no traced requirement")
@@ -773,6 +844,7 @@ def render_traceability(doc: dict) -> str:
     s = doc["summary"]
     L = ["# Master Requirements Traceability (Production Roadmap V2.2)", "",
          "**Status:** PROPOSED baseline for owner review, generated 2026-10-21 by `scripts/production/reconcile_issues.py`. Nothing here upgrades a historical status or gate. The full per-item record (acceptance criteria, required tests, security/privacy impact, dependencies, evidence of closure, the verbatim historical row) is in [`PRODUCTION_ISSUE_RECONCILIATION.json`](PRODUCTION_ISSUE_RECONCILIATION.json); the tables below are the readable index.", "",
+         f"The 6 November 00B placements follow the [written item-level decisions]({SCOPE_DECISION_REFERENCE}). Other rules retain their existing scope.", "",
          f"Baseline: {s['historical_issues']} register issues ({s['historical_closed']} closed, {s['historical_active']} active) + {s['new_items']} new items = {s['historical_issues'] + s['new_items']} traced rows. Unmapped: **{s['unmapped_issues']}**.", "",
          "Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAMED RELEASE (only while the feature stays disabled), CLOSE WITH EVIDENCE.", "", "## Work packages", "", "| WP | Name | Owner role (person not yet named) | Items |", "|---|---|---|---|"]
     cnt = Counter(r["wp"] for r in doc["items"])
@@ -782,6 +854,7 @@ def render_traceability(doc: dict) -> str:
           "| B1 | Blocks any production release and is not in an R1.0-excluded feature family: FIX (or VERIFY when never run/verified/human-reviewed) before R1.0 |", "| B2 | Safety/privacy/public-claim relevance for an enabled R1.0 feature: VERIFY before R1.0 |",
           "| B3 | Production impact unknown at P0/P1: VERIFY before R1.0 |", "| S1 | AI-safety (D), privacy (F) or legal (K) item at P0-P2 or with a security/privacy impact: VERIFY before R1.0, never deferred while its feature is enabled |", "| M1 | Source qualification for one of the seven R1.0 markets: VERIFY before R1.0 |", "| D-GEN | No production impact, no enabled-feature dependency, no agreed release theme: R1.1 (placement proposed, OD-DEFER-PLACEMENT) |", "| D-ADM | As D-GEN but Admin-related: R1.2 (placement proposed) |", "| D-COM | Commercial activation and plan expansion: R1.1 while billing gates stay False |",
           "| D-INT | Later integrations: R1.2 (alerts), R1.5 (market data) or R1.7 (enterprise) while not configured |", "| D-INTL | Additional-country evidence R1.5, compensation R1.6, while Compensation V2 and international sources stay disabled |", "| D-SPEECH | Server speech and voice practice: R1.4 while governed speech gates stay False |",
+          "| D-00B | Exact written 00B placement for one named item while its Candidate capability stays disabled |",
           "| U-RU | Russian: excluded from R1.0; any activation is a separate future owner decision (UNSCHEDULED) |", "| A0 | Academic-only capstone-submission task: not a production dependency; owner confirms retirement (UNSCHEDULED) |", "| D-FL | Mandarin, Hindi, Arabic: R1.3 |", "| +dup | Same meaning as an earlier issue: shares its disposition |", ""]
     order = {d: n for n, d in enumerate(DISPOSITIONS)}
     for rel in list(RELEASES) + [UNSCHEDULED, "n/a"]:
@@ -813,7 +886,7 @@ def render_dashboard(doc: dict) -> str:
     r10 = [r for r in items if r["disposition"] in ("FIX BEFORE R1.0", "VERIFY BEFORE R1.0")]
     def sg(n):
         return f"{n:+d}"
-    L = ["# Release Blocker Dashboard (R1.0, 30 November 2026, free private beta)", "", "**Status:** corrected 2026-10-21 against the owner's authoritative requirements. Counts come from `PRODUCTION_ISSUE_RECONCILIATION.json` and are checked by `scripts/production/reconcile_issues.py check`. Dispositions remain PROPOSED for owner review.", "",
+    L = ["# Release Blocker Dashboard (R1.0, 30 November 2026, free private beta)", "", "**Status:** corrected 2026-10-21 against the owner's authoritative requirements. Counts come from `PRODUCTION_ISSUE_RECONCILIATION.json` and are checked by `scripts/production/reconcile_issues.py check`. The nine written 00B placements are recorded below. Other proposed placements retain their prior status.", "",
          "## Totals", "", "| Measure | Count |", "|---|---|", f"| Historical issues (all preserved with original IDs) | {s['historical_issues']} |", f"| Historically closed (evidence preserved) | {s['historical_closed']} |", f"| Historically active | {s['historical_active']} |",
          f"| Historical production blockers | {s['historical_production_blockers']} |", f"| Historical pending owner decisions | {s['historical_owner_decisions']} |",
          f"| New items | {s['new_items']}: reviewer findings {s['new_reviewer_findings']}, owner capabilities {s['new_owner_requested_areas']}, language requirements {s['new_language_requirements']}, other owner requirements {s['new_other_requirements']}, demo-observed findings {s['new_demo_findings']}, later-release scope rows {s['new_release_scope_rows']}, cross-check {s['new_cross_check_issues']} |",
@@ -829,7 +902,11 @@ def render_dashboard(doc: dict) -> str:
           "- Six historical capstone-submission tasks were reclassified ACADEMIC_ONLY and moved to OWNER DECISION (UNSCHEDULED) pending confirmation of retirement; they no longer count as production work.",
           "- Deferrals were re-routed from the earlier invented R1.1 to R2.0 themes onto the agreed train: commercial to R1.1, speech to R1.4, additional-country evidence to R1.5, compensation to R1.6, with items that fit no agreed theme placed in R1.1 (R1.2 for Admin) as a proposal.", ""]
     pr = s["proposed_reclassification"]
-    L += ["## Proposed R1.0 scope reclassification (PROPOSED, NOT APPLIED)", "", f"{pr['items']} of 12 candidates pass the proof that their capability is inaccessible in the R1.0 Candidate API and UI; {pr['withdrawn']} fail it and stay in R1.0. If the owner confirms, R1.0 must-fix would be {pr['r1_0_fix_if_applied']} and fix plus verify {pr['r1_0_total_if_applied']}. Evidence and per-item detail: `execution/R1_SCOPE_RECLASSIFICATION_PROPOSAL.md`. Nothing is applied: the owner retains every R1.0 obligation until an item-level disposition is explicitly approved (OD-RECLASS).", ""]
+    L += ["## 00B item-level scope reclassification", "",
+          f"The owner approved {pr['applied_count']} of the {pr['items']} proposed moves. BL-9 remains in R1.0 and has no R1.5 milestone. "
+          f"The {pr['withdrawn']} withdrawn candidates BL-6.6 and BL-7 stay in R1.0. "
+          f"The current totals are {s['r1_0_must_fix']} fixes and {s['r1_0_total_work']} fix/verify obligations. "
+          f"See the [dated decision and count audit]({SCOPE_DECISION_REFERENCE}). OD-RECLASS stays open for BL-9.", ""]
     L += ["## Totals by release (all dispositions)", "", "| Release | Items | Theme |", "|---|---|---|"] + [f"| {rel} | {s['by_release_total'].get(rel, 0)} | {RELEASE_THEMES[rel][:110]} |" for rel in RELEASES] + [f"| {UNSCHEDULED} | {s['by_release_total'].get(UNSCHEDULED, 0)} | owner decisions with no release yet |", f"| n/a (closed) | {s['by_release_total'].get('n/a', 0)} | closure evidence preserved |", ""]
     L += ["## R1.0 work by priority", "", "| Priority | Items |", "|---|---|"] + [f"| {k} | {v} |" for k, v in sorted(s["priority_of_r1_0_work"].items())] + [""]
     L += ["## R1.0 work by work package", "", "| WP | Fix | Verify | Owner decisions |", "|---|---|---|---|"]
@@ -864,7 +941,7 @@ NEW_DECISIONS = [  # genuinely OPEN decisions (id, decision, detail, proposed re
     ('OD-DEFER-PLACEMENT', 'Confirm placement of items that fit no agreed release theme', 'Items that are neither blockers nor part of an agreed release theme are placed in R1.1 (or R1.2 for Admin) as a proposal.', 'R1.1', 'AWAITING'),
     ('OD-PLAN-LIMITS', 'Which limits and allowances Basic and Premium carry during the free beta', 'Server-enforced entitlements are approved in direction. Open: the concrete values (history window, model profile access, usage allowances) for each free beta tier and whether any is enforced from day one; enabling an enforcement flips a gate constant that the reconciliation checks.', 'R1.0', 'AWAITING'),
     ('OD-US-CONTENT', 'May US-sourced content appear at all, as clearly labelled non-EU general information?', 'The owner approved that no unqualified US content is used as factual EU labour-market evidence. Open: whether US sources (O*NET, BLS) stay available only as clearly labelled non-EU general information, or are removed from Candidate retrieval entirely in the beta. Implemented by package 02D and REQ-COV-02.', 'R1.0', 'AWAITING'),
-    ('OD-RECLASS', 'Item-level disposition of the ten proposed reclassifications', 'The owner retains every R1.0 fix and verify obligation until an item-level disposition is explicitly approved; the ten-item proposal (BL-5, BL-6, BL-6.1 to BL-6.5, BL-9, BL-12, W12.4E-12) is NOT applied. Each approval must distinguish a genuine later-release dependency from an R1.0 product cut (R1_SCOPE_RECLASSIFICATION_PROPOSAL.md).', 'R1.0', 'AWAITING'),
+    ('OD-RECLASS', 'Item-level disposition of the ten proposed reclassifications', 'Nine exact moves approved on 6 November 2026. BL-9 reclassification deferred and retained in R1.0 with its BL-5, BL-6 and BL-8 prerequisites. No R1.5 promotion milestone. See [00B owner disposition](execution/00B_OWNER_DISPOSITION_2026_11_06.md).', 'R1.0', 'PARTIAL / OPEN (BL-9)'),
 ]
 
 RESOLVED_DECISIONS = [  # owner-approved at the Phase 00 sign-off, 2026-10-21 (id, decision, resolution)
@@ -964,7 +1041,7 @@ def render_acceptance_matrix(doc: dict) -> str:
 
 def main(argv: list[str]) -> int:
     cmd = argv[1] if len(argv) > 1 else "check"
-    if cmd == "generate":
+    if cmd in ("generate", "generate-scope"):
         doc = build()
         errs = validate(doc)
         if errs:
@@ -974,19 +1051,21 @@ def main(argv: list[str]) -> int:
         RECON.write_text(json.dumps(doc, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
         (OUT / "MASTER_REQUIREMENTS_TRACEABILITY.md").write_text(render_traceability(doc), encoding="utf-8")
         (OUT / "RELEASE_BLOCKER_DASHBOARD.md").write_text(render_dashboard(doc), encoding="utf-8")
-        (OUT / "OWNER_DECISION_REGISTER.md").write_text(render_owner_decisions(doc), encoding="utf-8")
-        (OUT / "PRODUCTION_ACCEPTANCE_MATRIX.md").write_text(render_acceptance_matrix(doc), encoding="utf-8")
+        if cmd == "generate":
+            (OUT / "OWNER_DECISION_REGISTER.md").write_text(render_owner_decisions(doc), encoding="utf-8")
+            (OUT / "PRODUCTION_ACCEPTANCE_MATRIX.md").write_text(render_acceptance_matrix(doc), encoding="utf-8")
         print(json.dumps(doc["summary"], indent=1))
         return 0
     if cmd == "check":
         doc = json.loads(RECON.read_text(encoding="utf-8"))
         errs = validate(doc)
         fresh = build()
-        for key in ("summary",):
-            if doc[key] != fresh[key]:
-                errs.append(f"committed {key} is stale: regenerate with `generate`")
-        if {r["id"]: r["disposition"] for r in doc["items"]} != {r["id"]: r["disposition"] for r in fresh["items"]}:
-            errs.append("committed dispositions differ from the rules: regenerate with `generate` (or the register changed)")
+        if doc != fresh:
+            errs.append("committed reconciliation differs from the rules and recorded decisions: run generate-scope")
+        for name, render in (("MASTER_REQUIREMENTS_TRACEABILITY.md", render_traceability), ("RELEASE_BLOCKER_DASHBOARD.md", render_dashboard)):
+            path = OUT / name
+            if not path.is_file() or path.read_text(encoding="utf-8") != render(fresh):
+                errs.append(f"{name} is stale: run generate-scope")
         if errs:
             print("\n".join(errs[:40]))
             return 1

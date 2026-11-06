@@ -6,7 +6,7 @@
   "base_main_sha": "3d1af6f",
   "count": 394
  },
- "disclaimer": "All dispositions, releases, owners and work packages are PROPOSED by documented rules for owner review. No historical status, gate or closure evidence was changed.",
+ "disclaimer": "Dispositions follow documented rules and exact owner-approved 00B placements. Historical status, gate results and closure evidence are retained.",
  "dispositions": [
   "FIX BEFORE R1.0",
   "VERIFY BEFORE R1.0",
@@ -133,34 +133,34 @@
   "prior_alias_merges": 18,
   "duplicates_reconciled_this_pass": 6,
   "disposition_counts": {
-   "FIX BEFORE R1.0": 88,
-   "DEFER TO NAMED RELEASE": 143,
+   "FIX BEFORE R1.0": 79,
+   "DEFER TO NAMED RELEASE": 152,
    "VERIFY BEFORE R1.0": 74,
    "OWNER DECISION": 95,
    "CLOSE WITH EVIDENCE": 52
   },
   "historical_disposition_counts": {
-   "FIX BEFORE R1.0": 56,
-   "DEFER TO NAMED RELEASE": 134,
+   "FIX BEFORE R1.0": 47,
+   "DEFER TO NAMED RELEASE": 143,
    "VERIFY BEFORE R1.0": 69,
    "OWNER DECISION": 83,
    "CLOSE WITH EVIDENCE": 52
   },
   "release_by_disposition": {
    "R1.0": {
-    "FIX BEFORE R1.0": 88,
+    "FIX BEFORE R1.0": 79,
     "VERIFY BEFORE R1.0": 74,
     "OWNER DECISION": 35
+   },
+   "R1.6": {
+    "DEFER TO NAMED RELEASE": 4
+   },
+   "R1.5": {
+    "DEFER TO NAMED RELEASE": 13
    },
    "R1.1": {
     "DEFER TO NAMED RELEASE": 88,
     "OWNER DECISION": 44
-   },
-   "R1.5": {
-    "DEFER TO NAMED RELEASE": 7
-   },
-   "R1.6": {
-    "DEFER TO NAMED RELEASE": 2
    },
    "UNSCHEDULED": {
     "OWNER DECISION": 15
@@ -172,7 +172,7 @@
     "DEFER TO NAMED RELEASE": 3
    },
    "R1.4": {
-    "DEFER TO NAMED RELEASE": 23
+    "DEFER TO NAMED RELEASE": 24
    },
    "R1.2": {
     "DEFER TO NAMED RELEASE": 18,
@@ -185,23 +185,23 @@
     "DEFER TO NAMED RELEASE": 1
    }
   },
-  "r1_0_must_fix": 88,
+  "r1_0_must_fix": 79,
   "r1_0_must_verify": 74,
   "owner_decisions": 95,
   "deferred_by_release": {
    "R1.1": 88,
    "R1.2": 18,
    "R1.3": 3,
-   "R1.4": 23,
-   "R1.5": 7,
-   "R1.6": 2,
+   "R1.4": 24,
+   "R1.5": 13,
+   "R1.6": 4,
    "R1.7": 1,
    "R2.0": 1
   },
   "priority_of_r1_0_work": {
    "P0": 12,
-   "P1": 86,
-   "P2": 53,
+   "P1": 78,
+   "P2": 52,
    "P3": 11
   },
   "cross_check_rows": 168,
@@ -220,15 +220,15 @@
   "genuine_new_owner_decisions": 12,
   "decision_register_entries": 18,
   "owner_approved_decisions": 9,
-  "r1_0_total_work": 162,
+  "r1_0_total_work": 153,
   "by_release_total": {
-   "R1.0": 197,
+   "R1.0": 188,
    "R1.1": 132,
    "R1.2": 19,
    "R1.3": 3,
-   "R1.4": 23,
-   "R1.5": 7,
-   "R1.6": 2,
+   "R1.4": 24,
+   "R1.5": 13,
+   "R1.6": 4,
    "R1.7": 1,
    "R2.0": 1,
    "UNSCHEDULED": 15,
@@ -255,7 +255,9 @@
   "proposed_reclassification": {
    "items": 10,
    "withdrawn": 2,
-   "applied": false,
+   "applied": true,
+   "applied_count": 9,
+   "held_count": 1,
    "r1_0_fix_if_applied": 78,
    "r1_0_total_if_applied": 152
   },
@@ -277,10 +279,10 @@
   },
   "delta_vs_previous": {
    "items": 19,
-   "r1_0_must_fix": 18,
+   "r1_0_must_fix": 9,
    "r1_0_must_verify": 0,
    "owner_decisions": 4,
-   "deferred": -3,
+   "deferred": 6,
    "new_items": 19
   }
  },
@@ -2165,12 +2167,12 @@
     "aliases": [],
     "id": "DI-A-003"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.6",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-READY, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-6",
@@ -2221,12 +2223,12 @@
     "aliases": [],
     "id": "DI-A-004"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.5",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-READY, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-6.1",
@@ -2277,12 +2279,12 @@
     "aliases": [],
     "id": "DI-A-005"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.5",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-6.2",
@@ -2333,12 +2335,12 @@
     "aliases": [],
     "id": "DI-A-006"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.5",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-6.3",
@@ -2389,12 +2391,12 @@
     "aliases": [],
     "id": "DI-A-007"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.5",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-6.4",
@@ -2445,12 +2447,12 @@
     "aliases": [],
     "id": "DI-A-008"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.5",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-6.5",
@@ -2501,12 +2503,12 @@
     "aliases": [],
     "id": "DI-A-009"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.5",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-6.6",
@@ -2893,12 +2895,12 @@
     "aliases": [],
     "id": "DI-A-016"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.6",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "Candidate V2 runtime import, API and UI exclusion. REQ-DEFER-01 evidence: E-IMPORT, E-ROUTES, E-UI, E-READY, E-REGISTER",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "BL-13",
@@ -10168,12 +10170,12 @@
     "aliases": [],
     "id": "DI-E-012"
    },
-   "disposition": "FIX BEFORE R1.0",
-   "release": "R1.0",
-   "rule_id": "B1",
-   "reason": "blocks any production release and is not in an R1.0-excluded feature family",
-   "feature_gate": "",
-   "release_basis": "AGREED_RELEASE_TRAIN"
+   "disposition": "DEFER TO NAMED RELEASE",
+   "release": "R1.4",
+   "rule_id": "D-00B",
+   "reason": "Owner approved this placement on 2026-11-06 in execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "feature_gate": "src.speech.policy.SERVER_SPEECH_PROVIDERS_AUTHORIZED + src.speech.policy.WHISPER_API_TRANSPORT_AUTHORIZED. REQ-DEFER-01 evidence: E-SPEECH",
+   "release_basis": "OWNER_DISPOSITION_00B"
   },
   {
    "id": "W12.4E-13",
@@ -26320,7 +26322,7 @@
   "OD-RECLASS"
  ],
  "scope_proposals": {
-  "applied": false,
+  "applied": true,
   "evidence": {
    "E-IMPORT": "no module under src/ outside src/knowledge_foundation imports it (AST scan): the Compensation V2 and US occupational foundation code is unreachable from any API, application, agent or retrieval path",
    "E-ROUTES": "the OpenAPI path table (266 paths, 114 non-admin) has no compensation, foundation, qualification, alias or recording route",
@@ -26434,6 +26436,53 @@
   "withdrawn": {
    "BL-6.6": "Data Analyst and Product Manager remain unresolved: the register states it affects 13 of the 26 insufficient coverage cases (ambiguous titles), i.e. the enabled role-resolution and abstention behaviour Candidates use today; the proof fails, so it stays in R1.0 (package 02E)",
    "BL-7": "Resolve the Data Analyst and Product Manager evidence gaps: needed for any legitimate coverage close and concerns enabled role resolution; the proof fails, so it stays in R1.0 (package 02E)"
+  },
+  "owner_disposition": {
+   "date": "2026-11-06",
+   "baseline_main": "0e8d686f5fc8d71e46bcf2090cd527d4a65e4cd3",
+   "reference": "execution/00B_OWNER_DISPOSITION_2026_11_06.md",
+   "decisions": {
+    "BL-5": {
+     "decision": "APPROVE",
+     "approved_release": "R1.6"
+    },
+    "BL-6": {
+     "decision": "APPROVE",
+     "approved_release": "R1.5"
+    },
+    "BL-6.1": {
+     "decision": "APPROVE",
+     "approved_release": "R1.5"
+    },
+    "BL-6.2": {
+     "decision": "APPROVE",
+     "approved_release": "R1.5"
+    },
+    "BL-6.3": {
+     "decision": "APPROVE",
+     "approved_release": "R1.5"
+    },
+    "BL-6.4": {
+     "decision": "APPROVE",
+     "approved_release": "R1.5"
+    },
+    "BL-6.5": {
+     "decision": "APPROVE",
+     "approved_release": "R1.5"
+    },
+    "BL-9": {
+     "decision": "DEFER",
+     "approved_release": null
+    },
+    "BL-12": {
+     "decision": "APPROVE",
+     "approved_release": "R1.6"
+    },
+    "W12.4E-12": {
+     "decision": "APPROVE",
+     "approved_release": "R1.4"
+    }
+   }
   }
  }
 }

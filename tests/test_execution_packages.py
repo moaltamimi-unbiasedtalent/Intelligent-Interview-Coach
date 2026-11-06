@@ -27,7 +27,18 @@ def test_every_r1_0_fix_or_verify_item_is_in_exactly_one_package():
     items = E.load_items()
     need = set(E.r10_items(items))
     assigned = [i for p in E.PACKAGES for i in p["items"]]
-    assert len(need) == 162 and sorted(assigned) == sorted(need) and len(assigned) == len(set(assigned))
+    assert len(E.PACKAGES) == 45
+    assert len(need) == 153 and sorted(assigned) == sorted(need) and len(assigned) == len(set(assigned))
+
+
+def test_scope_reconciliation_preserves_remaining_package_assignments():
+    assigned = {i for p in E.PACKAGES for i in p["items"]}
+    moved = {"BL-5", "BL-6", "BL-6.1", "BL-6.2", "BL-6.3", "BL-6.4", "BL-6.5", "BL-12", "W12.4E-12"}
+    assert assigned.isdisjoint(moved)
+    assert E.BYID["00B"]["items"] == ["BL-9"]
+    assert E.BYID["00B"]["decisions"] == ["OD-RECLASS"]
+    assert {"BL-6.6", "BL-7"} <= set(E.BYID["02E"]["items"])
+    assert E.PACKAGE_STATUS["00B"][0].startswith("PARTIAL")
 
 
 def test_removing_or_duplicating_an_item_fails_the_check(monkeypatch):

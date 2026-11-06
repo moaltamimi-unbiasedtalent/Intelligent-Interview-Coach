@@ -2,6 +2,8 @@
 
 **Status:** PROPOSED baseline for owner review, generated 2026-10-21 by `scripts/production/reconcile_issues.py`. Nothing here upgrades a historical status or gate. The full per-item record (acceptance criteria, required tests, security/privacy impact, dependencies, evidence of closure, the verbatim historical row) is in [`PRODUCTION_ISSUE_RECONCILIATION.json`](PRODUCTION_ISSUE_RECONCILIATION.json); the tables below are the readable index.
 
+The 6 November 00B placements follow the [written item-level decisions](execution/00B_OWNER_DISPOSITION_2026_11_06.md). Other rules retain their existing scope.
+
 Baseline: 394 register issues (52 closed, 342 active) + 58 new items = 452 traced rows. Unmapped: **0**.
 
 Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAMED RELEASE (only while the feature stays disabled), CLOSE WITH EVIDENCE.
@@ -45,6 +47,7 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 | D-INT | Later integrations: R1.2 (alerts), R1.5 (market data) or R1.7 (enterprise) while not configured |
 | D-INTL | Additional-country evidence R1.5, compensation R1.6, while Compensation V2 and international sources stay disabled |
 | D-SPEECH | Server speech and voice practice: R1.4 while governed speech gates stay False |
+| D-00B | Exact written 00B placement for one named item while its Candidate capability stays disabled |
 | U-RU | Russian: excluded from R1.0; any activation is a separate future owner decision (UNSCHEDULED) |
 | A0 | Academic-only capstone-submission task: not a production dependency; owner confirms retirement (UNSCHEDULED) |
 | D-FL | Mandarin, Hindi, Arabic: R1.3 |
@@ -52,7 +55,7 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 
 ## R1.0: 30 November 2026: free, invitation-only private production beta; seven languages each subject to individual qualification; Admin 2.0 essentials; reliable Knowledge Sources; Story Bank and Workspaces; core reporting; the five reviewer corrections; no live billing
 
-197 items.
+188 items.
 
 | ID | Title | Origin | Disposition | WP | Prio | Status | Rule |
 |---|---|---|---|---|---|---|---|
@@ -71,17 +74,9 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 | A-K1 | Germany K1 governed compensation set is an engineering draft | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | OPEN - PRODUCTION RELEASE BLOCKER | B1 |
 | B-SCANNER | Real malware scanner not configured for governed knowledge uploads | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | OPEN - PRODUCTION RELEASE BLOCKER | B1 |
 | BL-11 | Satisfy the 95% product-coverage gate (392 of 412) | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | OPEN - PRE-SUBMISSION QUALIFICATION | B1 |
-| BL-12 | Separate runtime authorisation and deployment review for Compensation V2 | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
 | BL-18 | Human measurement/alias reviews, appointments, persistent authorisation, licensing clearan | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-01 | P1 | DEFERRED - POST SUBMISSION | B1 |
 | BL-19 | P10F targeted human validation | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-14 | P1 | DEFERRED - POST SUBMISSION | B1 |
 | BL-4 | Decide on privileged reviewer endpoints | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
-| BL-5 | Review and decide the 12 measurement batches | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
-| BL-6 | Review the five alias proposals individually | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
-| BL-6.1 | Alias decision: Software Developer to 15-1252 | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
-| BL-6.2 | Alias decision: Human Resources Manager to 11-3121 | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
-| BL-6.3 | Alias decision: Sales Manager to 11-2022 | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
-| BL-6.4 | Alias decision: Accountant to 13-2011 | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
-| BL-6.5 | Alias decision: Financial Analyst to 13-2051 | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
 | BL-6.6 | Data Analyst and Product Manager remain unresolved | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
 | BL-7 | Resolve Data Analyst / Product Manager evidence gaps | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
 | BL-9 | Persistent-registry authorisation and promotion of us_soc_2018 and bls_oews | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-06 | P1 | DEFERRED - POST SUBMISSION | B1 |
@@ -136,7 +131,6 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 | J-OPENROUTER | OpenRouter live behaviour beyond P10E sample | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-13 | P2 | PARTIALLY REMEDIATED | B1 |
 | M-DOC-COVERAGE | Stale committed product-coverage summary (97%) | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-15 | P2 | PARTIALLY REMEDIATED | B1 |
 | PRIV-BACKUP | Backup erasure after account deletion | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-04 | P2 | DEFERRED - POST SUBMISSION | B1 |
-| W12.4E-12 | Server-side browser recording client | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-12 | P2 | DEFERRED - POST SUBMISSION | B1 |
 | W12.4E-16 | Browser disclosure legal/privacy review | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-12 | P2 | DEFERRED - POST SUBMISSION | B1 |
 | W9.8-D10 | Additional account-deletion safeguards | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-04 | P2 | PARTIALLY REMEDIATED | B1 |
 | W9.8-D1a | Preparation-chat ownership index | REGISTER-HISTORICAL | FIX BEFORE R1.0 | WP-04 | P2 | PARTIALLY REMEDIATED | B1 |
@@ -431,7 +425,7 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 
 ## R1.4: Indicative February 2027: voice interview experience (qualified STT, TTS and live voice practice; licensing and consent; latency; native speech quality)
 
-23 items.
+24 items.
 
 | ID | Title | Origin | Disposition | WP | Prio | Status | Rule |
 |---|---|---|---|---|---|---|---|
@@ -449,6 +443,7 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 | E-LOCAL-ENGINES | Local engine bindings limited | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-12 | P2 | DEFERRED - POST SUBMISSION | D-SPEECH |
 | EX-02 | Realtime voice (C1) live round-trip NOT RUN | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-12 | P2 | NOT RUN | D-SPEECH |
 | W12.4E-10 | Per-voice licence verification | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-12 | P2 | DEFERRED - POST SUBMISSION | D-SPEECH |
+| W12.4E-12 | Server-side browser recording client | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-12 | P2 | DEFERRED - POST SUBMISSION | D-00B |
 | W12.4E-17 | Response-origin authorization hardening | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-12 | P2 | DEFERRED - POST SUBMISSION | D-SPEECH |
 | W12.4E-18 | Engine timeout and cancellation hardening | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-12 | P2 | DEFERRED - POST SUBMISSION | D-SPEECH |
 | W12.4E-4 | Model weights and resource placement | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-12 | P2 | DEFERRED - POST SUBMISSION | D-SPEECH |
@@ -461,10 +456,16 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 
 ## R1.5: Indicative February to March 2027: global career intelligence (additional countries, qualified occupational sources, provenance, multilingual geographic retrieval)
 
-7 items.
+13 items.
 
 | ID | Title | Origin | Disposition | WP | Prio | Status | Rule |
 |---|---|---|---|---|---|---|---|
+| BL-6 | Review the five alias proposals individually | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
+| BL-6.1 | Alias decision: Software Developer to 15-1252 | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
+| BL-6.2 | Alias decision: Human Resources Manager to 11-3121 | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
+| BL-6.3 | Alias decision: Sales Manager to 11-2022 | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
+| BL-6.4 | Alias decision: Accountant to 13-2011 | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
+| BL-6.5 | Alias decision: Financial Analyst to 13-2051 | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
 | BL-13 | P10C-F2B United Kingdom (Package 2) | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P2 | DEFERRED - POST SUBMISSION | D-INTL |
 | F2B-UK-ALIAS | No UK alias evidence assessed | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P2 | DEFERRED - POST SUBMISSION | D-INTL |
 | C-K4 | K4 live Adzuna validation | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-16 | P3 | NOT RUN | D-INT |
@@ -475,10 +476,12 @@ Dispositions: FIX BEFORE R1.0, VERIFY BEFORE R1.0, OWNER DECISION, DEFER TO NAME
 
 ## R1.6: Indicative March 2027: Compensation Intelligence V2 (qualified salary datasets, geographic comparison, freshness, methodology, legal and human approval)
 
-2 items.
+4 items.
 
 | ID | Title | Origin | Disposition | WP | Prio | Status | Rule |
 |---|---|---|---|---|---|---|---|
+| BL-12 | Separate runtime authorisation and deployment review for Compensation V2 | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
+| BL-5 | Review and decide the 12 measurement batches | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P1 | DEFERRED - POST SUBMISSION | D-00B |
 | BL-16 | P10C-F2E Canada, Mexico, Brazil | REGISTER-HISTORICAL | DEFER TO NAMED RELEASE | WP-06 | P2 | DEFERRED - POST SUBMISSION | D-INTL |
 | REL-R1.6 | R1.6 release scope: Compensation Intelligence V2 | OWNER-REQUIREMENT | DEFER TO NAMED RELEASE | WP-06 | P3 | PLANNED (indicative window) | NEW |
 

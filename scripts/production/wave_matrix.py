@@ -23,7 +23,7 @@ NS = "NOT RUN"
 # id: (live staging verification, human qualification, production gate acceptance)
 LAYERS: dict[str, tuple[str, str, str]] = {
     "00A": ("n/a", "Owner names reviewers, counsel and legal qualifiers (OPEN)", "PG-07 BLOCKED until reviewers are named"),
-    "00B": ("n/a", "Owner disposition of the ten reclassifications (OPEN)", "PG-11 PASS (machine-checked); no reclassification applied"),
+    "00B": ("n/a", "Final owner disposition for BL-9 (OD-RECLASS OPEN)", "PG-11 PASS (machine-checked)"),
     "01A": (NS + " (injection screen on hosted stack)", "Human security review (9 questions); independent held-out author (OPEN)", "PG-03 IN PROGRESS; thresholds unapproved (OD-GATE-THRESHOLDS)"),
     "01D": ("n/a", "Security review of tool authorization", "PG-03 (REVIEW-01 R4/R5)"),
     "01B0": ("n/a", "none", "PG-12 IN PROGRESS"),

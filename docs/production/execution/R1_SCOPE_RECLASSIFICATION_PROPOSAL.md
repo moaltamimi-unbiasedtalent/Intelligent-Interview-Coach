@@ -1,5 +1,7 @@
 # R1.0 Scope Reclassification Proposal (PROPOSED, NOT APPLIED)
 
+> Historical proposal dated 21 October 2026. The [6 November owner disposition](00B_OWNER_DISPOSITION_2026_11_06.md) approves nine exact placements and retains BL-9 in R1.0. The original proof and proposed counts below are retained as historical evidence.
+
 **Status:** PROPOSAL for owner confirmation, 2026-10-21 (Phase 00 review). The reconciliation file still lists all twelve candidates as R1.0 FIX BEFORE; nothing was moved. Historical issue IDs, failed gates and closure evidence are untouched: a confirmed move only changes the proposed release of an item, never its historical status. The rule applied: an item may leave R1.0 only if the capability it concerns is **provably inaccessible in the R1.0 Candidate API and UI** (REQ-DEFER-01, REQ-SCOPE-01).
 
 ## 1. Result
