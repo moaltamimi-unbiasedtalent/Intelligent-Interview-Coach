@@ -7,7 +7,7 @@ python scripts/production/exact_run_evidence.py /path/to/reviewed.json --release
 python scripts/production/exact_run_evidence.py /path/to/reviewed.json --release-sha FULL_COMMIT_SHA --archives /path/to/approved-archives
 ```
 
-Pass the independently verified release SHA whenever the packet includes a `main_push` observation. Inputs and optional archive bytes stay local. The CLI uses the standard library and writes its report only to stdout. Validation errors exit nonzero.
+Pass the independently verified release SHA whenever the packet includes a `main_push` observation. If it includes a `private_wrapper` observation, pass the separately reviewed runner repository with `--wrapper-repository`. Inputs and optional archive bytes stay local. The CLI uses the standard library and writes its report only to stdout. Validation errors exit nonzero.
 
 ## Version 1 input
 
@@ -67,7 +67,7 @@ The envelope has `schema: "ask4mo.exact_run_evidence.v1"` and a nonempty `record
 | `main_push` | Canonical repo, GitHub-hosted `push` on `main`, one of the seven reviewed workflows, full execution source and workflow head both equal to the explicit release SHA. |
 | `pr_head` | Canonical repo, GitHub-hosted `pull_request`, reviewed checkout SHA equals the full workflow head SHA. |
 | `manual_dispatch` | Canonical repo, GitHub-hosted `workflow_dispatch`, reviewed checkout SHA equals the full workflow head SHA. |
-| `private_wrapper` | Designated private wrapper repo, `push`, disposable Linux/amd64, distinct full workflow-head and Ask4Mo execution-source SHAs. |
+| `private_wrapper` | Independently supplied `--wrapper-repository owner/repository`, `push`, disposable Linux/amd64, distinct full workflow-head and Ask4Mo execution-source SHAs. |
 
 - Capture `source_sha` from the checked-out source evidence. For a PR job using a default merge-ref checkout, the run head alone cannot establish a `pr_head` observation. Supply only proven bindings. The `main_push` workflow list defines which individual observations this version can accept. The report makes no workflow-quorum decision.
 - Record the run lifecycle separately from measured stages. A completed run has a terminal conclusion. An unfinished run has an explicit `null` conclusion. Stages use `job`, `step` or `scenario` and preserve `PASS`, `FAIL`, `SKIP` and `NOT RUN`. An empty stage list records run-level evidence only. Capture failure categories as bounded identifiers, or `null` where the category is unavailable. For successful workflow observations, submitted stages describe effective qualification outcomes. Keep raw tolerated errors in their original diagnostics.

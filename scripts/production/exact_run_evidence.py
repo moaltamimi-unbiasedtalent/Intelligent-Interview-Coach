@@ -14,13 +14,12 @@ from typing import Any
 
 SCHEMA = "ask4mo.exact_run_evidence.v1"
 REPO = "moaltamimi-unbiasedtalent/Intelligent-Interview-Coach"
-PRIVATE_WRAPPER_REPO = "moaltamimi-unbiasedtalent/ask4mo-oci-builds"
 # The classification describes provenance, not the purpose or acceptance of a test.
 CLASSIFICATIONS = {
-    "main_push": (REPO, "push", "github_hosted_ci"),
-    "pr_head": (REPO, "pull_request", "github_hosted_ci"),
-    "manual_dispatch": (REPO, "workflow_dispatch", "github_hosted_ci"),
-    "private_wrapper": (PRIVATE_WRAPPER_REPO, "push", "disposable_linux_amd64"),
+    "main_push": ("push", "github_hosted_ci"),
+    "pr_head": ("pull_request", "github_hosted_ci"),
+    "manual_dispatch": ("workflow_dispatch", "github_hosted_ci"),
+    "private_wrapper": ("push", "disposable_linux_amd64"),
 }
 # The reviewed push checks supported by this intake version.
 MAIN_WORKFLOWS = frozenset(
@@ -80,11 +79,13 @@ def valid_date(value: Any) -> bool:
     return True
 
 
-def validate_run(record: dict, where: str, release_sha: str | None) -> None:
+def validate_run(record: dict, where: str, release_sha: str | None, wrapper_repository: str | None) -> None:
     classification = record["classification"]
     require(isinstance(classification, str) and classification in CLASSIFICATIONS,
             where, "unsupported evidence classification")
-    expected = CLASSIFICATIONS[classification]
+    workflow_repository = wrapper_repository if classification == "private_wrapper" else REPO
+    require(workflow_repository is not None, where, "private wrapper requires an explicit workflow repository")
+    expected = (workflow_repository, *CLASSIFICATIONS[classification])
     actual = (record["workflow_repository"], record["event"], record["environment"])
     require(actual == expected, where, "workflow repository, event or environment conflicts with classification")
     require(record["source_repository"] == REPO, where, "unexpected source repository")
@@ -177,11 +178,18 @@ def verify_archive(artifact: dict, archives: Path | None) -> str:
     return "verified"
 
 
-def validate_intake(document: Any, *, release_sha: str | None = None, archives: Path | None = None) -> dict:
+def validate_intake(
+    document: Any, *, release_sha: str | None = None, wrapper_repository: str | None = None,
+    archives: Path | None = None,
+) -> dict:
     """Return a stable observation report. The reviewed inputs supply provenance."""
     shape(document, frozenset({"schema", "records"}), "intake")
     require(document["schema"] == SCHEMA, "intake", "unsupported schema")
     require(release_sha is None or is_sha(release_sha), "release SHA", "expected a complete Git SHA")
+    require(wrapper_repository is None or (
+        matches(wrapper_repository, r"[a-zA-Z0-9][a-zA-Z0-9-]*/[a-zA-Z0-9_][a-zA-Z0-9_.-]*")
+        and wrapper_repository.casefold() != REPO.casefold()
+    ), "wrapper repository", "expected a separate owner/repository identifier")
     records = document["records"]
     require(isinstance(records, list) and bool(records), "intake", "records must be a nonempty array")
     seen = set()
@@ -190,7 +198,7 @@ def validate_intake(document: Any, *, release_sha: str | None = None, archives: 
     for number, record in enumerate(records):
         where = f"records[{number}]"
         shape(record, RECORD_FIELDS, where)
-        validate_run(record, where, release_sha)
+        validate_run(record, where, release_sha, wrapper_repository)
         run = (record["workflow_repository"], record["run_id"])
         attempt = (*run, record["attempt"])
         require(attempt not in seen, where, "duplicate run attempt")
@@ -232,11 +240,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path, help="reviewed local JSON observations")
     parser.add_argument("--release-sha", help="full release commit, required for main_push observations")
+    parser.add_argument("--wrapper-repository", help="independently reviewed owner/repository for private wrapper records")
     parser.add_argument("--archives", type=Path, help="local directory of optional <artifact ID>.zip files")
     args = parser.parse_args(argv)
     try:
         document = json.loads(args.input.read_text(encoding="utf-8"), object_pairs_hook=unique_json_keys)
-        report = validate_intake(document, release_sha=args.release_sha, archives=args.archives)
+        report = validate_intake(document, release_sha=args.release_sha, wrapper_repository=args.wrapper_repository,
+                                 archives=args.archives)
     except IntakeError as exc:
         print(f"FAIL: {exc}")
         return 1

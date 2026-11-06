@@ -12,6 +12,7 @@ from scripts.production import exact_run_evidence as intake
 RELEASE = "1" * 40
 FEATURE = "2" * 40
 WRAPPER = "3" * 40
+WRAPPER_REPO = "example-org/validation-wrapper"
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +55,7 @@ def pr(**overrides):
 
 def wrapper(**overrides):
     return run(**{
-        "workflow_repository": intake.PRIVATE_WRAPPER_REPO, "workflow_head_sha": WRAPPER,
+        "workflow_repository": WRAPPER_REPO, "workflow_head_sha": WRAPPER,
         "head_branch": "validation/example", "classification": "private_wrapper",
         "environment": "disposable_linux_amd64", "run_id": 1003, **overrides,
     })
@@ -77,17 +78,26 @@ def document(*records):
 
 
 def validate(*records, **options):
-    return intake.validate_intake(document(*records), **{"release_sha": RELEASE, **options})["observations"]
+    return intake.validate_intake(document(*records), **{"release_sha": RELEASE, "wrapper_repository": WRAPPER_REPO, **options})["observations"]
 
 
 def test_main_pr_and_private_source_claims_stay_distinct():
     rows = validate(wrapper(), pr(), run())
-    assert [r["classification"] for r in rows] == ["main_push", "pr_head", "private_wrapper"]
-    main, feature, private = rows
+    assert [r["classification"] for r in rows] == ["private_wrapper", "main_push", "pr_head"]
+    private, main, feature = rows
     assert main["source_sha"] == main["workflow_head_sha"] == RELEASE
     assert feature["source_sha"] == feature["workflow_head_sha"] == FEATURE
     assert private["source_sha"] == RELEASE and private["workflow_head_sha"] == WRAPPER
     assert {r["conclusion"] for r in rows} == {"success"}
+
+
+def test_wrapper_uses_independently_supplied_repository_identity():
+    with pytest.raises(intake.IntakeError, match="explicit workflow repository"):
+        validate(wrapper(), wrapper_repository=None)
+    with pytest.raises(intake.IntakeError, match="conflicts with classification"):
+        validate(wrapper(), wrapper_repository="example-org/other")
+    with pytest.raises(intake.IntakeError, match="separate owner/repository"):
+        validate(wrapper(), wrapper_repository=intake.REPO.lower())
 
 
 def test_manual_dispatch_at_release_sha_retains_its_separate_event():
@@ -103,7 +113,7 @@ def test_manual_dispatch_at_release_sha_retains_its_separate_event():
     ({"head_branch": "feature/release"}, "main branch"),
     ({"event": "pull_request"}, "conflicts with classification"),
     ({"event": "schedule"}, "conflicts with classification"),
-    ({"workflow_repository": intake.PRIVATE_WRAPPER_REPO}, "conflicts with classification"),
+    ({"workflow_repository": WRAPPER_REPO}, "conflicts with classification"),
     ({"source_repository": "other/project"}, "unexpected source repository"),
     ({"workflow_path": "https://example.test/check.yml"}, "invalid workflow path"),
     ({"workflow_path": ".github/workflows/e2e.yml"}, "unsupported main push workflow"),
@@ -260,7 +270,7 @@ def test_archive_symlink_is_refused(tmp_path):
     ({"run_id": 2001}, "belongs to a different"),
     ({"attempt": 2}, "belongs to a different"),
     ({"attempt": True}, "belongs to a different"),
-    ({"workflow_repository": intake.PRIVATE_WRAPPER_REPO}, "belongs to a different"),
+    ({"workflow_repository": WRAPPER_REPO}, "belongs to a different"),
     ({"id": True}, "invalid artifact ID"),
     ({"sha256": RELEASE}, "64 lowercase hex digits"),
     ({"sha256": "g" * 64}, "64 lowercase hex digits"),
