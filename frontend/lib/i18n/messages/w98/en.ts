@@ -159,7 +159,8 @@ const en = {
     accountConfirmExport: "Download your data first",
     accountConfirmKeep: "Keep my account",
     accountConfirmDelete: "Delete my account for good",
-    accountDeleteFailed: "Your account was not deleted. Nothing was changed. Please try again.",
+    accountDeleteFailed: "We could not confirm that your account was deleted. Please try again.",
+    accountDeleteIncomplete: "Account deletion did not finish. Some private files may already have been removed. Please try again to finish deleting your account.",
   },
 };
 

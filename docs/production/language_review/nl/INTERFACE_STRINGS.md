@@ -796,7 +796,7 @@ Appears in: `components/marketing/AiTransparencyContent.tsx`
 | `aiTransparency.whenHeading` | When AI is used versus deterministic logic | Wanneer AI wordt gebruikt versus deterministische logica | `AiTransparencyContent.tsx` |  |
 | `aiTransparency.whenPolicy` | The choice of model per operation is governed by a central server-side policy; your browser can never choose a raw model. | De keuze van het model per bewerking wordt bepaald door een centraal serverbeleid; uw browser kan nooit een ruw model kiezen. | `AiTransparencyContent.tsx` |  |
 
-### `dataPrivacy` (170 strings)
+### `dataPrivacy` (171 strings)
 
 Context: Data and privacy controls: export, deletion, retention explanations.
 
@@ -816,7 +816,8 @@ Appears in: `components/account/DataPrivacyCenter.tsx`, `components/account/Priv
 | `dataPrivacy.accountConfirmKeep` | Keep my account | Mijn account behouden | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountConfirmKept` | Security records are kept with your identity removed. Backups are not erased instantly. Some preparation-chat working data may remain until it is cleaned up. | Beveiligingsgegevens worden zonder uw identiteit bewaard. Back-ups worden niet direct gewist. Sommige werkgegevens van voorbereidingschats kunnen blijven bestaan tot ze worden opgeruimd. | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountConfirmTitle` | Delete your account? | Uw account verwijderen? | `DataPrivacyCenter.tsx` |  |
-| `dataPrivacy.accountDeleteFailed` | Your account was not deleted. Nothing was changed. Please try again. | Uw account is niet verwijderd. Er is niets gewijzigd. Probeer het opnieuw. | `DataPrivacyCenter.tsx` |  |
+| `dataPrivacy.accountDeleteFailed` | We could not confirm that your account was deleted. Please try again. | We konden niet bevestigen dat uw account is verwijderd. Probeer het opnieuw. | `DataPrivacyCenter.tsx` |  |
+| `dataPrivacy.accountDeleteIncomplete` | Account deletion did not finish. Some private files may already have been removed. Please try again to finish deleting your account. | Het verwijderen van uw account is niet voltooid. Sommige privébestanden zijn mogelijk al verwijderd. Probeer het opnieuw om het verwijderen te voltooien. | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountZoneBody` | Deleting your account is permanent. Use the options above first if you only want to remove some of your data. | Uw account verwijderen is permanent. Gebruik eerst de bovenstaande opties als u slechts een deel van uw gegevens wilt verwijderen. | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountZoneButton` | Delete my account… | Mijn account verwijderen… | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountZoneTitle` | Delete your account | Uw account verwijderen | `DataPrivacyCenter.tsx` |  |

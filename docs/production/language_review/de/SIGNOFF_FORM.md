@@ -5,7 +5,7 @@
 
 **This form is BLANK and must stay blank in the repository.** Only the named human fills it, and only the owner records the result. One form per gate; the same person may sign both only if qualified for both (a native reviewer is not automatically a legal qualifier).
 
-Pack content digest (SHA-256 of the reviewed content): `b5d1434f6f399b51e25c0551c8c02fe0f619ffc6004ba2cb3cec2f020e3657e9`
+Pack content digest (SHA-256 of the reviewed content): `747d39a3476115d512208de0e5e7c0d8edff15b28aff26a978aa6f3a02252d59`
 
 ## LG-11 Native-language human review
 

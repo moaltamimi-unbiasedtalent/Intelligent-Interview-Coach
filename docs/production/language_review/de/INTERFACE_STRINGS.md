@@ -796,7 +796,7 @@ Appears in: `components/marketing/AiTransparencyContent.tsx`
 | `aiTransparency.whenHeading` | When AI is used versus deterministic logic | Wann KI genutzt wird und wann deterministische Logik | `AiTransparencyContent.tsx` |  |
 | `aiTransparency.whenPolicy` | The choice of model per operation is governed by a central server-side policy; your browser can never choose a raw model. | Die Wahl des Modells je Vorgang wird durch eine zentrale serverseitige Richtlinie gesteuert; Ihr Browser kann niemals ein rohes Modell wählen. | `AiTransparencyContent.tsx` |  |
 
-### `dataPrivacy` (170 strings)
+### `dataPrivacy` (171 strings)
 
 Context: Data and privacy controls: export, deletion, retention explanations.
 
@@ -816,7 +816,8 @@ Appears in: `components/account/DataPrivacyCenter.tsx`, `components/account/Priv
 | `dataPrivacy.accountConfirmKeep` | Keep my account | Mein Konto behalten | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountConfirmKept` | Security records are kept with your identity removed. Backups are not erased instantly. Some preparation-chat working data may remain until it is cleaned up. | Sicherheitsprotokolle werden ohne Ihre Identität aufbewahrt. Backups werden nicht sofort gelöscht. Einige Arbeitsdaten aus Vorbereitungschats können bestehen bleiben, bis sie bereinigt werden. | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountConfirmTitle` | Delete your account? | Ihr Konto löschen? | `DataPrivacyCenter.tsx` |  |
-| `dataPrivacy.accountDeleteFailed` | Your account was not deleted. Nothing was changed. Please try again. | Ihr Konto wurde nicht gelöscht. Nichts wurde geändert. Bitte versuchen Sie es erneut. | `DataPrivacyCenter.tsx` |  |
+| `dataPrivacy.accountDeleteFailed` | We could not confirm that your account was deleted. Please try again. | Wir konnten nicht bestätigen, dass Ihr Konto gelöscht wurde. Bitte versuchen Sie es erneut. | `DataPrivacyCenter.tsx` |  |
+| `dataPrivacy.accountDeleteIncomplete` | Account deletion did not finish. Some private files may already have been removed. Please try again to finish deleting your account. | Die Löschung Ihres Kontos wurde nicht abgeschlossen. Einige private Dateien wurden möglicherweise bereits entfernt. Bitte versuchen Sie es erneut, um die Löschung abzuschließen. | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountZoneBody` | Deleting your account is permanent. Use the options above first if you only want to remove some of your data. | Das Löschen Ihres Kontos ist dauerhaft. Nutzen Sie zuerst die Optionen oben, wenn Sie nur einen Teil Ihrer Daten entfernen möchten. | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountZoneButton` | Delete my account… | Mein Konto löschen… | `DataPrivacyCenter.tsx` |  |
 | `dataPrivacy.accountZoneTitle` | Delete your account | Konto löschen | `DataPrivacyCenter.tsx` |  |

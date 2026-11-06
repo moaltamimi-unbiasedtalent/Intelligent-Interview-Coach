@@ -12,7 +12,7 @@ LG-10 needs a qualified person (counsel or a qualified legal translator) to revi
 - Transactional email (account notice and verification) is in `MO_SENTENCES.md`.
 - If `docs/production/legal_review/` exists in the release tree (the 05E legal review pack), the qualifier also reviews the documents listed there; this pack does not copy them and does not depend on them. If the directory is absent, say so in the evidence reference.
 
-## Legal and trust strings (282)
+## Legal and trust strings (283)
 
 | key | English source |
 |---|---|
@@ -49,7 +49,8 @@ LG-10 needs a qualified person (counsel or a qualified legal translator) to revi
 | `dataPrivacy.accountConfirmKeep` | Keep my account |
 | `dataPrivacy.accountConfirmKept` | Security records are kept with your identity removed. Backups are not erased instantly. Some preparation-chat working data may remain until it is cleaned up. |
 | `dataPrivacy.accountConfirmTitle` | Delete your account? |
-| `dataPrivacy.accountDeleteFailed` | Your account was not deleted. Nothing was changed. Please try again. |
+| `dataPrivacy.accountDeleteFailed` | We could not confirm that your account was deleted. Please try again. |
+| `dataPrivacy.accountDeleteIncomplete` | Account deletion did not finish. Some private files may already have been removed. Please try again to finish deleting your account. |
 | `dataPrivacy.accountZoneBody` | Deleting your account is permanent. Use the options above first if you only want to remove some of your data. |
 | `dataPrivacy.accountZoneButton` | Delete my account… |
 | `dataPrivacy.accountZoneTitle` | Delete your account |

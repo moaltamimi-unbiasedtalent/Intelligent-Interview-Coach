@@ -155,7 +155,8 @@ const fr: typeof en = {
     accountConfirmExport: "Télécharger d’abord vos données",
     accountConfirmKeep: "Garder mon compte",
     accountConfirmDelete: "Supprimer mon compte définitivement",
-    accountDeleteFailed: "Votre compte n’a pas été supprimé. Rien n’a été modifié. Veuillez réessayer.",
+    accountDeleteFailed: "Nous n’avons pas pu confirmer la suppression de votre compte. Veuillez réessayer.",
+    accountDeleteIncomplete: "La suppression de votre compte n’a pas abouti. Certains fichiers privés ont peut-être déjà été supprimés. Veuillez réessayer pour terminer la suppression.",
   },
 };
 

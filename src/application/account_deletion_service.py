@@ -1,8 +1,9 @@
 """Complete application-controlled account deletion (Capstone P8, §14/§15).
 
-A single orchestrator that removes (or anonymizes) every user-owned resource the APPLICATION
-controls, in child→parent order, then purges external resources (private files, agent
-checkpoints). It is authenticated + owner-scoped at the call site, idempotent, and audited.
+A single orchestrator that removes (or anonymizes) user-owned resources the APPLICATION
+controls. It updates relational data in child→parent order and deletes private files before
+committing those changes. It also purges agent checkpoints. The call site authenticates and
+scopes deletion to the owner. The operation is idempotent and audited.
 
 Design decisions (see docs/capstone/p8_e8_productisation_hosting.md):
 - **Explicit deletes, not DB cascade.** SQLite does not enable FK cascades and several tables
@@ -75,8 +76,11 @@ class SubscriptionResolutionRequired(Exception):
 
 
 class DeletionIncomplete(Exception):
-    """05E: a step that must succeed BEFORE the account rows are removed failed (a private file could not be deleted). Nothing was committed, the account is intact and the
-    deletion can simply be run again; ``category`` is a fixed code, never a path, key or exception text."""
+    """A private file could not be deleted before SQL commit.
+
+    SQL rolls back so the account remains available to retry. Files already removed stay removed.
+    ``category`` is a fixed code, with no path, key or exception text.
+    """
 
     def __init__(self, category: str) -> None:
         super().__init__(category)
@@ -98,7 +102,7 @@ class AccountDeletionService:
         # An Admin-requested deletion keeps its own privacy request row until the job completes it (it is finalised by the job).
         self._retain_requests = retain_privacy_requests
 
-    # -- external-resource discovery (collected inside the txn, purged after commit) --
+    # -- external-resource discovery for private-file and checkpoint cleanup --
     def _collect_storage_keys(self, s, user_id: int) -> list[str]:
         rows = s.execute(
             select(P.DocumentVersion.storage_key)
@@ -395,8 +399,8 @@ class AccountDeletionService:
             summary.fk_swept = _erasure.sweep(s, user_id, retain_billing=keep_billing, retain_requests=self._retain_requests)
 
             # 7c) 05E: private files are deleted BEFORE the commit. Once the rows are gone the storage keys are gone with them, so a failure after the commit could never be
-            # retried and the files would be orphaned for good. In this order a failed (or interrupted) deletion leaves the account intact and re-runnable, and a
-            # re-run finds the same keys (an already-deleted file is not an error).
+            # retried and the files would be orphaned. SQL rollback preserves those keys but cannot restore a removed file.
+            # A retry finds the same keys and tolerates files that were already removed.
             if self._store is not None:
                 failed = 0
                 for key in storage_keys:

@@ -5,12 +5,12 @@
 
 | Item | Value |
 |---|---|
-| Interface strings | 2687 |
+| Interface strings | 2688 |
 | Mo-voiced sentences | 17 |
 | Email parts | 12 |
 | Interview samples (synthetic prompts) | 12 |
-| Legal and trust strings | 282 |
-| Pack content digest (SHA-256) | `3ad566a314ab2e4976c4da7750ab8880c5a8920a53ba106c9775bc024fee3d0f` |
+| Legal and trust strings | 283 |
+| Pack content digest (SHA-256) | `6c4329a8d6b01453c3a65d7f9244b4829be5d1a98d037f6e1adab483bc379ffc` |
 | Mechanical hints (for attention only) | =EN: 44, EN?: 13 |
 | Namespaces without a curated context note | `agentStream`, `betaPricing`, `providerMode`, `recentRuns`, `wsTransfer` |
 | Generator | 06F/1 |
@@ -20,12 +20,12 @@
 | File | SHA-256 |
 |---|---|
 | `INSTRUCTIONS.md` | `774a6ce006025b2fa88b548dcb406a290d454973f94ec9a7c167f807c4939d72` |
-| `INTERFACE_STRINGS.md` | `714807df2495fba8c48b615294c43b77891d3beffac0c9b0dc2507f494957030` |
+| `INTERFACE_STRINGS.md` | `bec9e26d2bdd1d53a371375bccceaafa122966f867abf9b0a0ac9540a9fe0c4c` |
 | `MO_SENTENCES.md` | `d3bf54e3a0415edee29daad41ab3a4fd40503f6a44cf6e3a844bb533aab82989` |
 | `INTERVIEW_SAMPLES.md` | `5113bfab1aa1de933e437308af8996649d8489d3915eacdee5d35ab761105630` |
-| `LEGAL_POINTERS.md` | `d002536ac103191e9817d212eb670d9ffba05a87b373e843809089e1be6cb024` |
-| `SIGNOFF_FORM.md` | `185112913dd5ecc8a5360226ec96f78373301bd41b7727f3e541e786b697dfc1` |
-| `SIGNOFF_FORM.template.json` | `42e8d2cc86e13241793bb9b169779f8692dc782376eab9d4d246ab561f5c2dc0` |
+| `LEGAL_POINTERS.md` | `383c1f5cf74dd2586db41650c634cb47309fe8e491ca98455bfda80843dec3a2` |
+| `SIGNOFF_FORM.md` | `1292684bb19062f771c0430842d3cc15bf44e1a9330b409627b518350b9c04f6` |
+| `SIGNOFF_FORM.template.json` | `1235d77a40d74833c92908a76242ea8526bbb0ca3b406fecfc5c7609db085f6e` |
 
 ## Start here
 

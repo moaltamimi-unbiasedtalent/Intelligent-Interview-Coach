@@ -12,7 +12,7 @@ LG-10 needs a qualified person (counsel or a qualified legal translator) to revi
 - Transactional email (account notice and verification) is in `MO_SENTENCES.md`.
 - If `docs/production/legal_review/` exists in the release tree (the 05E legal review pack), the qualifier also reviews the documents listed there; this pack does not copy them and does not depend on them. If the directory is absent, say so in the evidence reference.
 
-## Legal and trust strings (282)
+## Legal and trust strings (283)
 
 | key | English source | translation | hints |
 |---|---|---|---|
@@ -49,7 +49,8 @@ LG-10 needs a qualified person (counsel or a qualified legal translator) to revi
 | `dataPrivacy.accountConfirmKeep` | Keep my account | Mijn account behouden |  |
 | `dataPrivacy.accountConfirmKept` | Security records are kept with your identity removed. Backups are not erased instantly. Some preparation-chat working data may remain until it is cleaned up. | Beveiligingsgegevens worden zonder uw identiteit bewaard. Back-ups worden niet direct gewist. Sommige werkgegevens van voorbereidingschats kunnen blijven bestaan tot ze worden opgeruimd. |  |
 | `dataPrivacy.accountConfirmTitle` | Delete your account? | Uw account verwijderen? |  |
-| `dataPrivacy.accountDeleteFailed` | Your account was not deleted. Nothing was changed. Please try again. | Uw account is niet verwijderd. Er is niets gewijzigd. Probeer het opnieuw. |  |
+| `dataPrivacy.accountDeleteFailed` | We could not confirm that your account was deleted. Please try again. | We konden niet bevestigen dat uw account is verwijderd. Probeer het opnieuw. |  |
+| `dataPrivacy.accountDeleteIncomplete` | Account deletion did not finish. Some private files may already have been removed. Please try again to finish deleting your account. | Het verwijderen van uw account is niet voltooid. Sommige privébestanden zijn mogelijk al verwijderd. Probeer het opnieuw om het verwijderen te voltooien. |  |
 | `dataPrivacy.accountZoneBody` | Deleting your account is permanent. Use the options above first if you only want to remove some of your data. | Uw account verwijderen is permanent. Gebruik eerst de bovenstaande opties als u slechts een deel van uw gegevens wilt verwijderen. |  |
 | `dataPrivacy.accountZoneButton` | Delete my account… | Mijn account verwijderen… |  |
 | `dataPrivacy.accountZoneTitle` | Delete your account | Uw account verwijderen |  |

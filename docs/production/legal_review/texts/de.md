@@ -171,7 +171,7 @@ Namespace `trust`, 36 strings, in catalogue order (not page order).
 
 ## 5. In-app Data & Privacy copy (export, deletion, sharing statements)
 
-Namespace `dataPrivacy`, 170 strings, in catalogue order (not page order).
+Namespace `dataPrivacy`, 171 strings, in catalogue order (not page order).
 
 - `dataPrivacy.eyebrow`: Konto
 - `dataPrivacy.title`: Ihre Daten & Ihr Datenschutz
@@ -290,7 +290,8 @@ Namespace `dataPrivacy`, 170 strings, in catalogue order (not page order).
 - `dataPrivacy.accountConfirmExport`: Zuerst Ihre Daten herunterladen
 - `dataPrivacy.accountConfirmKeep`: Mein Konto behalten
 - `dataPrivacy.accountConfirmDelete`: Mein Konto endgültig löschen
-- `dataPrivacy.accountDeleteFailed`: Ihr Konto wurde nicht gelöscht. Nichts wurde geändert. Bitte versuchen Sie es erneut.
+- `dataPrivacy.accountDeleteFailed`: Wir konnten nicht bestätigen, dass Ihr Konto gelöscht wurde. Bitte versuchen Sie es erneut.
+- `dataPrivacy.accountDeleteIncomplete`: Die Löschung Ihres Kontos wurde nicht abgeschlossen. Einige private Dateien wurden möglicherweise bereits entfernt. Bitte versuchen Sie es erneut, um die Löschung abzuschließen.
 - `dataPrivacy.incSupport`: Support-Anfragen, die Sie gesendet haben, und die für Sie sichtbaren Nachrichten darin
 - `dataPrivacy.excSupportNotes`: Interne Notizen des Support-Teams
 - `dataPrivacy.incPlan`: Ihr Tarif und seine Änderungen im Zeitverlauf (nur Zugangszuweisungen)

@@ -291,6 +291,79 @@ def test_the_account_delete_route_answers_503_and_keeps_the_account_when_a_file_
         assert not store.exists("eeeeeeee55555555")
 
 
+def test_account_deletion_503_reports_partial_file_removal_and_can_be_retried(tmp_path, monkeypatch, caplog):
+    from fastapi.testclient import TestClient
+
+    from src.api import dependencies as deps
+    from tests._auth_factories import build_auth_app, cookies_for, login_token, register, verification_token
+
+    app, repo, mail = build_auth_app()
+    store = LocalDocumentStore(str(tmp_path / "docs"))
+    app.dependency_overrides[deps.get_document_store] = lambda: store
+    with TestClient(app) as client:
+        email = "partial-erasure@example.com"
+        assert register(client, email, "password123").status_code == 201
+        assert client.post("/api/v1/auth/verify-email", json={"token": verification_token(mail)}).status_code == 200
+        token = login_token(client, email, "password123")
+        assert token is not None
+        cookies = cookies_for(token)
+        with repo.session_factory() as s:
+            uid = s.scalar(select(P.User.id).where(P.User.email == email))
+        assert uid is not None
+        other = _user(repo.session_factory, "foreign-sentinel")
+        owned_keys = {"aaaaaaaa11111111", "bbbbbbbb22222222"}
+        foreign_key = "cccccccc33333333"
+        for key in sorted(owned_keys):
+            _doc_with_file(repo.session_factory, store, uid, key)
+        _doc_with_file(repo.session_factory, store, other, foreign_key)
+
+        attempts = []
+        delete_file = store.delete
+        failure_detail = "fixture storage error at /secret/erasure-sentinel"
+
+        def fail_second_delete(key: str) -> bool:
+            attempts.append(key)
+            if len(attempts) == 2:
+                raise OSError(failure_detail)
+            return delete_file(key)
+
+        # Fail the later attempt without assuming an ordering for the storage-key query.
+        with monkeypatch.context() as patch:
+            patch.setattr(store, "delete", fail_second_delete)
+            response = client.post("/api/v1/auth/account/delete", cookies=cookies)
+
+        assert response.status_code == 503
+        error = response.json()["error"]
+        assert error["code"] == "deletion_incomplete"
+        assert len(attempts) == 2 and set(attempts) == owned_keys
+        removed, failed = attempts
+        assert not store.exists(removed)
+        assert store.exists(failed) and store.exists(foreign_key)
+        with repo.session_factory() as s:
+            assert s.get(P.User, uid) is not None
+            remaining = s.scalars(
+                select(P.DocumentVersion.storage_key)
+                .join(P.CandidateDocument)
+                .where(P.CandidateDocument.user_id == uid)
+            ).all()
+            assert set(remaining) == owned_keys
+        assert client.get("/api/v1/auth/me", cookies=cookies).status_code == 200
+        for secret in (*owned_keys, foreign_key, failure_detail, "/secret/erasure-sentinel", token, "password123"):
+            assert secret not in response.text
+            assert secret not in caplog.text
+        assert "Some private files may already have been removed" in error["message"]
+        assert "nothing was removed" not in error["message"].lower()
+
+        retry = client.post("/api/v1/auth/account/delete", cookies=cookies)
+        assert retry.status_code == 200
+        assert client.get("/api/v1/auth/me", cookies=cookies).status_code == 401
+        assert not any(store.exists(key) for key in owned_keys)
+        assert store.exists(foreign_key)
+        with repo.session_factory() as s:
+            assert s.get(P.User, uid) is None and s.get(P.User, other) is not None
+            assert s.scalars(select(P.DocumentVersion.storage_key)).all() == [foreign_key]
+
+
 # ----------------------------------------------------------------------------------------------------------------- checkpoints and the ownership index
 def test_account_deletion_purges_every_indexed_run_and_nothing_is_ever_listed_or_scanned(sf):
     victim, other = _user(sf, "victim"), _user(sf, "bystander")
