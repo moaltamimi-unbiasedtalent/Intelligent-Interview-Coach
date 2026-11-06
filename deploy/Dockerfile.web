@@ -30,7 +30,15 @@ RUN npm ci --include=dev
 # Build the app.
 COPY frontend/ ./
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build && npm prune --omit=dev --package-lock=false
+RUN npm run build
+
+# ---- Production dependencies ----------------------------------------------
+FROM node:20-slim AS production-dependencies
+WORKDIR /app/frontend
+
+# Install the runtime dependency tree directly from the committed lockfile.
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --omit=dev
 
 # ---- Runtime stage ---------------------------------------------------------
 FROM node:20-slim AS runtime
@@ -46,9 +54,9 @@ RUN apt-get update \
 ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
-# Copy the built app and production node_modules from the build stage.
-COPY --from=build /app/frontend/package.json /app/frontend/package-lock.json ./
-COPY --from=build /app/frontend/node_modules ./node_modules
+# Copy locked production dependencies and the compiled app from their stages.
+COPY --from=production-dependencies /app/frontend/package.json /app/frontend/package-lock.json ./
+COPY --from=production-dependencies /app/frontend/node_modules ./node_modules
 COPY --from=build /app/frontend/.next ./.next
 COPY --from=build /app/frontend/public ./public
 COPY --from=build /app/frontend/next.config.mjs ./next.config.mjs
