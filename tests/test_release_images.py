@@ -1,12 +1,89 @@
 """Manifest integrity / conservative promotion policy, no Docker or private stores."""
 from contextlib import nullcontext
+import io
 import json
+import stat
+import tarfile
 
 import pytest
 import yaml
 
 from scripts import release_images as R
 
+
+def test_committed_source_directory_modes_and_contents(tmp_path, monkeypatch):
+    repo = tmp_path / "repository"
+    repo.mkdir()
+    R.run(["git", "init", "--template="], cwd=repo)
+    assets = repo / "frontend/public/images/nested"
+    assets.mkdir(parents=True)
+    asset = assets / "sample.bin"
+    content = b"\x00synthetic asset\xff"
+    asset.write_bytes(content)
+    asset.chmod(0o644)
+    executable = repo / "run.sh"
+    executable.write_bytes(b"#!/bin/sh\nexit 0\n")
+    executable.chmod(0o755)
+    R.run(["git", "add", "--", "frontend", "run.sh"], cwd=repo)
+    R.run(["git", "-c", "user.name=Release test", "-c", "user.email=test@example.invalid",
+           "-c", "commit.gpgsign=false", "commit", "-m", "Synthetic release source"], cwd=repo)
+    sha = R.run(["git", "rev-parse", "HEAD"], cwd=repo).decode().strip()
+    monkeypatch.setattr(R, "MINIMUM", sha)
+    monkeypatch.setattr(R.tempfile, "tempdir", str(tmp_path))
+    repo.chmod(0o700)
+    assets.chmod(0o700)
+    (repo / "untracked.txt").write_text("excluded from the archive")
+
+    with R.committed_source(sha, repo=repo) as extracted:
+        assert extracted.parent == tmp_path
+        assert stat.S_IMODE(extracted.stat().st_mode) == 0o700
+        for directory in ("frontend", "frontend/public", "frontend/public/images", "frontend/public/images/nested"):
+            assert stat.S_IMODE((extracted / directory).stat().st_mode) == 0o755
+        extracted_asset = extracted / asset.relative_to(repo)
+        assert extracted_asset.read_bytes() == content
+        assert stat.S_IMODE(extracted_asset.stat().st_mode) == 0o644
+        assert (extracted / "run.sh").read_bytes() == executable.read_bytes()
+        assert stat.S_IMODE((extracted / "run.sh").stat().st_mode) == 0o755
+        assert not (extracted / "untracked.txt").exists()
+        assert stat.S_IMODE(repo.stat().st_mode) == 0o700
+        assert stat.S_IMODE(assets.stat().st_mode) == 0o700
+    assert not extracted.exists()
+
+
+@pytest.mark.parametrize(("kind", "name", "error"), [
+    (tarfile.SYMTYPE, "link", "unsafe_source_member"),
+    (tarfile.LNKTYPE, "link", "unsafe_source_member"),
+    (tarfile.FIFOTYPE, "pipe", "unsafe_source_member"),
+    (tarfile.CHRTYPE, "device", "unsafe_source_member"),
+    (tarfile.DIRTYPE, "../outside", "unsafe_source_path"),
+    (tarfile.DIRTYPE, "/outside", "unsafe_source_path"),
+])
+def test_committed_source_rejects_unsafe_archive_members(tmp_path, monkeypatch, kind, name, error):
+    sha = "a" * 40
+    outside = tmp_path / "outside"
+    outside.mkdir(mode=0o700)
+    monkeypatch.setattr(R.tempfile, "tempdir", str(tmp_path))
+    archive = io.BytesIO()
+    with tarfile.open(fileobj=archive, mode="w") as tar:
+        member = tarfile.TarInfo(name)
+        member.type = kind
+        member.linkname = "../outside"
+        tar.addfile(member)
+
+    def git_command(args, *, cwd):
+        if args[1] == "rev-parse":
+            return sha.encode()
+        if args[1] == "merge-base":
+            return b""
+        assert args == ["git", "archive", "--format=tar", sha]
+        return archive.getvalue()
+
+    monkeypatch.setattr(R, "run", git_command)
+    with pytest.raises(R.ReleaseError, match=f"^{error}$"):
+        with R.committed_source(sha, repo=tmp_path):
+            pytest.fail("unsafe archive was extracted")
+    assert stat.S_IMODE(outside.stat().st_mode) == 0o700
+    assert list(tmp_path.iterdir()) == [outside]
 
 @pytest.fixture
 def source(tmp_path, monkeypatch):

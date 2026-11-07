@@ -101,10 +101,21 @@ def committed_source(sha, repo=ROOT):
     with tempfile.TemporaryDirectory(prefix="ask4mo-release-source-") as directory:
         root = Path(directory).resolve()
         with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            directories = set()
             for member in tar.getmembers():
                 require(not member.issym() and not member.islnk() and (member.isdir() or member.isfile()), "unsafe_source_member")
-                require((root / member.name).resolve().is_relative_to(root), "unsafe_source_path")
+                target = (root / member.name).resolve()
+                require(not Path(member.name).is_absolute() and target.is_relative_to(root), "unsafe_source_path")
+                if member.isdir() and target != root:
+                    directories.add(target)
             tar.extractall(root, filter="data")
+            # The data filter leaves directory modes to the umask. Keep the outer root private.
+            for target in directories:
+                fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                try:
+                    os.fchmod(fd, 0o755)
+                finally:
+                    os.close(fd)
         yield root
 
 
