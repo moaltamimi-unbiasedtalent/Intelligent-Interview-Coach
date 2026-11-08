@@ -117,6 +117,7 @@ class PipelineTrace:
     output_findings: list[str] = field(default_factory=list)
     # Owner policy A/B/C: the approved response class of the final answer ("" when no model answer was produced).
     response_class: str = ""
+    source_approval_market: str | None = None
 
 
 @dataclass
@@ -679,6 +680,7 @@ class CareerIntelligenceService:
 
         results, structured_evidence, approval = approval_filter.apply(
             results, structured_evidence, selected_market=market, detected_country=trace.detected_country)
+        trace.source_approval_market = approval.market
         bundle.results = results
         bundle.structured_evidence = structured_evidence
         trace.context_count = len(results)

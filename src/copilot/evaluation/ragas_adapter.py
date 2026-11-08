@@ -78,6 +78,10 @@ class RagasNotConfigured(RuntimeError):
     """Raised when a live RAGAS run is requested without evaluator credentials."""
 
 
+class InvalidContextText(ValueError):
+    """Strict extraction received malformed evidence or provenance."""
+
+
 @dataclass
 class RagasEvalCase:
     """A plain, RAGAS-independent evaluation record (safe to serialise)."""
@@ -165,6 +169,56 @@ def _dedupe_bounded(texts) -> list[str]:
     return out
 
 
+def _strict_contexts(response, result) -> tuple[list[str], list[str]]:
+    from types import SimpleNamespace
+
+    from src.copilot.models import DocumentChunk, KnowledgeEvidence, RetrievalResult
+    from src.knowledge_approval import source_key
+
+    evidence = getattr(response, "evidence", None)
+    retrieved = getattr(response, "retrieved", None)
+    if retrieved is None and response is not result:
+        retrieved = getattr(result, "retrieved", None)
+    for channel in (evidence, retrieved):
+        if channel is not None and type(channel) is not list and type(channel) is not tuple:
+            raise InvalidContextText("Retrieved evidence must be a list or tuple.")
+
+    contexts: list[str] = []
+    source_ids: list[str] = []
+
+    def add(entry) -> None:
+        text = getattr(entry, "text", None)
+        source = getattr(entry, "source_id", "")
+        metadata = getattr(entry, "metadata", None)
+        if type(text) is not str or type(source) is not str:
+            raise InvalidContextText("Retrieved text and source identifiers must be strings.")
+        if metadata is None:
+            metadata = {}
+        if type(metadata) is not dict or any(
+            type(metadata.get(key, "")) is not str
+            for key in ("knowledge_source_id", "manifest_source_id", "source_id")
+        ):
+            raise InvalidContextText("Retrieved source identifiers must be strings.")
+        if text.strip():
+            contexts.append(text)
+            identity = source_key(metadata, source)
+            if identity and identity not in source_ids:
+                source_ids.append(identity)
+
+    for entry in evidence or ():
+        if type(entry) is not KnowledgeEvidence and type(entry) is not SimpleNamespace:
+            raise InvalidContextText("Unsupported structured evidence entry.")
+        add(entry)
+    for entry in retrieved or ():
+        if type(entry) is not RetrievalResult and type(entry) is not SimpleNamespace:
+            raise InvalidContextText("Unsupported retrieved evidence entry.")
+        chunk = getattr(entry, "chunk", None)
+        if type(chunk) is not DocumentChunk and type(chunk) is not SimpleNamespace:
+            raise InvalidContextText("Unsupported retrieved evidence chunk.")
+        add(chunk)
+    return contexts, source_ids
+
+
 def case_from_service_result(
     case_id: str,
     question: str,
@@ -173,35 +227,41 @@ def case_from_service_result(
     category: str | None = None,
     reference: str | None = None,
     reference_contexts: list[str] | None = None,
+    strict_context_text: bool = False,
 ) -> RagasEvalCase:
     """Convert a Career Intelligence result into a plain :class:`RagasEvalCase`.
 
     Only the question, the generated answer, and the answer's evidence/citation
     text are used. Private inputs (candidate background, raw job description,
     transcripts, uploaded company files) are never read here.
+    Strict extraction validates both collections before iteration and derives
+    context and source identities from the same evidence entries.
     """
     response = getattr(result, "response", result)
     answer = getattr(result, "answer", None) or getattr(response, "answer", "")
 
-    contexts: list[str] = []
-    for ev in getattr(response, "evidence", None) or []:
-        text = getattr(ev, "text", None)
-        if text:
-            contexts.append(text)
-    for r in getattr(response, "retrieved", None) or getattr(result, "retrieved", None) or []:
-        text = getattr(getattr(r, "chunk", None), "text", None)
-        if text:
-            contexts.append(text)
+    if strict_context_text:
+        contexts, source_ids = _strict_contexts(response, result)
+    else:
+        contexts = []
+        for ev in getattr(response, "evidence", None) or []:
+            text = getattr(ev, "text", None)
+            if text:
+                contexts.append(text)
+        for r in getattr(response, "retrieved", None) or getattr(result, "retrieved", None) or []:
+            text = getattr(getattr(r, "chunk", None), "text", None)
+            if text:
+                contexts.append(text)
 
-    source_ids: list[str] = []
-    for ev in getattr(response, "evidence", None) or []:
-        sid = getattr(ev, "source_id", None)
-        if sid and sid not in source_ids:
-            source_ids.append(sid)
-    for c in getattr(response, "citations", None) or getattr(result, "citations", None) or []:
-        sid = getattr(c, "doc_id", None) or getattr(c, "source", None)
-        if sid and sid not in source_ids:
-            source_ids.append(sid)
+        source_ids = []
+        for ev in getattr(response, "evidence", None) or []:
+            sid = getattr(ev, "source_id", None)
+            if sid and sid not in source_ids:
+                source_ids.append(sid)
+        for c in getattr(response, "citations", None) or getattr(result, "citations", None) or []:
+            sid = getattr(c, "doc_id", None) or getattr(c, "source", None)
+            if sid and sid not in source_ids:
+                source_ids.append(sid)
 
     metadata = {"category": category} if category else {}
     return RagasEvalCase(
