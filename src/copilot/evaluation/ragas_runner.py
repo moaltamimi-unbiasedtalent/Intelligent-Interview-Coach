@@ -15,7 +15,7 @@ returned, logged, or written.
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 from src.copilot.evaluation import ragas_adapter as ra
@@ -33,6 +33,27 @@ __all__ = [
 
 CASES_PATH = "evaluations/ragas/cases.json"
 RUNS_DIR = Path("evaluations/ragas/runs")
+_Q01_CASE_MARKETS = {
+    "role_us_data_analyst": "US",
+    "role_uk_operations_manager": "UK",
+}
+_Q01_SOURCES = {"US": "q01-synthetic-us", "UK": "q01-synthetic-uk"}
+_Q01_UNAPPROVED_SOURCE = "q01-synthetic-unapproved"
+_Q01_METRICS = [ra.METRIC_FAITHFULNESS, ra.METRIC_RESPONSE_RELEVANCY,
+                ra.METRIC_CONTEXT_PRECISION, ra.METRIC_CONTEXT_RECALL]
+_Q01_FAILURE_MESSAGES = {
+    "q01_offline_unavailable": "Q01 requires a network-denied worker.",
+    "q01_invalid_options": "Q01 requires fixed synthetic fixtures and no overrides.",
+    "q01_invalid_selection": "Q01 requires the two approved case IDs in order.",
+    "q01_invalid_benchmark": "Q01 requires one benchmark row for each approved case.",
+    "q01_missing_reference": "Both Q01 cases require a nonempty benchmark reference.",
+    "q01_invalid_market": "Both Q01 cases require their approved explicit market.",
+    "q01_unverified_market": "Q01 requires an effective source-approval market matching the case.",
+    "q01_invalid_context": "Q01 retrieved context or provenance is malformed.",
+    "q01_no_context": "Q01 requires a nonempty retrieved context for each case.",
+    "q01_unverified_approval": "Q01 requires the expected synthetic source approval and refusals.",
+    "no_valid_scores": "Synthetic evaluator returned no valid scores.",
+}
 
 # The ONLY case-count choices exposed in the UI (no free-form counts).
 # label -> limit (None = full benchmark).
@@ -61,6 +82,7 @@ class RagasRunResult:
     output_directory: str | None = None
     error_category: str | None = None
     safe_message: str | None = None
+    q01_diagnostics: list[dict] = field(default_factory=list)
 
     @property
     def is_failed(self) -> bool:
@@ -164,6 +186,343 @@ def _default_service(config):
         config=config, retriever=retriever, knowledge_coordinator=coordinator)
 
 
+def _q01_failure(category: str, diagnostics=None) -> RagasRunResult:
+    return RagasRunResult(
+        status=ra.STATUS_FAILED, error_category=category, safe_message=_Q01_FAILURE_MESSAGES[category],
+        q01_diagnostics=diagnostics if diagnostics is not None else [],
+    )
+
+
+def _q01_known_source_ids(values) -> list[str]:
+    if type(values) is not list:
+        return []
+    known = (*_Q01_SOURCES.values(), _Q01_UNAPPROVED_SOURCE)
+    return list(dict.fromkeys(value for value in values if type(value) is str and value in known))
+
+
+def _q01_approved_context(diagnostic: dict) -> bool:
+    market = diagnostic["intended_market"]
+    return (
+        diagnostic["source_approval_market"] == market
+        and diagnostic["approval_enforced"] is True
+        and diagnostic["retrieved_context_count"] == 1
+        and diagnostic["source_ids"] == [_Q01_SOURCES[market]]
+        and diagnostic["dropped_source_ids"] == [
+            *(source for key, source in _Q01_SOURCES.items() if key != market),
+            _Q01_UNAPPROVED_SOURCE,
+        ]
+    )
+
+
+def _q01_valid_diagnostics(diagnostics: list) -> bool:
+    from src.copilot.knowledge.countries import NAMED_COUNTRY_CODES
+    from src.knowledge_approval import MARKETS
+
+    if len(diagnostics) > len(_Q01_CASE_MARKETS):
+        return False
+    for item, (case_id, market) in zip(diagnostics, _Q01_CASE_MARKETS.items()):
+        if (
+            type(item) is not dict or item.keys() != {
+                "case_id", "intended_market", "detected_country", "source_approval_market",
+                "retrieved_context_count", "source_ids", "dropped_source_ids", "approval_enforced",
+            }
+            or item["case_id"] != case_id or item["intended_market"] != market
+            or item["detected_country"] not in (None, *NAMED_COUNTRY_CODES)
+            or item["source_approval_market"] not in (None, *MARKETS)
+            or type(item["approval_enforced"]) is not bool
+            or type(item["retrieved_context_count"]) is not int
+            or not 0 <= item["retrieved_context_count"] <= ra._MAX_CONTEXTS
+            or _q01_known_source_ids(item["source_ids"]) != item["source_ids"]
+            or _q01_known_source_ids(item["dropped_source_ids"]) != item["dropped_source_ids"]
+            or (item["retrieved_context_count"] == 0 and item["source_ids"])
+        ):
+            return False
+    return True
+
+
+def _q01_valid_refusal(error: str, diagnostics: list) -> bool:
+    if error in ("q01_offline_unavailable", "q01_invalid_benchmark",
+                 "q01_missing_reference", "q01_invalid_market"):
+        return not diagnostics
+    if not diagnostics or not all(_q01_approved_context(item) for item in diagnostics[:-1]):
+        return False
+    last = diagnostics[-1]
+    matched = last["intended_market"] == last["source_approval_market"]
+    count = last["retrieved_context_count"]
+    if error == "q01_unverified_market":
+        return not matched and count == 0
+    if error in ("q01_invalid_context", "q01_no_context"):
+        return matched and count == 0
+    return error == "q01_unverified_approval" and matched and count > 0
+
+
+def _q01_valid_scores(reply: dict) -> bool:
+    rows = reply["per_case"]
+    diagnostics = reply["q01_diagnostics"]
+    if (
+        reply["case_count"] != 2 or reply["referenced_case_count"] != 2
+        or reply["context_recall_run"] is not True or len(rows) != 2 or len(diagnostics) != 2
+        or not all(_q01_approved_context(item) for item in diagnostics)
+        or reply["metric_names"] != _Q01_METRICS or reply["metrics"].keys() != set(_Q01_METRICS)
+        or any(value is not None and not ra.is_valid_score(value) for value in reply["metrics"].values())
+    ):
+        return False
+    for row, case_id in zip(rows, _Q01_CASE_MARKETS, strict=True):
+        if (
+            type(row) is not dict or row.get("case_id") != case_id
+            or row.get("category") != "role_responsibilities"
+            or any(name not in _Q01_METRICS or not ra.is_valid_score(value)
+                   for name, value in row.items() if name not in ("case_id", "category"))
+        ):
+            return False
+    expected = 8
+    valid = sum(name in row for row in rows for name in _Q01_METRICS)
+    status = ra.STATUS_FAILED if valid == 0 else (ra.STATUS_COMPLETE if valid == expected else ra.STATUS_PARTIAL)
+    error = "no_valid_scores" if valid == 0 else None
+    return (
+        reply["status"] == status and reply["error_category"] == error
+        and reply["safe_message"] == _Q01_FAILURE_MESSAGES.get(error)
+        and reply["expected_score_count"] == expected and reply["valid_score_count"] == valid
+        and reply["failed_score_count"] == expected - valid
+        and reply["score_coverage"] == round(valid / expected, 4)
+        and reply["metrics"] == ra._aggregate(rows, _Q01_METRICS)
+    )
+
+
+def _q01_json_object(pairs) -> dict:
+    result = dict(pairs)
+    if len(result) != len(pairs):
+        raise ValueError("Duplicate Q01 response field.")
+    return result
+
+
+def _decode_q01_response(payload: bytes) -> RagasRunResult:
+    failure = _q01_failure("q01_offline_unavailable")
+    if len(payload) > 8192:
+        return failure
+    reply = json.loads(payload, object_pairs_hook=_q01_json_object)
+    if type(reply) is not dict or reply.keys() != {item.name for item in fields(RagasRunResult)}:
+        return failure
+    diagnostics = reply["q01_diagnostics"]
+    if (
+        reply["status"] not in (ra.STATUS_COMPLETE, ra.STATUS_PARTIAL, ra.STATUS_FAILED)
+        or reply["output_directory"] is not None
+        or type(reply["context_recall_run"]) is not bool
+        or type(reply["metrics"]) is not dict
+        or any(type(reply[key]) is not list for key in ("metric_names", "per_case", "q01_diagnostics"))
+        or any(type(reply[key]) is not int or reply[key] < 0 for key in (
+            "case_count", "referenced_case_count", "expected_score_count", "valid_score_count", "failed_score_count",
+        ))
+        or not ra.is_valid_score(reply["score_coverage"])
+        or not _q01_valid_diagnostics(diagnostics)
+    ):
+        return failure
+    if reply["case_count"]:
+        return RagasRunResult(**reply) if _q01_valid_scores(reply) else failure
+    error = reply["error_category"]
+    if (
+        type(error) is str
+        and _q01_valid_refusal(error, diagnostics)
+        and reply == asdict(_q01_failure(error, diagnostics))
+    ):
+        return RagasRunResult(**reply)
+    return failure
+
+
+def _q01_worker_profile(scratch: str) -> str:
+    return (
+        "(version 1)(allow default)(deny network*)(deny file-write*)"
+        f"(allow file-write* (subpath {json.dumps(scratch)}))"
+    )
+
+
+def _launch_q01() -> RagasRunResult:
+    import subprocess
+    import sys
+    from tempfile import TemporaryDirectory
+
+    failure = _q01_failure("q01_offline_unavailable")
+    if sys.platform != "darwin":
+        return failure
+
+    source = Path(__file__).resolve().parents[3]
+    bootstrap = (
+        "import sys; sys.path.insert(0, sys.argv[1]); "
+        "from src.copilot.evaluation.ragas_runner import _q01_worker_output; "
+        "_q01_worker_output()"
+    )
+    try:
+        with TemporaryDirectory(prefix="ask4mo-q01-") as directory:
+            scratch = str(Path(directory).resolve())
+            worker = subprocess.run(
+                ["/usr/bin/sandbox-exec", "-p", _q01_worker_profile(scratch), sys.executable,
+                 "-I", "-B", "-c", bootstrap, str(source)],
+                cwd=scratch,
+                env={"HOME": scratch, "TMPDIR": scratch, "XDG_CACHE_HOME": scratch,
+                     "PATH": "/usr/bin:/bin", "PYTHON_DOTENV_DISABLED": "1",
+                     "ASK4MO_PROVIDER_MODE": "offline"},
+                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                close_fds=True, check=True, timeout=30,
+            )
+        return _decode_q01_response(worker.stdout)
+    except (OSError, subprocess.SubprocessError, ValueError, TypeError, OverflowError, RecursionError):
+        return failure
+
+
+def _q01_network_denied() -> bool:
+    import errno
+    import socket
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+            return probe.connect_ex(("127.0.0.1", 1)) in (errno.EPERM, errno.EACCES)
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+
+
+def _q01_worker_output() -> None:
+    print(json.dumps(asdict(_run_q01_worker()), allow_nan=False))
+
+
+def _q01_fixture_answer(question: str, *, market: str):
+    from types import SimpleNamespace
+
+    from src import knowledge_approval as ka
+    from src.copilot.knowledge import approval_filter
+    from src.copilot.knowledge.router import detect_country
+    from src.copilot.models import KnowledgeEvidence
+    from src.copilot.service import PipelineTrace
+
+    # An already-resolved, in-memory fixture register. Production approvals
+    # and the test-only global register override are outside this worker.
+    register = ka.Register(mode=ka.MODE_ENFORCED, records=tuple(
+        ka.RecordStatus(source, approved_market, enabled=True)
+        for approved_market, source in _Q01_SOURCES.items()
+    ))
+    evidence = [
+        KnowledgeEvidence(evidence_id=source, source_id=source,
+                          text=f"Synthetic Q01 evidence from {source}.")
+        for source in (*_Q01_SOURCES.values(), _Q01_UNAPPROVED_SOURCE)
+    ]
+    detected = detect_country(question)
+    retrieved, filtered, approval = approval_filter.apply(
+        [], evidence, selected_market=market, detected_country=detected, register=register,
+    )
+    return SimpleNamespace(
+        trace=PipelineTrace(detected_country=detected, source_approval_market=approval.market),
+        approval=approval,
+        response=SimpleNamespace(answer="Synthetic Q01 answer.", evidence=filtered, retrieved=retrieved),
+    )
+
+
+def _q01_fixture_score(cases):
+    def metrics(*, reference_free_only):
+        names = _Q01_METRICS[:-1] if reference_free_only else _Q01_METRICS
+        return [(name, None) for name in names]
+
+    def evaluate(samples, selected_metrics, _llm, _embeddings):
+        # Fixed values exercise accounting only. They are not model-quality scores.
+        return {index: {name: 0.0 for name, _ in selected_metrics}
+                for index in range(len(samples))}
+
+    return ra.run_ragas(
+        cases, config=object(), evaluate_fn=evaluate, build_metrics_fn=metrics,
+        to_sample_fn=lambda case, **_: case,
+    )
+
+
+def _run_q01_worker() -> RagasRunResult:
+    if not _q01_network_denied():
+        return _q01_failure("q01_offline_unavailable")
+
+    from src.copilot.knowledge.countries import NAMED_COUNTRY_CODES
+    from src.knowledge_approval import MARKETS, normalise_market
+
+    benchmark_path = Path(__file__).resolve().parents[3] / CASES_PATH
+    selected = [case for case in ra.load_cases(str(benchmark_path))
+                if case.case_id in _Q01_CASE_MARKETS]
+    by_id = {case.case_id: case for case in selected}
+    if len(selected) != len(_Q01_CASE_MARKETS) or by_id.keys() != _Q01_CASE_MARKETS.keys():
+        return _q01_failure("q01_invalid_benchmark")
+    cases = [by_id[case_id] for case_id in _Q01_CASE_MARKETS]
+    if not all(case.has_reference for case in cases):
+        return _q01_failure("q01_missing_reference")
+    case_markets = {case.case_id: normalise_market(case.metadata.get("geography")) for case in cases}
+    if case_markets != _Q01_CASE_MARKETS:
+        return _q01_failure("q01_invalid_market")
+
+    eval_cases = []
+    diagnostics = []
+    for case in cases:
+        market = case_markets[case.case_id]
+        result = _q01_fixture_answer(case.question, market=market)
+        trace = getattr(result, "trace", None)
+        approval = getattr(result, "approval", None)
+        detected = getattr(trace, "detected_country", None)
+        observed = getattr(approval, "market", None)
+        effective_market = observed if type(observed) is str and observed in MARKETS else None
+        dropped = getattr(approval, "dropped_sources", None)
+        diagnostic = {
+            "case_id": case.case_id,
+            "intended_market": market,
+            "detected_country": detected if type(detected) is str and detected in NAMED_COUNTRY_CODES else None,
+            "source_approval_market": effective_market,
+            "retrieved_context_count": 0,
+            "source_ids": [],
+            "dropped_source_ids": _q01_known_source_ids(dropped),
+            "approval_enforced": getattr(approval, "enforced", None) is True,
+        }
+        diagnostics.append(diagnostic)
+        if effective_market != market:
+            return _q01_failure("q01_unverified_market", diagnostics)
+        try:
+            adapted = ra.case_from_service_result(
+                case.case_id, case.question, result, category=case.metadata.get("category"),
+                reference=case.reference, strict_context_text=True,
+            )
+        except ra.InvalidContextText:
+            return _q01_failure("q01_invalid_context", diagnostics)
+        if not adapted.retrieved_contexts:
+            return _q01_failure("q01_no_context", diagnostics)
+        diagnostic["retrieved_context_count"] = len(adapted.retrieved_contexts)
+        diagnostic["source_ids"] = _q01_known_source_ids(adapted.source_ids)
+        if (
+            not _q01_approved_context(diagnostic)
+            or diagnostic["source_ids"] != adapted.source_ids
+            or len(diagnostic["dropped_source_ids"]) != len(dropped)
+            or approval.dropped_count != len(dropped)
+            or approval.labelled_count != 0
+        ):
+            return _q01_failure("q01_unverified_approval", diagnostics)
+        eval_cases.append(adapted)
+
+    run = _q01_fixture_score(eval_cases)
+    base = _scored_result(run)
+    base.q01_diagnostics = diagnostics
+    if not ra.has_usable_scores(run):
+        base.error_category = "no_valid_scores"
+        base.safe_message = _Q01_FAILURE_MESSAGES["no_valid_scores"]
+    return base
+
+
+def _scored_result(run: dict) -> RagasRunResult:
+    return RagasRunResult(
+        status=run["status"],
+        case_count=run["case_count"],
+        metrics=run["metrics"],
+        metric_names=run["metric_names"],
+        per_case=run["per_case"],
+        valid_score_count=run["valid_score_count"],
+        expected_score_count=run["expected_score_count"],
+        failed_score_count=run["failed_score_count"],
+        score_coverage=run["score_coverage"],
+        referenced_case_count=run["referenced_case_count"],
+        context_recall_run=run["context_recall_run"],
+    )
+
+
 def run_live_ragas(
     *,
     config,
@@ -179,6 +538,7 @@ def run_live_ragas(
     service_factory=None,
     run_ragas_fn=None,
     timestamp: str | None = None,
+    q01_diagnostic: bool = False,
 ) -> RagasRunResult:
     """Generate answers over the public cases and score them with RAGAS.
 
@@ -186,7 +546,26 @@ def run_live_ragas(
     scores) is NEVER persisted — no directory or artifacts are created. The
     ``*_fn`` / ``service`` / ``timestamp`` hooks are injection points for offline
     tests; production uses the real defaults.
+
+    Q01 runs fixed synthetic fixtures in a network-denied worker, with no
+    caller-supplied dependencies, runtime configuration or persistence.
     """
+    if q01_diagnostic:
+        if (
+            persist is not False or output_dir is not None
+            or config is not None or evaluator_config is not None
+            or service is not None or service_factory is not None or run_ragas_fn is not None
+            or category is not None or limit is not None or cases_path != CASES_PATH
+            or runs_dir != RUNS_DIR or timestamp is not None
+        ):
+            return _q01_failure("q01_invalid_options")
+        if ((type(case_ids) is not list and type(case_ids) is not tuple)
+                or len(case_ids) != len(_Q01_CASE_MARKETS)
+                or any(type(case_id) is not str for case_id in case_ids)
+                or tuple(case_ids) != tuple(_Q01_CASE_MARKETS)):
+            return _q01_failure("q01_invalid_selection")
+        return _launch_q01()
+
     cases = _load_filtered_cases(cases_path, category, limit, case_ids)
     if not cases:
         return RagasRunResult(status=ra.STATUS_FAILED, error_category="no_cases",
@@ -203,20 +582,7 @@ def run_live_ragas(
             category=qc.metadata.get("category"), reference=qc.reference))
 
     run = (run_ragas_fn or ra.run_ragas)(eval_cases, config=evaluator_config)
-
-    base = RagasRunResult(
-        status=run["status"],
-        case_count=run["case_count"],
-        metrics=run["metrics"],
-        metric_names=run["metric_names"],
-        per_case=run["per_case"],
-        valid_score_count=run["valid_score_count"],
-        expected_score_count=run["expected_score_count"],
-        failed_score_count=run["failed_score_count"],
-        score_coverage=run["score_coverage"],
-        referenced_case_count=run["referenced_case_count"],
-        context_recall_run=run["context_recall_run"],
-    )
+    base = _scored_result(run)
 
     # HARD STOP: an all-invalid run must not be persisted as a normal result.
     if not ra.has_usable_scores(run):
