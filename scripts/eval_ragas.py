@@ -24,6 +24,7 @@ Credentials (never printed):
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -142,10 +143,9 @@ def _estimate_judge(subset_ids: list[str], all_cases: int) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None, *, prototype_handler=None) -> int:
     from src.demo_live.guard import install_from_env
 
-    install_from_env()      # capstone demonstration provider control (no-op unless ASK4MO_PROVIDER_MODE is set); evaluator requests then count against the ragas allocation
     parser = argparse.ArgumentParser(description="Optional RAGAS generation-quality evaluation.")
     parser.add_argument("--mode", choices=["deterministic", "judge"], default=None,
                         help="deterministic (free, default) or judge (LLM, opt-in/paid)")
@@ -153,6 +153,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="run the live LLM judge (paid authorization; == --mode judge --allow-paid)")
     parser.add_argument("--allow-paid", action="store_true",
                         help="explicitly authorize paid judge calls (required for --mode judge)")
+    parser.add_argument("--governed-07b", action="store_true",
+                        help="select the offline 07B handoff prototype")
     parser.add_argument("--estimate-only", action="store_true",
                         help="print a judge cost estimate; make NO model calls")
     parser.add_argument("--subset", choices=["reviewer"], default=None,
@@ -167,13 +169,42 @@ def main(argv: list[str] | None = None) -> int:
                         help="opt in to reuse the production chat key as the evaluator key")
     args = parser.parse_args(argv)
 
-    def _skip(msg: str) -> int:
-        print(msg)
-        return 1 if args.require_live else 0
+    if not args.governed_07b:
+        install_from_env()  # Preserve the legacy provider-control path.
 
     # --- Mode routing -------------------------------------------------------
     judge_mode = args.live or args.mode == "judge" or args.require_live
     subset_ids = _load_judge_subset() if args.subset == "reviewer" else []
+
+    if args.governed_07b:
+        if (args.mode != "judge" or not args.allow_paid or args.live or args.estimate_only
+                or args.allow_chat_fallback or args.subset != "reviewer" or not subset_ids
+                or args.limit is None or not 1 <= args.limit <= len(subset_ids)):
+            print("REFUSED (evaluation_options_invalid): 07B requires an explicitly bounded reviewer judge run.", file=sys.stderr)
+            return 2
+        if os.environ.get("PYTHON_DOTENV_DISABLED") != "1":
+            print("REFUSED (evaluation_environment_invalid): 07B requires dotenv loading to be disabled.", file=sys.stderr)
+            return 2
+        if not callable(prototype_handler):
+            print("REFUSED (transport_not_qualified): 07B requires a synthetic transport.", file=sys.stderr)
+            return 2
+        from src.llm.budget import governor as budget
+        from src.llm.budget.errors import BudgetError
+        from src.llm.budget.script_guard import require_paid_budget
+
+        try:
+            require_paid_budget("eval_ragas", budget_class="evaluation", governed_07b=True,
+                                prototype_handler=prototype_handler)
+        except BudgetError as exc:
+            print(f"REFUSED by the AI budget governor ({exc.reason}).", file=sys.stderr)
+            return 2
+        try:
+            return _run_judge(args, subset_ids)
+        except Exception:
+            print("REFUSED (evaluation_failed): the governed judge run could not complete.", file=sys.stderr)
+            return 2
+        finally:
+            budget.uninstall()
 
     if args.estimate_only:
         from src.copilot.evaluation import rag_id_metrics as idm
@@ -191,8 +222,18 @@ def main(argv: list[str] | None = None) -> int:
               "--estimate-only for a cost estimate.")
         return 1 if args.require_live else 0
 
+    return _run_judge(args, subset_ids)
+
+
+def _run_judge(args: argparse.Namespace, subset_ids: list[str]) -> int:
+    def _skip(msg: str) -> int:
+        print(msg)
+        return 1 if args.require_live or args.governed_07b else 0
+
     # Preconditions (safe checks; no secret values).
     if not ra.ragas_available():
+        if args.governed_07b:
+            return _skip("NOT RUN (sdk_compatibility_incomplete): the RAGAS runtime is unavailable.")
         return _skip("RAGAS is not installed. Install with: pip install -e \".[evaluation]\"")
     evaluator = ra.evaluator_config_from_env(allow_chat_fallback=args.allow_chat_fallback)
     if evaluator is None:
@@ -207,9 +248,22 @@ def main(argv: list[str] | None = None) -> int:
 
     from src.llm.budget.script_guard import guard_paid_script      # 05C: every paid path also needs the governed budget (approved marker, durable ledger, ceilings, kill switch)
 
-    refused = guard_paid_script("eval_ragas", category="evaluation")
-    if refused is not None:
-        return refused
+    if args.governed_07b:
+        from src.llm.budget.config import GOVERNED_07B_BASE_URL
+        from src.llm.budget.governor import active_governor
+
+        policy_models = active_governor().config.approval["operation_models"]
+        if (evaluator.base_url != GOVERNED_07B_BASE_URL or config.base_url != GOVERNED_07B_BASE_URL
+                or evaluator.model != policy_models["ragas"]
+                or evaluator.embedding_model != policy_models["evaluator_embedding"]
+                or config.embedding_provider not in ("local", "openrouter")
+                or (config.embedding_provider == "openrouter" and config.embedding_model != policy_models["retrieval_embedding"])):
+            print("REFUSED (evaluation_provider_invalid): 07B provider configuration does not match the policy.", file=sys.stderr)
+            return 2
+    else:
+        refused = guard_paid_script("eval_ragas", category="evaluation")
+        if refused is not None:
+            return refused
     print(f"Generating answers and scoring via the shared RAGAS runner "
           f"(limit={args.limit or 'all'}, category={args.category or 'all'})…")
     result = runner.run_live_ragas(

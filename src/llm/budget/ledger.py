@@ -29,6 +29,8 @@ from src.llm.budget.errors import BudgetError
 from src.persistence import AiBudgetControl, AiBudgetEntry
 
 GLOBAL = "global"
+CONTROL_07B = "governed:07b"
+SQLITE_MAX_INTEGER = (1 << 63) - 1
 
 
 def class_key(budget_class: str) -> str:
@@ -113,12 +115,48 @@ class DbBudgetLedger:
             if pending_session(s):
                 raise BudgetError("recovery_reconciliation_required", "Recovery accounting requires authorized reconciliation.")
             self._ensure_rows(s, [GLOBAL])
-            s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(killed=False, kill_reason=None))
+            # Order resume against admission, settlement, and direct SQL kills.
+            s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL)
+                      .values(updated_at=AiBudgetControl.updated_at))
+            control = s.get(AiBudgetControl, GLOBAL)
+            if control is None:
+                raise BudgetError("ledger_inconsistent", "The durable global budget control is missing.")
+            if s.get(AiBudgetControl, CONTROL_07B) is not None:
+                if not control.killed:
+                    return  # Routine resume cannot clear holds on an already-open ledger.
+                if s.scalar(select(AiBudgetEntry.id).where(AiBudgetEntry.state.in_(("reserved", "unknown"))).limit(1)) is not None:
+                    raise BudgetError("recovery_reconciliation_required", "07B cannot resume with an unresolved reservation.")
+            control.killed, control.kill_reason = False, None
             s.commit()
 
+    def accept_07b_handoff(self, reservation: Reservation, accept: Callable[[], None]) -> None:
+        """Order local transport acceptance against SQLite writers. The callback only checks local state."""
+        try:
+            with self._sf() as s:
+                if s.get_bind().dialect.name != "sqlite":
+                    raise BudgetError("transport_not_qualified", "The 07B handoff prototype requires SQLite.")
+                s.connection().exec_driver_sql("BEGIN IMMEDIATE")
+                control = s.get(AiBudgetControl, GLOBAL)
+                row = s.get(AiBudgetEntry, reservation.entry_id)
+                if (control is None or s.get(AiBudgetControl, CONTROL_07B) is None or row is None
+                        or row.state != "reserved" or row.budget_class != reservation.budget_class
+                        or row.category != reservation.category or row.endpoint != reservation.endpoint
+                        or row.reserved_micro_usd != reservation.worst_case):
+                    raise BudgetError("ledger_inconsistent", "The transport reservation could not be verified.")
+                if control.killed:
+                    raise BudgetError("kill_switch", "The 07B kill committed before transport acceptance.")
+                accept()
+                # This receiver now owns the request. Release before handing it to the I/O phase.
+                s.rollback()
+        except SQLAlchemyError:
+            raise BudgetError("ledger_error", "07B could not verify or release its acceptance transaction.") from None
+
     # ------------------------------------------------------------------ reservation
-    def reserve(self, config: BudgetConfig, *, budget_class: str, category: str, operation: str, model: str, endpoint: str, fingerprint: str, worst_case: int) -> Reservation:
+    def reserve(self, config: BudgetConfig, *, budget_class: str, category: str, operation: str, model: str, endpoint: str, fingerprint: str, worst_case: int,
+                governed_07b: bool = False) -> Reservation:
         """Atomically admit and record a reservation or raise ``BudgetError``. Bounded retries and duplicate suppression are decided here, in the same transaction."""
+        if governed_07b and (budget_class != "evaluation" or config.approval.get("scope") != "07b"):
+            raise BudgetError("approval_invalid", "Durable replay protection requires the approved 07B policy.")
         cls = config.classes.get(budget_class)
         if cls is None:
             raise BudgetError("class_not_configured", f"Budget class {budget_class!r} has no configured ceiling (fail closed).")
@@ -151,6 +189,8 @@ class DbBudgetLedger:
                         raise BudgetError("policy_mismatch", "Budget policy changed; authorized reconciliation is required.")
                     if not prior:
                         s.add(AiBudgetControl(scope_key=policy, held_micro_usd=0, requests=0, killed=False))
+                    if config.approval.get("scope") == "07b" and s.get(AiBudgetControl, CONTROL_07B) is None:
+                        s.add(AiBudgetControl(scope_key=CONTROL_07B, held_micro_usd=0, requests=0, killed=False))
                     active = s.execute(select(func.count()).select_from(AiBudgetEntry).where(AiBudgetEntry.state == "reserved")).scalar()
                     if active >= config.limits.max_concurrency:
                         raise BudgetError("concurrency_limit", "The durable provider concurrency limit is saturated.")
@@ -162,7 +202,7 @@ class DbBudgetLedger:
                     held = self._entries_held(s)
                     if held + worst_case > config.total.stop:
                         raise BudgetError("total_stop", "The total approved spending threshold would be exceeded.")
-                self._check_duplicates(s, config, fingerprint, now)
+                self._check_duplicates(s, config, fingerprint, now, governed_07b=governed_07b)
                 ck, gk = class_key(budget_class), category_key(budget_class, category)
                 # (1) the class counter: held + worst <= stop AND requests < max. (2) the category counter. Either failing rolls the whole transaction back.
                 hit = s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == ck, AiBudgetControl.held_micro_usd + worst_case <= cls.ceiling.stop,
@@ -200,17 +240,24 @@ class DbBudgetLedger:
             return "request_cap", f"The request cap of the {budget_class} budget is reached."
         return "stop_threshold", f"The {budget_class} stop threshold would be exceeded (held {micro_to_usd(held)} USD, this request up to {micro_to_usd(worst_case)} USD)."
 
-    def _check_duplicates(self, s: Session, config: BudgetConfig, fingerprint: str, now: float) -> None:
+    def _check_duplicates(self, s: Session, config: BudgetConfig, fingerprint: str, now: float, *,
+                          governed_07b: bool = False) -> None:
         """Bounded retries and no retry after an unknown outcome. A call that was REFUSED by the provider before any inference (429 and other determinate rejections) may be retried up to
         ``max_retries`` times inside the window; a call whose outcome is unknown (timeout, 5xx, no usage) is never sent again automatically, because it may already have been billed."""
         window = config.limits.dedupe_window_s
         since = now - window
-        rows = s.execute(select(AiBudgetEntry.state, func.count()).where(AiBudgetEntry.fingerprint == fingerprint, or_(AiBudgetEntry.state.in_(("reserved", "unknown")), AiBudgetEntry.created_ts >= since)).group_by(AiBudgetEntry.state)).all()
+        durable_states = ("reserved", "unknown", "settled") if governed_07b else ("reserved", "unknown")
+        rows = s.execute(select(AiBudgetEntry.state, func.count())
+                         .where(AiBudgetEntry.fingerprint == fingerprint,
+                                or_(AiBudgetEntry.state.in_(durable_states), AiBudgetEntry.created_ts >= since))
+                         .group_by(AiBudgetEntry.state)).all()
         by_state = {st: n for st, n in rows}
         if by_state.get("reserved"):
             raise BudgetError("duplicate_in_flight", "An identical request is already in flight.")
         if by_state.get("unknown"):
             raise BudgetError("unknown_outcome_no_retry", "An identical earlier request has an unknown outcome (possibly billed); it is not retried automatically.")
+        if governed_07b and by_state.get("settled"):
+            raise BudgetError("retry_limit", "An identical 07B request was already settled in this policy ledger.")
         if by_state.get("rejected", 0) > config.limits.max_retries:
             raise BudgetError("retry_limit", "The bounded retry limit for this request is reached.")
 
@@ -229,6 +276,13 @@ class DbBudgetLedger:
                     raise BudgetError("ledger_inconsistent", "Settlement requires consistent durable counters.")
                 if type(committed) is not int or committed < 0:
                     raise BudgetError("usage_invalid", "The reported cost is invalid; the reservation remains held.")
+                overrun = committed > reservation.worst_case
+                if (overrun and outcome == "unknown" and status_code == 429 and error_category == "contradictory_charge"
+                        and s.get_bind().dialect.name == "sqlite"
+                        and self._entries_held(s) + committed - reservation.worst_case > SQLITE_MAX_INTEGER):
+                    # Unrepresentable total exposure still stops admission and keeps
+                    # the original hold. SQLite must not promote counters to REAL.
+                    committed = 0
                 delta = (committed - reservation.worst_case) if outcome == "settled" else (-reservation.worst_case if outcome == "rejected" else max(committed - reservation.worst_case, 0))
                 done = s.execute(update(AiBudgetEntry).where(AiBudgetEntry.id == reservation.entry_id, AiBudgetEntry.state == "reserved")
                                  .values(state=outcome, reserved_micro_usd=max(committed, reservation.worst_case) if outcome == "unknown" else reservation.worst_case, committed_micro_usd=committed if outcome == "settled" else 0, input_tokens=input_tokens, output_tokens=output_tokens,
@@ -240,7 +294,7 @@ class DbBudgetLedger:
                 if delta:
                     for key in (class_key(reservation.budget_class), category_key(reservation.budget_class, reservation.category)):
                         s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == key).values(held_micro_usd=AiBudgetControl.held_micro_usd + delta))
-                if committed > reservation.worst_case:
+                if overrun:
                     s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(killed=True, kill_reason="overrun"))
                 s.commit()
         except SQLAlchemyError:

@@ -356,6 +356,22 @@ def test_unlisted_endpoint_of_a_governed_host_is_refused_but_other_hosts_pass_th
     assert live.status()["requests"] == 0
 
 
+def test_ordinary_governor_keeps_unrelated_redirects(live):
+    gov = live
+    paths = []
+
+    def handler(request):
+        paths.append(request.url.path)
+        if request.url.path == "/initial":
+            return httpx.Response(307, headers={"location": "/final"})
+        return httpx.Response(204)
+
+    with httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=True) as client:
+        assert client.get("https://fixture.invalid/initial").status_code == 204
+    assert paths == ["/initial", "/final"]
+    assert gov.status()["requests"] == 0
+
+
 def test_the_request_timeout_is_clamped_to_the_configured_limit(live):
     seen = {}
 

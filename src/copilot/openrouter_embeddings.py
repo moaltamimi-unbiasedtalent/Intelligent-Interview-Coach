@@ -164,20 +164,24 @@ class OpenRouterEmbedder(BaseEmbedder):
         return body
 
     def _post(self, batch: list[str]) -> httpx.Response:
+        gov = _governor.active_governor()
+        strict = gov is not None and gov.governed_07b
+        retries = 0 if strict else self._max_retries
+        headers = self._headers | {_governor.OP_HEADER: "retrieval_embedding"} if strict else self._headers
         own = self._client is None
-        client = self._client or httpx.Client(timeout=self._timeout)        # follow_redirects stays False: the key is never re-sent elsewhere
+        client = self._client or (gov.prototype_client() if strict else httpx.Client(timeout=self._timeout))        # follow_redirects stays False: the key is never re-sent elsewhere
         try:
             attempt = 0
             while True:
                 self.requests_sent += 1
                 try:
-                    return client.post(self._url, json=self._body(batch), headers=self._headers, timeout=self._timeout)
+                    return client.post(self._url, json=self._body(batch), headers=headers, timeout=self._timeout)
                 except BudgetError as exc:
                     err = EmbeddingProviderError("budget_refused")
                     err.reason = exc.reason
                     raise err from None
                 except (httpx.ConnectError, httpx.ConnectTimeout):
-                    if attempt >= self._max_retries:
+                    if attempt >= retries:
                         raise EmbeddingProviderError("network") from None
                     attempt += 1
                     self._sleep(min(2.0 * attempt, 5.0))
