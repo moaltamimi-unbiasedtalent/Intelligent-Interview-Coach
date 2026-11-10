@@ -303,7 +303,21 @@ def load_cases(path: str) -> list[RagasEvalCase]:
 
 
 def _evaluator_bounds() -> tuple[dict, dict]:
-    """Request bounds for the evaluator LLM and embeddings; empty unless a provider-control mode is set. Pure (imports no optional package) so CI can test it without RAGAS."""
+    """Resolve bounds without importing the optional evaluator SDK."""
+    from src.llm.budget.config import GOVERNED_07B_MAX_EMBEDDING_INPUTS
+    from src.llm.budget.governor import OP_HEADER, active_governor
+
+    governor = active_governor()
+    if governor is not None and governor.governed_07b:
+        limits = governor.config.limits
+        return (
+            {"max_tokens": limits.max_output_tokens, "timeout": limits.request_timeout_s,
+             "max_retries": 0, "use_responses_api": False, "disable_streaming": True,
+             "default_headers": {OP_HEADER: "ragas"}},
+            {"timeout": limits.request_timeout_s, "max_retries": 0, "check_embedding_ctx_length": False,
+             "chunk_size": GOVERNED_07B_MAX_EMBEDDING_INPUTS,
+             "default_headers": {OP_HEADER: "evaluator_embedding"}},
+        )
     if not os.environ.get("ASK4MO_PROVIDER_MODE"):
         return {}, {}
     # Capstone live demonstration: every request must carry an output cap, a timeout and at most one retry so the EUR ledger can reserve its worst case; embeddings are
@@ -317,7 +331,15 @@ def _build_evaluator(config: EvaluatorConfig):
     from ragas.embeddings import LangchainEmbeddingsWrapper
     from ragas.llms import LangchainLLMWrapper
 
+    from src.llm.budget.governor import active_governor
+
     chat_bounds, emb_bounds = _evaluator_bounds()
+    governor = active_governor()
+    if governor is not None and governor.governed_07b:
+        clients = {"http_client": governor.prototype_client(),
+                   "http_async_client": governor.prototype_client(asynchronous=True)}
+        chat_bounds.update(clients)
+        emb_bounds.update(clients)
     chat = ChatOpenAI(model=config.model, api_key=config.api_key,
                       base_url=config.base_url, temperature=0.0, **chat_bounds)
     emb = OpenAIEmbeddings(model=config.embedding_model, api_key=config.api_key,
@@ -452,9 +474,18 @@ def _default_evaluate(samples, metrics, llm, embeddings):
     from ragas import evaluate
     from ragas.dataset_schema import EvaluationDataset
 
+    from src.llm.budget.governor import active_governor
+
+    options = {}
+    governor = active_governor()
+    if governor is not None and governor.governed_07b:
+        from ragas.run_config import RunConfig
+
+        options["run_config"] = RunConfig(max_workers=1, max_retries=1, timeout=governor.config.limits.request_timeout_s)
+        options["raise_exceptions"] = True
     dataset = EvaluationDataset(samples=samples)
     result = evaluate(dataset=dataset, metrics=[m[1] for m in metrics],
-                      llm=llm, embeddings=embeddings)
+                      llm=llm, embeddings=embeddings, **options)
     frame = result.to_pandas()
     out: dict[int, dict] = {}
     for idx in range(len(frame)):

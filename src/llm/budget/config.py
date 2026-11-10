@@ -31,6 +31,15 @@ CLASS_ENV = "AI_BUDGET_CLASS"
 MARKER_ENV = "AI_BUDGET_APPROVED_MARKER"
 KILL_ENV = "AI_BUDGET_KILL"
 DEFAULT_HOSTS = ("openrouter.ai",)
+GOVERNED_07B_BASE_URL = "https://openrouter.ai/api/v1"
+GOVERNED_07B_LEDGER_ENV = "AI_BUDGET_07B_DATABASE_URL"
+GOVERNED_07B_MAX_EMBEDDING_INPUTS = 64
+GOVERNED_07B_OPERATIONS = {
+    "agent": ("chat", "agent"),
+    "ragas": ("chat", "evaluation"),
+    "retrieval_embedding": ("embeddings", "embedding"),
+    "evaluator_embedding": ("embeddings", "embedding"),
+}
 _MARKER_RE = re.compile(r"^OD-BUDGET:[A-Za-z0-9._-]{4,64}$")
 LOCAL_ENVIRONMENTS = ("development", "dev", "local", "test", "testing")
 
@@ -192,9 +201,24 @@ def hosted(environ: Mapping[str, str]) -> bool:
     return (environ.get("API_ENV") or "development").strip().lower() not in LOCAL_ENVIRONMENTS
 
 
-def validate_hosted_approval(config: BudgetConfig, environ: Mapping[str, str]) -> None:
+def check_07b_handoff_deadline(config: BudgetConfig) -> None:
+    """Evaluate the sealed policy deadline inside the transport acceptance transaction."""
+    approval = config.approval
+    try:
+        starts = max(datetime.fromisoformat(approval[key].replace("Z", "+00:00"))
+                     for key in ("period_start", "pricing_effective_at"))
+        ends = min(datetime.fromisoformat(approval[key].replace("Z", "+00:00"))
+                   for key in ("expires_at", "pricing_expires_at"))
+        current = starts <= datetime.now(timezone.utc) < ends
+    except (KeyError, TypeError, ValueError, AttributeError):
+        current = False
+    if not current:
+        raise BudgetError("approval_invalid", "07B approval or pricing expired before transport acceptance.")
+
+
+def validate_hosted_approval(config: BudgetConfig, environ: Mapping[str, str], *, governed_07b: bool = False) -> None:
     """Owner-authored evidence, checked again before every admission; no approval is generated."""
-    if not hosted(environ):
+    if not governed_07b and not hosted(environ):
         return
     if environ.get(CONFIG_PATH_ENV) and load_config(environ=environ).raw_hash != config.raw_hash:
         raise BudgetError("policy_mismatch", "The runtime budget file changed; drain and authorized reconciliation are required.")
@@ -205,7 +229,8 @@ def validate_hosted_approval(config: BudgetConfig, environ: Mapping[str, str]) -
         expiry = datetime.fromisoformat(a["expires_at"].replace("Z", "+00:00"))
         priced = datetime.fromisoformat(a["pricing_effective_at"].replace("Z", "+00:00"))
         price_expiry = datetime.fromisoformat(a["pricing_expires_at"].replace("Z", "+00:00"))
-        valid = (a["environment"] == environ["API_ENV"].strip().lower()
+        environment = environ.get("API_ENV", "development").strip().lower()
+        valid = (a["environment"] == environment
                  and priced <= now < price_expiry <= expiry and start <= now < expiry
                  and all(isinstance(a[k], str) and a[k].strip() for k in
                          ("owner", "approver", "pricing_source", "reconciliation_owner", "incident_owner"))
@@ -214,5 +239,24 @@ def validate_hosted_approval(config: BudgetConfig, environ: Mapping[str, str]) -
                  and all(c.ceiling.hard_cap <= config.total.hard_cap and c.ceiling.stop <= config.total.stop for c in config.classes.values()))
     except (KeyError, ValueError, TypeError, AttributeError):
         valid = False
+    if governed_07b:
+        models = config.approval.get("operation_models", {}) if valid else {}
+        ledger_url = environ.get(GOVERNED_07B_LEDGER_ENV, "")
+        valid = (
+            valid and bool(environ.get(CONFIG_PATH_ENV)) and bool(ledger_url)
+            and config.approval.get("scope") == "07b"
+            and hmac.compare_digest(
+                hashlib.sha256(ledger_url.encode()).hexdigest().encode(),
+                str(config.approval.get("ledger_url_sha256", "")).encode(),
+            )
+            and config.hosts == DEFAULT_HOSTS
+            and environ.get(MODE_ENV) == "enforce" and resolve_budget_class(environ) == "evaluation"
+            and set(config.classes) == {"evaluation"}
+            and set(config.classes["evaluation"].categories) >= {"agent", "evaluation", "embedding"}
+            and config.limits.max_retries == 0 and config.limits.max_concurrency == 1
+            and isinstance(models, dict) and models.keys() == GOVERNED_07B_OPERATIONS.keys()
+            and all(isinstance(model, str) and model in config.pricing for model in models.values())
+        )
     if not valid:
-        raise BudgetError("approval_invalid", "Hosted budget approval is missing, expired or incompatible.")
+        raise BudgetError("approval_invalid", "Budget approval is missing, expired or incompatible." if governed_07b
+                          else "Hosted budget approval is missing, expired or incompatible.")

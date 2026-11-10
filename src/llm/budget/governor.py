@@ -19,31 +19,71 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import inspect
 import json
+import math
 import os
 import threading
 import time
+from concurrent.futures import CancelledError as SyncCancelledError
 from decimal import Decimal
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
+from weakref import WeakSet
 
 import httpx
 
-from src.llm.budget.config import (BudgetConfig, CATEGORIES, KILL_ENV, MODE_ENV, load_config, require_approved_marker, resolve_budget_class, usd_to_micro, hosted, validate_hosted_approval)
+from src.llm.budget.config import (
+    BudgetConfig, CATEGORIES, GOVERNED_07B_LEDGER_ENV, GOVERNED_07B_MAX_EMBEDDING_INPUTS, GOVERNED_07B_OPERATIONS, KILL_ENV, MICRO, MODE_ENV,
+    check_07b_handoff_deadline, hosted, load_config, require_approved_marker, resolve_budget_class, usd_to_micro, validate_hosted_approval,
+)
 from src.llm.budget.errors import BudgetError
-from src.llm.budget.ledger import DbBudgetLedger, Reservation
+from src.llm.budget.ledger import SQLITE_MAX_INTEGER, DbBudgetLedger, Reservation
 
 HOSTED_POLICY_VERSION = 2
 
 OP_HEADER = "x-ask4mo-operation"
 METADATA_GET = ("/api/v1/key", "/api/v1/models", "/api/v1/credits", "/api/v1/embeddings/models")
 PRICED_ENDPOINTS = ("/chat/completions", "/embeddings")
+PAID_PATH_SUFFIXES = (*PRICED_ENDPOINTS, "/audio/transcriptions", "/realtime/sessions", "/responses",
+                      "/messages", "/images/generations", "/audio/speech")
+GOVERNED_07B_PATHS = {b"/api/v1/chat/completions": "chat", b"/api/v1/embeddings": "embeddings"}
+GOVERNED_07B_CHAT_FIELDS = {
+    "model", "messages", "max_tokens", "max_completion_tokens", "temperature", "top_p",
+    "frequency_penalty", "presence_penalty", "seed", "stop", "n", "stream", "response_format",
+}
+GOVERNED_07B_EMBED_FIELDS = {"model", "input", "dimensions", "encoding_format"}
 DETERMINATE_REJECTIONS = (400, 401, 402, 403, 404, 422, 429)
+MAX_429_EVIDENCE_BYTES = 64 * 1024
+MAX_LEDGER_USD = Decimal(SQLITE_MAX_INTEGER) / MICRO
+CHARGE_TOKEN_FIELDS = {
+    "prompt_tokens", "completion_tokens", "input_tokens", "output_tokens", "total_tokens",
+    "reasoning_tokens", "cached_tokens", "cache_read_input_tokens", "cache_write_input_tokens",
+}
+CHARGE_COST_FIELDS = {
+    "cost", "provider_cost", "provider_cost_usd", "cost_usd", "total_cost", "total_cost_usd",
+    "upstream_inference_cost", "upstream_inference_prompt_cost", "upstream_inference_completions_cost",
+}
 OPERATION_CATEGORY = {"agent": "agent", "interview": "interview", "embedding": "embedding", "embeddings": "embedding", "evaluation": "evaluation", "ragas": "evaluation"}
 
 
 def estimate_tokens(text: str) -> int:
     """Conservative byte bound, including non-ASCII input and serialized tool schemas."""
     return max(1, len(text.encode("utf-8")))
+
+
+def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    body = dict(pairs)
+    if len(body) != len(pairs):
+        raise ValueError("duplicate request fields")
+    return body
+
+
+class _ChargeObject(tuple):
+    """Preserve ordered JSON object pairs and distinguish them from arrays."""
+
+
+def _reject_nonfinite_json(value: str) -> None:
+    raise ValueError("non-finite JSON number")
 
 
 def _error_category(status: int | None, exc: BaseException | None = None) -> str | None:
@@ -60,19 +100,24 @@ class BudgetGovernor:
     """One governor per process: a configuration, a ledger, a budget class and (when it cannot be open) the fixed reason it is closed."""
 
     def __init__(self, config: BudgetConfig | None, ledger: DbBudgetLedger | None, budget_class: str, *, default_category: str | None = None,
-                 closed_reason: str | None = None, environ: Mapping[str, str] | None = None) -> None:
+                 closed_reason: str | None = None, environ: Mapping[str, str] | None = None, governed_07b: bool = False) -> None:
         self.config, self.ledger, self.budget_class = config, ledger, budget_class
         self.default_category = default_category
         self.closed_reason = closed_reason
         self.env = os.environ if environ is None else environ
         self._hosted_at_build = hosted(self.env)
         self.refusals: list[str] = []
+        self.governed_07b = governed_07b
+        self._seen_07b: set[str] = set()
+        self._stopped_07b = False
+        self._prototype_clients: WeakSet = WeakSet()
+        self.prototype_handler: Callable | None = None
         self._sem = threading.BoundedSemaphore(config.limits.max_concurrency) if config else None
 
     # ------------------------------------------------------------------ construction
     @classmethod
     def build(cls, session_factory, *, budget_class: str | None = None, default_category: str | None = None, environ: Mapping[str, str] | None = None,
-              config: BudgetConfig | None = None, require_marker: bool = True) -> "BudgetGovernor":
+              config: BudgetConfig | None = None, require_marker: bool = True, governed_07b: bool = False) -> "BudgetGovernor":
         """Build an OPEN governor or raise ``BudgetError`` (config, marker, class, ledger, CI). Never reads a provider key."""
         env = os.environ if environ is None else environ
         if env.get("CI") or env.get("GITHUB_ACTIONS"):
@@ -83,9 +128,19 @@ class BudgetGovernor:
         cfg = config or load_config(environ=env)
         if klass not in cfg.classes:
             raise BudgetError("class_not_configured", f"Budget class {klass!r} has no configured ceiling (fail closed).")
-        if require_marker:
+        if require_marker or governed_07b:
             require_approved_marker(cfg, env)
-        validate_hosted_approval(cfg, env)
+        validate_hosted_approval(cfg, env, governed_07b=governed_07b)
+        if governed_07b and klass != "evaluation":
+            raise BudgetError("class_mismatch", "07B requires the evaluation budget class.")
+        if governed_07b:
+            from sqlalchemy.engine import make_url
+
+            with session_factory() as session:
+                if session.get_bind().dialect.name != "sqlite":
+                    raise BudgetError("transport_not_qualified", "The 07B handoff prototype requires SQLite.")
+                if session.get_bind().url != make_url(env[GOVERNED_07B_LEDGER_ENV]):
+                    raise BudgetError("ledger_unavailable", "07B requires the approved dedicated durable ledger.")
         ledger = DbBudgetLedger(session_factory)
         ledger.ensure_ready()
         if hosted(env):
@@ -94,7 +149,7 @@ class BudgetGovernor:
                     raise BudgetError("durable_ledger_required", "Hosted budgets require PostgreSQL.")
         if (env.get(KILL_ENV) or "").strip().lower() in ("1", "true", "yes"):
             ledger.kill("environment")  # latch across process restart / image rollback
-        return cls(cfg, ledger, klass, default_category=default_category, environ=env)
+        return cls(cfg, ledger, klass, default_category=default_category, environ=env, governed_07b=governed_07b)
 
     @classmethod
     def closed(cls, reason: str, budget_class: str = "production", environ: Mapping[str, str] | None = None) -> "BudgetGovernor":
@@ -119,12 +174,20 @@ class BudgetGovernor:
         host = (request.url.host or "").lower()
         hosts = self.config.hosts if self.config else ("openrouter.ai",)
         if host not in hosts:
-            paid_path = any(request.url.path.rstrip("/").endswith(p) for p in (*PRICED_ENDPOINTS, "/audio/transcriptions", "/realtime/sessions", "/responses", "/messages", "/images/generations", "/audio/speech"))
-            if hosted(self.env) and (paid_path or host in ("openrouter.ai", "api.openai.com")):
+            paid_path = request.url.path.rstrip("/").endswith(PAID_PATH_SUFFIXES)
+            if self.governed_07b or (hosted(self.env) and (paid_path or host in ("openrouter.ai", "api.openai.com"))):
                 self._refuse("provider_host_not_allowed", "The provider endpoint is not approved.")
             return "passthrough"
         if request.url.scheme != "https" or request.url.port not in (None, 443) or request.url.userinfo:
             self._refuse("provider_endpoint_invalid", "The provider endpoint is not approved.")
+        if self.governed_07b:
+            if (request.headers.get_list("host") != [host] or request.url.fragment
+                    or {"sni_hostname", "target"} & request.extensions.keys()):
+                self._refuse("provider_endpoint_invalid", "The provider endpoint is not approved.")
+            kind = GOVERNED_07B_PATHS.get(request.url.raw_path)
+            if request.method != "POST" or kind is None:
+                self._refuse("endpoint_not_allowed", "The provider endpoint is not allowed.")
+            return kind
         path = request.url.path.rstrip("/")
         if request.method == "POST" and any(path.endswith(e) for e in PRICED_ENDPOINTS):
             return "embeddings" if path.endswith("/embeddings") else "chat"
@@ -151,11 +214,13 @@ class BudgetGovernor:
         if kw.get("stream"):
             self._refuse("streaming_not_supported", "Streaming responses are not admitted (usage could not be settled).")
         try:
-            body = json.loads(request.content or b"{}")
-        except ValueError:
+            body = json.loads(request.content or b"{}", object_pairs_hook=_unique_json_object if self.governed_07b else None)
+        except (ValueError, httpx.RequestNotRead):
             self._refuse("body_unreadable", "The request body could not be inspected.")
         if not isinstance(body, dict):
             self._refuse("body_unreadable", "The request body could not be inspected.")
+        if self.governed_07b:
+            self._validate_07b_body(body, kind)
         if body.get("n", 1) != 1 or body.get("best_of", 1) != 1 or body.get("modalities") or body.get("audio"):
             self._refuse("request_shape_not_supported", "Only a single text completion is budget-qualified.")
         for message in body.get("messages", []) or []:
@@ -190,31 +255,106 @@ class BudgetGovernor:
             self._refuse("input_too_large", "The input estimate exceeds the configured per-request limit.")
         worst = usd_to_micro(Decimal(tokens) * price.prompt + Decimal(out_cap) * price.completion)
         t = float(lim.request_timeout_s)
-        cur = request.extensions.get("timeout") or {}
-        request.extensions["timeout"] = {k: (t if cur.get(k) is None else min(float(cur[k]), t)) for k in ("connect", "read", "write", "pool")}
-        category = self.category_for(request, kind)
-        fingerprint = hashlib.sha256(f"{request.method}|{request.url.path}|".encode() + json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
-        return model, category, worst, fingerprint, category
+        cur = request.extensions.get("timeout", {})
+        phases = ("connect", "read", "write", "pool")
+        if self.governed_07b:
+            if (not isinstance(cur, dict) or cur.keys() - set(phases)
+                    or any(value is not None and (type(value) not in (float, int) or not 0 < value < math.inf)
+                           for value in cur.values())):
+                self._refuse("invalid_timeout", "07B requires positive finite transport timeouts.")
+            request.extensions["timeout"] = {key: min(cur.get(key) or t, t) for key in phases}
+        else:
+            cur = cur or {}
+            request.extensions["timeout"] = {key: (t if cur.get(key) is None else min(float(cur[key]), t)) for key in phases}
+        if self.governed_07b:
+            operation = request.headers.get(OP_HEADER, "")
+            category = self._07b_category(operation, kind, model)
+            target = str(request.url)
+        else:
+            category = operation = self.category_for(request, kind)
+            target = request.url.path
+        fingerprint = hashlib.sha256(f"{request.method}|{target}|".encode() + json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
+        return model, category, worst, fingerprint, operation
+
+    def _validate_07b_body(self, body: dict, kind: str) -> None:
+        if kind == "embeddings":
+            inputs = body.get("input")
+            if (not isinstance(inputs, list) or not inputs
+                    or any(not isinstance(item, str) or not item.strip() for item in inputs)):
+                self._refuse("embedding_input_invalid", "07B embeddings require nonempty text inputs.")
+            if len(inputs) > GOVERNED_07B_MAX_EMBEDDING_INPUTS:
+                self._refuse("input_too_large", "The embedding batch exceeds the approved input count.")
+            if (body.keys() - GOVERNED_07B_EMBED_FIELDS
+                    or body.get("encoding_format", "float") not in ("float", "base64")
+                    or ("dimensions" in body and (type(body["dimensions"]) is not int or body["dimensions"] <= 0))):
+                self._refuse("request_shape_not_supported", "The embedding request shape is not approved.")
+            return
+        messages = body.get("messages")
+        if (body.keys() - GOVERNED_07B_CHAT_FIELDS or not isinstance(messages, list) or not messages
+                or any(not isinstance(item, dict) or item.keys() - {"role", "content", "name"}
+                       or item.get("role") not in ("system", "developer", "user", "assistant")
+                       or not isinstance(item.get("content"), str) for item in messages)
+                or {"max_tokens", "max_completion_tokens"} <= body.keys()
+                or type(body.get("n", 1)) is not int
+                or type(body.get("stream", False)) is not bool):
+            self._refuse("request_shape_not_supported", "The chat request shape is not approved.")
+
+    def _07b_category(self, operation: str, kind: str, model: str) -> str:
+        policy = GOVERNED_07B_OPERATIONS.get(operation)
+        if policy is None or policy[0] != kind:
+            self._refuse("category_unknown", "The request operation is not approved for this endpoint.")
+        if self.config.approval["operation_models"][operation] != model:
+            self._refuse("model_not_allowed", "The model is not approved for this operation.")
+        return policy[1]
 
     def _open_or_refuse(self) -> None:
         if not self.is_open:
             self._refuse(self.closed_reason or "governor_closed", "The AI budget governor is closed (configuration, approval or ledger is not valid); paid provider calls are refused (fail closed).")
-        validate_hosted_approval(self.config, self.env)
+        validate_hosted_approval(self.config, self.env, governed_07b=self.governed_07b)
         require_approved_marker(self.config, self.env)
+        if self.governed_07b and self._stopped_07b:
+            self._refuse("evaluation_stopped", "The 07B run stopped after a provider or accounting failure.")
         if self.killed():
             self._refuse("kill_switch", "The AI budget kill switch is engaged; no provider request is sent.")
 
     def reserve(self, request: httpx.Request, kind: str, kw: dict) -> tuple[Reservation, str, float]:
         self._open_or_refuse()
         model, category, worst, fingerprint, operation = self.prepare(request, kind, kw)
+        if self.governed_07b:
+            if fingerprint in self._seen_07b:
+                self._refuse("retry_limit", "An identical request was already dispatched in this 07B run.")
+            if self._unknown_07b():
+                self._refuse("unknown_outcome_no_retry", "An earlier provider outcome requires reconciliation.")
         try:
-            res = self.ledger.reserve(self.config, budget_class=self.budget_class, category=category, operation=operation, model=model, endpoint=kind, fingerprint=fingerprint, worst_case=worst)  # type: ignore[union-attr]
+            res = self.ledger.reserve(self.config, budget_class=self.budget_class, category=category,
+                                      operation=operation, model=model, endpoint=kind, fingerprint=fingerprint,
+                                      worst_case=worst, governed_07b=self.governed_07b)  # type: ignore[union-attr]
         except BudgetError as exc:
             self.refusals.append(exc.reason)
             raise
+        if self.governed_07b:
+            # Check after the one durable concurrency slot is held. A separate
+            # process cannot settle an earlier reservation after this check.
+            if self._unknown_07b():
+                self.ledger.settle(res, outcome="rejected", error_category="reconciliation_required")
+                self._refuse("unknown_outcome_no_retry", "An earlier provider outcome requires reconciliation.")
+            try:
+                self._open_or_refuse()
+            except BudgetError:
+                self.ledger.settle(res, outcome="rejected", error_category="admission_changed")
+                raise
+            self._seen_07b.add(fingerprint)
         if OP_HEADER in request.headers:
             del request.headers[OP_HEADER]                     # an internal label; never sent to the provider
         return res, model, time.perf_counter()
+
+    def _unknown_07b(self) -> bool:
+        try:
+            counts = self.ledger.snapshot(self.config, self.budget_class)["calls_by_state"]
+        except Exception:
+            self._stopped_07b = True
+            raise BudgetError("ledger_error", "07B could not verify outstanding holds.") from None
+        return bool(counts.get("unknown"))
 
     # ------------------------------------------------------------------ settlement
     def usage_cost(self, model: str, data: dict, *, endpoint: str = "chat") -> tuple[int | None, int | None, int | None, int | None, int | None]:
@@ -240,33 +380,138 @@ class BudgetGovernor:
         assert led is not None
         if sc == 200:
             try:
-                committed, tin, tout, est, prov = self.usage_cost(model, response.json(), endpoint=res.endpoint)
+                data = response.json()
+                if self.governed_07b and (not isinstance(data, dict) or data.get("model") != model or "error" in data):
+                    raise ValueError("unexpected provider response identity")
+                committed, tin, tout, est, prov = self.usage_cost(model, data, endpoint=res.endpoint)
                 bad = False
             except Exception:  # noqa: BLE001 - an unreadable body is UNKNOWN, never zero
                 committed, tin, tout, bad = None, None, None, True
             if committed is None:
+                self._stopped_07b |= self.governed_07b
                 reported = None
                 try:
                     reported = usd_to_micro(response.json()["usage"]["cost"])
                 except (KeyError, ValueError, TypeError, ArithmeticError):
                     pass
                 led.settle(res, outcome="unknown", committed=reported or 0, input_tokens=tin, output_tokens=tout, provider_cost=reported, status_code=sc, latency_ms=ms, error_category="malformed_body" if bad else "usage_missing")
+                if self.governed_07b:
+                    self._refuse("outcome_unknown", "The provider response could not be reconciled.")
             else:
                 led.settle(res, outcome="settled", committed=committed, input_tokens=tin, output_tokens=tout, est_cost=est, provider_cost=prov, status_code=sc, latency_ms=ms)
+                if self.governed_07b and committed > res.worst_case:
+                    self._refuse("budget_overrun", "Provider usage exceeded the reservation.")
         elif sc in DETERMINATE_REJECTIONS:
+            self._stopped_07b |= self.governed_07b
+            evidence = None
+            if self.governed_07b:
+                evidence = self._rate_limit_charge(response) if sc == 429 else self._rejection_charge(response)
+            if evidence is not None:
+                led.settle(res, outcome="unknown", committed=evidence, status_code=sc, latency_ms=ms,
+                           error_category="contradictory_charge")
+                self._refuse("outcome_unknown", "Provider rejection carried conflicting charge evidence.")
             led.settle(res, outcome="rejected", status_code=sc, latency_ms=ms, error_category=_error_category(sc))
         else:
+            self._stopped_07b |= self.governed_07b
             led.settle(res, outcome="unknown", status_code=sc, latency_ms=ms, error_category=_error_category(sc))
+            if self.governed_07b:
+                self._refuse("outcome_unknown", "The provider response could not be reconciled.")
+
+    @staticmethod
+    def _rate_limit_charge(response: httpx.Response) -> int | None:
+        """None means a clean 429, zero means unknown cost, positive means reported exposure."""
+        try:
+            body = response.content
+            if len(body) > MAX_429_EVIDENCE_BYTES:
+                return 0
+            root = json.loads(body, object_pairs_hook=_ChargeObject, parse_float=Decimal,
+                              parse_constant=_reject_nonfinite_json)
+        except (httpx.ResponseNotRead, ValueError, RecursionError, ArithmeticError):
+            return 0
+        if not isinstance(root, _ChargeObject):
+            return 0
+
+        reported = 0
+        ambiguous = False
+        pending = [root]
+        while pending:
+            node = pending.pop()
+            if isinstance(node, list):
+                pending.extend(node)
+            if not isinstance(node, _ChargeObject):
+                continue
+            seen = set()
+            for key, value in node:
+                ambiguous |= key in seen
+                seen.add(key)
+                if key in ("usage", "cost_details") and not isinstance(value, _ChargeObject):
+                    ambiguous = True
+                if key in CHARGE_TOKEN_FIELDS:
+                    ambiguous |= type(value) is not int or value != 0
+                if key in CHARGE_COST_FIELDS:
+                    try:
+                        if type(value) not in (str, int, Decimal) or len(str(value)) > 64:
+                            raise ValueError
+                        cost = Decimal(str(value))
+                        if not cost.is_finite() or not 0 <= cost <= MAX_LEDGER_USD:
+                            raise ValueError
+                        # A positive value remains charge evidence if conversion underflows.
+                        ambiguous |= cost > 0
+                        reported = max(reported, usd_to_micro(cost))
+                    except (ValueError, ArithmeticError):
+                        ambiguous = True
+                if isinstance(value, (_ChargeObject, list)):
+                    pending.append(value)
+        return reported if reported or ambiguous else None
+
+    @staticmethod
+    def _rejection_charge(response: httpx.Response) -> int | None:
+        try:
+            data = response.json()
+        except ValueError:
+            return None
+        usage = data.get("usage") if isinstance(data, dict) else None
+        if not isinstance(usage, dict):
+            return None
+        try:
+            cost = usd_to_micro(Decimal(str(usage.get("cost"))))
+        except (ValueError, TypeError, ArithmeticError):
+            cost = 0
+        if cost or any(type(usage.get(key)) is int and usage[key] > 0
+                       for key in ("prompt_tokens", "completion_tokens", "input_tokens", "output_tokens", "total_tokens")):
+            return cost
+        return None
 
     def settle_failure(self, res: Reservation, started: float, exc: BaseException) -> None:
+        self._stopped_07b |= self.governed_07b
         try:
             self.ledger.settle(res, outcome="unknown", latency_ms=int((time.perf_counter() - started) * 1000), error_category=_error_category(None, exc))  # type: ignore[union-attr]
         except BudgetError:
             pass                                               # the reservation stays open at its worst case
 
+    def prototype_client(self, handler: Callable | None = None, *, asynchronous: bool = False):
+        """Create a closed-world HTTPX client for the offline 07B fixture."""
+        if handler is None:
+            handler = self.prototype_handler
+        if not self.governed_07b or not callable(handler):
+            self._refuse("transport_not_qualified", "07B requires a synthetic transport handler.")
+        transport = _07BPrototypeTransport(self, handler)
+        client_cls = httpx.AsyncClient if asynchronous else httpx.Client
+        client = client_cls(transport=transport, trust_env=False)
+        self._prototype_clients.add(client)
+        return client
+
+    def _prototype_send_options(self, client, kw: dict) -> None:
+        if client not in self._prototype_clients or client.event_hooks["request"] or kw.get("stream"):
+            self._refuse("transport_not_qualified", "07B admits only its offline transport without mutation hooks or streaming.")
+        kw.update(follow_redirects=False, auth=None)
+
     # ------------------------------------------------------------------ the two wrappers
     def send_sync(self, orig, client, request, kw):  # noqa: ANN001
         kind = self.classify(request)
+        if self.governed_07b:
+            self._prototype_send_options(client, kw)
+            return orig(client, request, **kw)
         if kind == "passthrough":
             return orig(client, request, **kw)
         if kind == "metadata":
@@ -291,6 +536,9 @@ class BudgetGovernor:
 
     async def send_async(self, orig, client, request, kw):  # noqa: ANN001
         kind = self.classify(request)
+        if self.governed_07b:
+            self._prototype_send_options(client, kw)
+            return await orig(client, request, **kw)
         if kind == "passthrough":
             return await orig(client, request, **kw)
         if kind == "metadata":
@@ -336,6 +584,68 @@ class BudgetGovernor:
         if not snap["integrity"]["consistent"]:
             snap.update(state="unavailable", reason="ledger_inconsistent")
         return snap
+
+
+class _07BPrototypeTransport(httpx.BaseTransport, httpx.AsyncBaseTransport):
+    """The actual receiving HTTPX transport in the offline prototype. It has no network delegate."""
+
+    def __init__(self, governor: BudgetGovernor, handler: Callable) -> None:
+        self.governor = governor
+        self.handler = handler
+
+    def _receive(self, request: httpx.Request, *, task: asyncio.Task | None = None):
+        gov = self.governor
+        kind = gov.classify(request)
+        reservation, model, started = gov.reserve(request, kind, {})
+        accepted = False
+
+        def accept():
+            nonlocal accepted
+            if task is not None and task.cancelling():
+                raise asyncio.CancelledError
+            if (gov.env.get(KILL_ENV) or "").strip().lower() in ("1", "true", "yes"):
+                raise BudgetError("kill_switch", "07B was stopped before transport acceptance.")
+            check_07b_handoff_deadline(gov.config)
+            # Successful acceptance linearizes at the clock sample inside this
+            # actual receiver, while SQLite excludes concurrent kill commits.
+            accepted = True
+
+        try:
+            gov.ledger.accept_07b_handoff(reservation, accept)
+        except BaseException as exc:
+            if not accepted and (isinstance(exc, (asyncio.CancelledError, SyncCancelledError, KeyboardInterrupt))
+                                 or isinstance(exc, BudgetError) and exc.reason in ("kill_switch", "approval_invalid")):
+                gov.ledger.settle(reservation, outcome="rejected", error_category="admission_changed")
+            else:
+                gov.settle_failure(reservation, started, exc)
+            raise
+        return reservation, model, started
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        gov = self.governor
+        reservation, model, started = self._receive(request)
+        try:
+            response = self.handler(request)
+            response.read()
+        except BaseException as exc:
+            gov.settle_failure(reservation, started, exc)
+            raise
+        gov.settle_response(reservation, model, response, started)
+        return response
+
+    async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
+        gov = self.governor
+        reservation, model, started = self._receive(request, task=asyncio.current_task())
+        try:
+            response = self.handler(request)
+            if inspect.isawaitable(response):
+                response = await response
+            await response.aread()
+        except BaseException as exc:
+            gov.settle_failure(reservation, started, exc)
+            raise
+        gov.settle_response(reservation, model, response, started)
+        return response
 
 
 # ------------------------------------------------------------------ process-wide install (one chokepoint)
@@ -419,5 +729,8 @@ def install_from_env(session_factory=None, environ: Mapping[str, str] | None = N
 
 def refuse_ungoverned_transport(environ: Mapping[str, str] | None = None) -> None:
     """Legacy speech/realtime SDKs have no qualified monetary settlement contract."""
+    current = active_governor()
+    if current is not None and current.governed_07b:
+        raise BudgetError("transport_not_qualified", "This AI transport is not budget-qualified for 07B.")
     if hosted(os.environ if environ is None else environ):
         raise BudgetError("transport_not_qualified", "This AI transport is not budget-qualified for hosted use.")

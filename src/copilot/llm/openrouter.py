@@ -100,6 +100,18 @@ def build_chat_model(
     kwargs = default_model_kwargs(
         config, model=model, temperature=temperature, max_tokens=max_tokens, timeout_s=timeout_s, max_retries=max_retries
     )
+    from src.llm.budget.governor import OP_HEADER, active_governor
+
+    governor = active_governor()
+    strict = governor is not None and governor.governed_07b
+    if strict:
+        kwargs.update(
+            max_tokens=min(kwargs["max_tokens"], governor.config.limits.max_output_tokens),
+            timeout=min(kwargs["timeout"], governor.config.limits.request_timeout_s),
+            max_retries=0, disable_streaming=True, use_responses_api=False,
+            http_client=governor.prototype_client(),
+            http_async_client=governor.prototype_client(asynchronous=True),
+        )
     if meter:
         # 04C: graph progress callbacks must never implicitly turn a provider
         # request into a token stream that the budget governor cannot settle.
@@ -118,7 +130,7 @@ def build_chat_model(
         default_headers={
             "HTTP-Referer": config.app_referer,
             "X-Title": config.app_title,
-            **_demo_operation_headers("agent"),
+            **({OP_HEADER: "agent"} if strict else _demo_operation_headers("agent")),
         },
         **kwargs,
     )

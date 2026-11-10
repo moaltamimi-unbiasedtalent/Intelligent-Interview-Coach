@@ -15,19 +15,40 @@ Any problem prints a fixed refusal (reason code, never a key, marker or prompt) 
 from __future__ import annotations
 
 import atexit
+import os
 import sys
-from typing import Mapping
+from pathlib import Path
+from urllib.request import getproxies
+from typing import Callable, Mapping
 
 from src.llm.budget import governor as G
+from src.llm.budget.config import GOVERNED_07B_LEDGER_ENV, load_config, require_approved_marker, validate_hosted_approval
 from src.llm.budget.errors import BudgetError
 
 REFUSED_EXIT = 2
 
 
 def require_paid_budget(script: str, *, budget_class: str = "evaluation", category: str = "evaluation", session_factory=None,
-                        environ: Mapping[str, str] | None = None) -> G.BudgetGovernor:
+                        environ: Mapping[str, str] | None = None, governed_07b: bool = False,
+                        prototype_handler: Callable | None = None) -> G.BudgetGovernor:
     """Return an OPEN, installed governor or raise ``BudgetError``. ``script`` is only a label for the operator."""
+    env = os.environ if environ is None else environ
     existing = G.active_governor()
+    config = None
+    if governed_07b:
+        from src.demo_live.guard import ProviderControl
+
+        if env.get("CI") or env.get("GITHUB_ACTIONS"):
+            raise BudgetError("ci_forbidden", "Paid provider calls never run in CI.")
+        if existing is not None or ProviderControl._active is not None or env.get("ASK4MO_PROVIDER_MODE"):
+            raise BudgetError("guard_conflict", "07B requires an exclusive governor without legacy controls.")
+        if budget_class != "evaluation":
+            raise BudgetError("class_mismatch", "07B requires the evaluation budget class.")
+        if env.get("OPENAI_PROXY") or getproxies().keys() - {"no"}:
+            raise BudgetError("provider_proxy_not_allowed", "07B requires direct provider transport.")
+        config = load_config(environ=env)
+        require_approved_marker(config, env)
+        validate_hosted_approval(config, env, governed_07b=True)
     if existing is not None:
         if not existing.is_open:
             raise BudgetError(existing.closed_reason or "governor_closed", f"{script}: the AI budget governor is closed.")
@@ -36,13 +57,34 @@ def require_paid_budget(script: str, *, budget_class: str = "evaluation", catego
             raise BudgetError("class_mismatch", "The installed budget is not approved for this script class.")
         return existing
     if session_factory is None:
-        from src.config import load_config
+        from src.config import load_config as load_app_config
         from src.persistence import make_engine, make_session_factory
 
-        session_factory = make_session_factory(make_engine(load_config().database_url))
-    governor = G.BudgetGovernor.build(session_factory, budget_class=budget_class, default_category=category, environ=environ)
+        if governed_07b:
+            from sqlalchemy.engine import make_url
+
+            try:
+                url = make_url(env[GOVERNED_07B_LEDGER_ENV])
+                backend = url.get_backend_name()
+                if backend == "sqlite":
+                    path = Path(url.database or "")
+                    if url.query or not path.is_absolute() or path != path.resolve() or not path.is_file():
+                        raise ValueError
+                else:
+                    raise ValueError
+                session_factory = make_session_factory(make_engine(env[GOVERNED_07B_LEDGER_ENV]))
+            except Exception:
+                raise BudgetError("ledger_unavailable", "07B requires the approved dedicated durable ledger.") from None
+        else:
+            session_factory = make_session_factory(make_engine(load_app_config().database_url))
+    governor = G.BudgetGovernor.build(session_factory, budget_class=budget_class, default_category=category,
+                                     environ=env, config=config, governed_07b=governed_07b)
     if governor.killed():
         raise BudgetError("kill_switch", f"{script}: the AI budget kill switch is engaged.")
+    if governed_07b and governor._unknown_07b():
+        raise BudgetError("unknown_outcome_no_retry", "An earlier provider outcome requires reconciliation.")
+    if governed_07b:
+        governor.prototype_handler = prototype_handler
     G.install(governor)
     atexit.register(G.uninstall)
     return governor
