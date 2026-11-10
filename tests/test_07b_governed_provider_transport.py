@@ -14,6 +14,8 @@ import threading
 from concurrent.futures import CancelledError as SyncCancelledError, ThreadPoolExecutor
 from contextlib import closing, contextmanager
 from datetime import datetime, timedelta, timezone
+from functools import partial
+from pathlib import Path
 from types import ModuleType
 
 import httpx
@@ -254,9 +256,41 @@ def test_approval_expiring_during_reservation_refuses_dispatch(env, monkeypatch)
         engine.dispose()
 
 
+@pytest.mark.parametrize("flags", [
+    pytest.param(("CI",), id="ci-only"),
+    pytest.param(("GITHUB_ACTIONS",), id="github-actions-only"),
+    pytest.param(("CI", "GITHUB_ACTIONS"), id="both"),
+])
+def test_cli_refuses_ci_before_config_ledger_or_provider(monkeypatch, flags, capsys):
+    from src import persistence
+    from src.copilot import config
+
+    for flag in ("CI", "GITHUB_ACTIONS"):
+        if flag in flags:
+            monkeypatch.setenv(flag, "true")
+        else:
+            monkeypatch.delenv(flag, raising=False)
+    monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
+    monkeypatch.setattr(script_guard, "load_config", lambda **kw: pytest.fail("budget configuration loaded"))
+    monkeypatch.setattr(persistence, "make_engine", lambda *a, **kw: pytest.fail("ledger engine created"))
+    monkeypatch.setattr(persistence, "make_session_factory", lambda *a, **kw: pytest.fail("ledger session factory created"))
+    monkeypatch.setattr(G, "install", lambda *a, **kw: pytest.fail("governor installed"))
+    monkeypatch.setattr(config, "load_config", lambda: pytest.fail("copilot credentials resolved"))
+    monkeypatch.setattr(ragas_adapter, "evaluator_config_from_env", lambda **kw: pytest.fail("evaluator credentials resolved"))
+    monkeypatch.setattr(ragas_adapter, "_build_evaluator", lambda *a, **kw: pytest.fail("provider clients created"))
+    monkeypatch.setattr(eval_ragas.runner, "run_live_ragas", lambda **kw: pytest.fail("evaluator runner entered"))
+
+    assert eval_ragas.main(CLI, prototype_handler=lambda _: pytest.fail("unexpected dispatch")) == 2
+    assert capsys.readouterr().err == "REFUSED by the AI budget governor (ci_forbidden).\n"
+    assert G.active_governor() is None
+
+
 @pytest.mark.parametrize("mode", ["offline", "live"])
 def test_cli_refuses_legacy_before_credentials(monkeypatch, mode, capsys):
-    monkeypatch.setenv("ASK4MO_PROVIDER_MODE", mode)
+    monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
+    monkeypatch.setattr(script_guard, "require_paid_budget", partial(
+        script_guard.require_paid_budget, environ={"ASK4MO_PROVIDER_MODE": mode},
+    ))
     monkeypatch.setattr(ragas_adapter, "evaluator_config_from_env", lambda **kw: pytest.fail("credentials resolved"))
     assert eval_ragas.main(CLI, prototype_handler=lambda _: pytest.fail("unexpected dispatch")) == 2
     assert "guard_conflict" in capsys.readouterr().err
@@ -269,7 +303,7 @@ def test_cli_rejects_legacy_active_control_before_credentials(monkeypatch):
     ctl = ProviderControl("offline").install()
     try:
         with pytest.raises(BudgetError) as exc:
-            script_guard.require_paid_budget("fixture", governed_07b=True)
+            script_guard.require_paid_budget("fixture", governed_07b=True, environ={})
         assert exc.value.reason == "guard_conflict"
     finally:
         ctl.uninstall()
@@ -282,41 +316,64 @@ def test_cli_requires_bounded_explicit_scope(monkeypatch, options, capsys):
     assert "evaluation_options_invalid" in capsys.readouterr().err
 
 
-def test_cli_refuses_dotenv_and_explicit_sdk_proxy_before_credentials(monkeypatch, capsys):
-    monkeypatch.delenv("PYTHON_DOTENV_DISABLED")
+def test_cli_refuses_dotenv_before_credentials(monkeypatch, capsys):
+    monkeypatch.delenv("PYTHON_DOTENV_DISABLED", raising=False)
     monkeypatch.setattr(ragas_adapter, "evaluator_config_from_env", lambda **kw: pytest.fail("credentials resolved"))
     assert eval_ragas.main(CLI) == 2
     assert "evaluation_environment_invalid" in capsys.readouterr().err
+
+
+def test_cli_refuses_explicit_sdk_proxy_before_credentials(monkeypatch, capsys):
     monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
-    monkeypatch.setenv("OPENAI_PROXY", "https://fixture.invalid")
+    monkeypatch.setattr(script_guard, "require_paid_budget", partial(
+        script_guard.require_paid_budget, environ={"OPENAI_PROXY": "https://fixture.invalid"},
+    ))
+    monkeypatch.setattr(ragas_adapter, "evaluator_config_from_env", lambda **kw: pytest.fail("credentials resolved"))
     assert eval_ragas.main(CLI, prototype_handler=lambda _: pytest.fail("unexpected dispatch")) == 2
     assert "provider_proxy_not_allowed" in capsys.readouterr().err
 
 
 def test_cli_installs_before_credential_resolution_and_uninstalls(env, monkeypatch):
-    for key, value in env.items():
-        monkeypatch.setenv(key, value)
+    monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
+    monkeypatch.setattr(script_guard, "require_paid_budget", partial(script_guard.require_paid_budget, environ=env))
     monkeypatch.setattr(ragas_adapter, "ragas_available", lambda: True)
+    subset = Path(__file__).resolve().parents[1] / "evaluations/ragas/judge_case_ids.json"
+    expected_case_ids = json.loads(subset.read_text(encoding="utf-8"))["case_ids"]
+    assert expected_case_ids
+    resolved_under = []
+    runner_calls = []
 
     def evaluator(**kw):
-        assert G.active_governor().governed_07b
+        governor = G.active_governor()
+        assert governor is not None and governor.is_open and governor.governed_07b
+        assert governor.env is env
+        assert governor.config.approval["scope"] == "07b"
+        assert governor.prototype_handler is no_dispatch
         assert kw == {"allow_chat_fallback": False}
+        resolved_under.append(governor)
         return ragas_adapter.EvaluatorConfig(KEY, MODEL, URL, EMBED)
+
+    def no_dispatch(_):
+        pytest.fail("unexpected dispatch")
 
     monkeypatch.setattr(ragas_adapter, "evaluator_config_from_env", evaluator)
     from src.copilot import config
     monkeypatch.setattr(config, "load_config", lambda: CopilotConfig(api_key=SecretStr(KEY), base_url=URL, embedding_provider="local"))
 
     def runner(**kw):
-        assert G.active_governor().budget_class == "evaluation"
-        assert kw["case_ids"] and kw["limit"] == 1
+        governor = G.active_governor()
+        assert resolved_under == [governor] and governor.budget_class == "evaluation"
+        assert kw["case_ids"] == expected_case_ids and kw["limit"] == 1
+        assert governor.status()["requests"] == 0
+        runner_calls.append(governor)
         return type("FixtureResult", (), {
             "is_failed": False, "status": "COMPLETE", "valid_score_count": 1, "expected_score_count": 1,
             "score_coverage": 1, "output_directory": "fixture", "metrics": {},
         })()
 
     monkeypatch.setattr(eval_ragas.runner, "run_live_ragas", runner)
-    assert eval_ragas.main(CLI, prototype_handler=lambda _: pytest.fail("unexpected dispatch")) == 0
+    assert eval_ragas.main(CLI, prototype_handler=no_dispatch) == 0
+    assert len(runner_calls) == 1
     assert G.active_governor() is None
 
 
