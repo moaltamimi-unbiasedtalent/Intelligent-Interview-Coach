@@ -93,3 +93,4 @@ data/feedback_intelligence/
 var/prompt_lab/
 var/
 PROJECT_*.md
+.kilo/
