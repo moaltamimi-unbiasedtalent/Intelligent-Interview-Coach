@@ -20,12 +20,14 @@ export APP_GIT_SHA="$commit"
 export APP_BUILD_TIME="$deployed_at"
 export APP_DEPLOY_TAGS="$tags"
 
+compose_global_args=()
 is_deploy=false
 for arg in "$@"; do
   if [ "$arg" = "up" ]; then
     is_deploy=true
     break
   fi
+  compose_global_args+=("$arg")
 done
 
 if [ "$is_deploy" = false ]; then
@@ -34,7 +36,7 @@ fi
 
 docker compose "$@"
 
-container_id="$(docker compose ps -q web)"
+container_id="$(docker compose "${compose_global_args[@]}" ps -q web)"
 if [ -z "$container_id" ]; then
   echo "ERROR: deployment verification failed: no running web container was found." >&2
   exit 1

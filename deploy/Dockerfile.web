@@ -23,12 +23,6 @@ WORKDIR /app/frontend
 ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
-# Deployment provenance is resolved by docker compose from the checkout.
-ARG APP_GIT_SHA=""
-ARG APP_BUILD_TIME=""
-ARG APP_DEPLOY_TAGS=""
-ENV APP_GIT_SHA=${APP_GIT_SHA} APP_BUILD_TIME=${APP_BUILD_TIME} APP_DEPLOY_TAGS=${APP_DEPLOY_TAGS}
-
 # Install deps against the committed lockfile for reproducible builds.
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --include=dev
