@@ -23,6 +23,12 @@ WORKDIR /app/frontend
 ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 
+# Deployment provenance is resolved by docker compose from the checkout.
+ARG APP_GIT_SHA=""
+ARG APP_BUILD_TIME=""
+ARG APP_DEPLOY_TAGS=""
+ENV APP_GIT_SHA=${APP_GIT_SHA} APP_BUILD_TIME=${APP_BUILD_TIME} APP_DEPLOY_TAGS=${APP_DEPLOY_TAGS}
+
 # Install deps against the committed lockfile for reproducible builds.
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --include=dev
@@ -66,11 +72,13 @@ USER node
 
 ARG APP_GIT_SHA=""
 ARG APP_BUILD_TIME=""
+ARG APP_DEPLOY_TAGS=""
 ARG APP_SOURCE_SHA256=""
-ENV APP_GIT_SHA=${APP_GIT_SHA} APP_BUILD_TIME=${APP_BUILD_TIME}
+ENV APP_GIT_SHA=${APP_GIT_SHA} APP_BUILD_TIME=${APP_BUILD_TIME} APP_DEPLOY_TAGS=${APP_DEPLOY_TAGS}
 LABEL org.opencontainers.image.revision="${APP_GIT_SHA}" \
       org.opencontainers.image.created="${APP_BUILD_TIME}" \
       org.opencontainers.image.source="https://github.com/moaltamimi-unbiasedtalent/Intelligent-Interview-Coach" \
+      io.ask4mo.deploy.tags="${APP_DEPLOY_TAGS}" \
       io.ask4mo.source.sha256="${APP_SOURCE_SHA256}" \
       io.ask4mo.role="web"
 
