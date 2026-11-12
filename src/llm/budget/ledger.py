@@ -16,9 +16,10 @@ Design rules (each is tested with mocked providers):
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable
+from uuid import UUID
 
 from sqlalchemy import case, func, select, update, or_
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -48,6 +49,7 @@ class Reservation:
     category: str
     worst_case: int
     endpoint: str = "chat"
+    capability: UUID | None = field(default=None, repr=False)
 
 
 class DbBudgetLedger:

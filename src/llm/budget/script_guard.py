@@ -24,6 +24,7 @@ from typing import Callable, Mapping
 from src.llm.budget import governor as G
 from src.llm.budget.config import GOVERNED_07B_LEDGER_ENV, load_config, require_approved_marker, validate_hosted_approval
 from src.llm.budget.errors import BudgetError
+from src.llm.budget.postgres_07b import validate_postgres_url
 
 REFUSED_EXIT = 2
 
@@ -70,9 +71,16 @@ def require_paid_budget(script: str, *, budget_class: str = "evaluation", catego
                     path = Path(url.database or "")
                     if url.query or not path.is_absolute() or path != path.resolve() or not path.is_file():
                         raise ValueError
+                    engine = make_engine(env[GOVERNED_07B_LEDGER_ENV])
+                elif backend == "postgresql":
+                    from sqlalchemy import create_engine
+
+                    validate_postgres_url(url)
+                    engine = create_engine(url, connect_args={"hostaddr": url.host, "connect_timeout": 5},
+                                           hide_parameters=True)
                 else:
                     raise ValueError
-                session_factory = make_session_factory(make_engine(env[GOVERNED_07B_LEDGER_ENV]))
+                session_factory = make_session_factory(engine)
             except Exception:
                 raise BudgetError("ledger_unavailable", "07B requires the approved dedicated durable ledger.") from None
         else:

@@ -38,6 +38,7 @@ from src.llm.budget.config import (
 )
 from src.llm.budget.errors import BudgetError
 from src.llm.budget.ledger import SQLITE_MAX_INTEGER, DbBudgetLedger, Reservation
+from src.llm.budget.postgres_07b import Postgres07BLedger, validate_postgres_url
 
 HOSTED_POLICY_VERSION = 2
 
@@ -99,7 +100,7 @@ def _error_category(status: int | None, exc: BaseException | None = None) -> str
 class BudgetGovernor:
     """One governor per process: a configuration, a ledger, a budget class and (when it cannot be open) the fixed reason it is closed."""
 
-    def __init__(self, config: BudgetConfig | None, ledger: DbBudgetLedger | None, budget_class: str, *, default_category: str | None = None,
+    def __init__(self, config: BudgetConfig | None, ledger: DbBudgetLedger | Postgres07BLedger | None, budget_class: str, *, default_category: str | None = None,
                  closed_reason: str | None = None, environ: Mapping[str, str] | None = None, governed_07b: bool = False) -> None:
         self.config, self.ledger, self.budget_class = config, ledger, budget_class
         self.default_category = default_category
@@ -133,21 +134,33 @@ class BudgetGovernor:
         validate_hosted_approval(cfg, env, governed_07b=governed_07b)
         if governed_07b and klass != "evaluation":
             raise BudgetError("class_mismatch", "07B requires the evaluation budget class.")
+        postgres_07b = False
         if governed_07b:
             from sqlalchemy.engine import make_url
+            from sqlalchemy.exc import ArgumentError
 
+            try:
+                expected = make_url(env[GOVERNED_07B_LEDGER_ENV])
+            except (ArgumentError, KeyError):
+                raise BudgetError("ledger_unavailable", "07B requires the approved dedicated durable ledger.") from None
             with session_factory() as session:
-                if session.get_bind().dialect.name != "sqlite":
-                    raise BudgetError("transport_not_qualified", "The 07B handoff prototype requires SQLite.")
-                if session.get_bind().url != make_url(env[GOVERNED_07B_LEDGER_ENV]):
+                bind = session.get_bind()
+                if bind.url != expected:
                     raise BudgetError("ledger_unavailable", "07B requires the approved dedicated durable ledger.")
-        ledger = DbBudgetLedger(session_factory)
+                postgres_07b = bind.dialect.name == "postgresql"
+                if postgres_07b:
+                    validate_postgres_url(expected)
+                elif bind.dialect.name != "sqlite":
+                    raise BudgetError("transport_not_qualified", "07B requires an approved SQLite or PostgreSQL ledger.")
+        ledger = Postgres07BLedger(session_factory, cfg) if postgres_07b else DbBudgetLedger(session_factory)
         ledger.ensure_ready()
         if hosted(env):
             with session_factory() as session:
                 if session.get_bind().dialect.name != "postgresql":
                     raise BudgetError("durable_ledger_required", "Hosted budgets require PostgreSQL.")
         if (env.get(KILL_ENV) or "").strip().lower() in ("1", "true", "yes"):
+            if isinstance(ledger, Postgres07BLedger):
+                raise BudgetError("kill_switch", "07B was stopped locally. A durable stop requires the stop operator.")
             ledger.kill("environment")  # latch across process restart / image rollback
         return cls(cfg, ledger, klass, default_category=default_category, environ=env, governed_07b=governed_07b)
 
@@ -607,7 +620,7 @@ class _07BPrototypeTransport(httpx.BaseTransport, httpx.AsyncBaseTransport):
                 raise BudgetError("kill_switch", "07B was stopped before transport acceptance.")
             check_07b_handoff_deadline(gov.config)
             # Successful acceptance linearizes at the clock sample inside this
-            # actual receiver, while SQLite excludes concurrent kill commits.
+            # actual receiver, while the database excludes concurrent kill commits.
             accepted = True
 
         try:
@@ -633,18 +646,45 @@ class _07BPrototypeTransport(httpx.BaseTransport, httpx.AsyncBaseTransport):
         gov.settle_response(reservation, model, response, started)
         return response
 
+    async def _receive_postgres(self, request: httpx.Request):
+        # PostgreSQL lock or connection waits must not block the event loop.
+        # Cancellation discards the receiver result and never invokes the
+        # handler. If acceptance already committed, its hold stays durable.
+        task = asyncio.current_task()
+        worker = asyncio.create_task(asyncio.to_thread(self._receive, request, task=task))
+        try:
+            return await asyncio.shield(worker)
+        except asyncio.CancelledError:
+            worker.add_done_callback(self._observe_abandoned_receiver)
+            raise
+
+    @staticmethod
+    def _observe_abandoned_receiver(worker: asyncio.Task) -> None:
+        if not worker.cancelled():
+            worker.exception()
+
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         gov = self.governor
-        reservation, model, started = self._receive(request, task=asyncio.current_task())
+        postgres = isinstance(gov.ledger, Postgres07BLedger)
+        if postgres:
+            reservation, model, started = await self._receive_postgres(request)
+        else:
+            reservation, model, started = self._receive(request, task=asyncio.current_task())
         try:
             response = self.handler(request)
             if inspect.isawaitable(response):
                 response = await response
             await response.aread()
         except BaseException as exc:
-            gov.settle_failure(reservation, started, exc)
+            if postgres:
+                await asyncio.to_thread(gov.settle_failure, reservation, started, exc)
+            else:
+                gov.settle_failure(reservation, started, exc)
             raise
-        gov.settle_response(reservation, model, response, started)
+        if postgres:
+            await asyncio.to_thread(gov.settle_response, reservation, model, response, started)
+        else:
+            gov.settle_response(reservation, model, response, started)
         return response
 
 
