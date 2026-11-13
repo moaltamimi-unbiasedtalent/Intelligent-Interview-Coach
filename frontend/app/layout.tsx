@@ -6,6 +6,7 @@ import { ThemeScript } from "@/components/layout/ThemeScript";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { I18nProvider } from "@/components/i18n/I18nProvider";
 import { LOCALE_COOKIE } from "@/lib/i18n/cookie";
+import { deploymentMetadata } from "@/lib/deploymentMetadata";
 import { DEFAULT_APP_LOCALE, toActiveLocale } from "@/lib/i18n/locales";
 import "./globals.css";
 
@@ -22,7 +23,7 @@ const inter = Inter({
 // Request-specific nonces cannot be served from static HTML/ISR caches.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://ask4mo.example.com"),
   title: {
     default: "Ask4Mo - Intelligent Interview Coach",
@@ -43,6 +44,10 @@ export const metadata: Metadata = {
     images: [{ url: "/brand/ask4mo-logo.svg", width: 1200, height: 630, alt: "Ask4Mo" }],
   },
 };
+
+export function generateMetadata(): Metadata {
+  return { ...baseMetadata, other: deploymentMetadata() };
+}
 
 export const viewport: Viewport = {
   themeColor: "#1a5e63",
