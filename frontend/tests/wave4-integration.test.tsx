@@ -20,8 +20,6 @@ vi.mock("@/lib/api/client", () => ({
   },
 }));
 
-vi.mock("@/lib/api/errors", () => ({ ApiError: class extends Error {} }));
-
 // German account preference → the setup should default the interview language to German.
 vi.mock("@/components/auth/AuthProvider", () => ({
   useAuthOptional: () => ({ account: { conversation_language: "de" }, status: "authenticated" }),
@@ -33,6 +31,60 @@ import { DocumentPicker } from "@/components/documents/DocumentPicker";
 afterEach(() => vi.clearAllMocks());
 
 describe("Wave 4 — Practice setup carries language + governed context", () => {
+  it.each([
+    ["a rejected options request", () => Promise.reject(new Error("PRIVATE-UPSTREAM-DETAIL"))],
+    ["an empty career-level list", () => Promise.resolve({ career_levels: [] })],
+  ] as const)("recovers from %s without losing form input or starting an interview", async (_failure, firstLoad) => {
+    const user = userEvent.setup();
+    let resolveRetry!: (value: { career_levels: string[] }) => void;
+    const retry = new Promise<{ career_levels: string[] }>((resolve) => { resolveRetry = resolve; });
+    options.mockImplementationOnce(firstLoad).mockReturnValueOnce(retry);
+    listDocuments.mockResolvedValue({ documents: [] });
+    createInterview.mockResolvedValue({ session_id: "recovered" });
+    const onCreated = vi.fn();
+    render(<InterviewSessionSetup onCreated={onCreated} />);
+
+    const role = screen.getByPlaceholderText(/Senior Product Manager/i);
+    const industry = screen.getByPlaceholderText(/fintech/i);
+    await user.type(role, "Registered Nurse");
+    await user.type(industry, "healthcare");
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent(/couldn’t be processed/i);
+    expect(alert).not.toHaveTextContent("PRIVATE-UPSTREAM-DETAIL");
+    expect(screen.queryByRole("option", { name: /loading/i })).not.toBeInTheDocument();
+    const start = screen.getByRole("button", { name: "Start interview" });
+    expect(start).toBeDisabled();
+    await user.click(start);
+    expect(createInterview).not.toHaveBeenCalled();
+    expect(options).toHaveBeenCalledTimes(1);
+
+    const retryButton = screen.getByRole("button", { name: "Try again" });
+    await user.click(retryButton);
+    expect(retryButton).toBeDisabled();
+    expect(retryButton).toHaveAttribute("aria-busy", "true");
+    await user.click(retryButton);
+    expect(options).toHaveBeenCalledTimes(2);
+    expect(createInterview).not.toHaveBeenCalled();
+    expect(start).toBeDisabled();
+
+    resolveRetry({ career_levels: ["senior", "mid"] });
+    const level = await screen.findByRole("combobox", { name: "Career level" });
+    expect(level).toHaveValue("senior");
+    await user.selectOptions(level, "mid");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(role).toHaveValue("Registered Nurse");
+    expect(industry).toHaveValue("healthcare");
+    expect(createInterview).not.toHaveBeenCalled();
+
+    await user.click(start);
+    expect(createInterview).toHaveBeenCalledTimes(1);
+    expect(createInterview).toHaveBeenCalledWith(
+      { configuration: expect.objectContaining({ target_role: "Registered Nurse", industry_or_sector: "healthcare", career_level: "mid" }) },
+      { idempotencyKey: expect.stringMatching(/^practice-setup:/) },
+    );
+    expect(onCreated).toHaveBeenCalledWith("recovered");
+  });
+
   it("defaults the interview language from the account and sends the full config", async () => {
     options.mockResolvedValue({ career_levels: ["senior"], interview_types: [], difficulty_levels: [] });
     listDocuments.mockResolvedValue({

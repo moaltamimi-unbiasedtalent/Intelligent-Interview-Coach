@@ -7,8 +7,10 @@ import { ApiError, stateKeyForError } from "@/lib/api/errors";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Field";
+import { ErrorState } from "@/components/ui/States";
 import { useI18n } from "@/components/i18n/I18nProvider";
 import { useAuthOptional } from "@/components/auth/AuthProvider";
+import { useResource } from "@/lib/hooks/useResource";
 import { toActiveLocale, type AppLocale, DEFAULT_APP_LOCALE } from "@/lib/i18n/locales";
 import { DocumentPicker } from "@/components/documents/DocumentPicker";
 import { StoryPicker } from "@/components/stories/StoryPicker";
@@ -31,8 +33,7 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
   const account = useAuthOptional()?.account;
   const [role, setRole] = useState("");
   const [industry, setIndustry] = useState("");
-  const [careerLevels, setCareerLevels] = useState<string[]>([]);
-  const [careerLevel, setCareerLevel] = useState("");
+  const [selectedCareerLevel, setSelectedCareerLevel] = useState("");
   const [count, setCount] = useState(5);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,8 +51,6 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
   );
   // Optional customisation (backend-owned taxonomies; empty = backend default).
   const [showCustomise, setShowCustomise] = useState(false);
-  const [interviewTypeOptions, setInterviewTypeOptions] = useState<string[]>([]);
-  const [difficultyOptions, setDifficultyOptions] = useState<string[]>([]);
   const [interviewTypes, setInterviewTypes] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState("");
 
@@ -80,19 +79,18 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
     return () => { alive = false; };
   }, [opportunityId]);
 
-  useEffect(() => {
-    let alive = true;
-    api.interviews.options()
-      .then((o) => {
-        if (!alive) return;
-        setCareerLevels(o.career_levels);
-        setCareerLevel((prev) => prev || o.career_levels[0] || "");
-        setInterviewTypeOptions(o.interview_types ?? []);
-        setDifficultyOptions(o.difficulty_levels ?? []);
-      })
-      .catch(() => { /* options are non-critical; the form still submits with defaults */ });
-    return () => { alive = false; };
-  }, []);
+  const options = useResource(async (signal) => {
+    const data = await api.interviews.options({ signal });
+    if (!Array.isArray(data?.career_levels) || !data.career_levels.length ||
+        data.career_levels.some((level) => typeof level !== "string" || !level.trim())) {
+      throw new Error("Interview options did not include usable career levels.");
+    }
+    return data;
+  });
+  const careerLevels = options.state.data?.career_levels ?? [];
+  const careerLevel = careerLevels.includes(selectedCareerLevel) ? selectedCareerLevel : careerLevels[0] ?? "";
+  const interviewTypeOptions = options.state.data?.interview_types ?? [];
+  const difficultyOptions = options.state.data?.difficulty_levels ?? [];
 
   const canSubmit = role.trim() && industry.trim() && careerLevel && !busy && (storyIds.length === 0 || storyConsent);
 
@@ -175,18 +173,27 @@ export function InterviewSessionSetup({ onCreated, opportunityId = null }: {
         {/* INTERVIEW */}
         <section className="mt-6 grid gap-3">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">{t("prepctx.interviewSection")}</h2>
-          <Labeled label={t("practice.careerLevel")}>
-            <select
-              value={careerLevel}
-              onChange={(e) => setCareerLevel(e.target.value)}
-              disabled={busy || careerLevels.length === 0}
-              className="min-h-[44px] rounded border border-border bg-surface px-2 text-sm"
-              aria-label={t("practice.careerLevel")}
-            >
-              {careerLevels.length === 0 ? <option value="">{t("common.loading")}</option> : null}
-              {careerLevels.map((lvl) => <option key={lvl} value={lvl}>{labelize(lvl)}</option>)}
-            </select>
-          </Labeled>
+          {options.state.status === "error" ? (
+            <ErrorState
+              variant="section"
+              message={t(stateKeyForError(options.state.error instanceof ApiError ? options.state.error.kind : "unknown"))}
+              onRetry={options.reload}
+              retrying={options.state.retrying}
+            />
+          ) : (
+            <Labeled label={t("practice.careerLevel")}>
+              <select
+                value={careerLevel}
+                onChange={(e) => setSelectedCareerLevel(e.target.value)}
+                disabled={busy || options.state.status === "loading"}
+                className="min-h-[44px] rounded border border-border bg-surface px-2 text-sm"
+                aria-label={t("practice.careerLevel")}
+              >
+                {options.state.status === "loading" ? <option value="">{t("common.loading")}</option> : null}
+                {careerLevels.map((lvl) => <option key={lvl} value={lvl}>{labelize(lvl)}</option>)}
+              </select>
+            </Labeled>
+          )}
           <Labeled label={t("practice.numberOfQuestions")}>
             <Input type="number" min={1} max={20} value={count}
                    onChange={(e) => setCount(Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
