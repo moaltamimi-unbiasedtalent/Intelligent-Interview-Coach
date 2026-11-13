@@ -434,8 +434,12 @@ def test_the_connection_probe_checks_credential_and_sender_and_never_sends_an_em
         return f
     store = SS.InMemorySecretStore({"BREVO_API_KEY": KEY_A})
     ok = Hub(answer([{"email": SENDER, "active": True}]))
-    assert I.probe_brevo(store, transport=ok.transport) == I.ProbeResult("success", "ok", I.probe_brevo(store, transport=ok.transport).latency_ms)
-    assert [r.url.path for r in ok.requests[:2]] == ["/v3/account", "/v3/senders"] and all(r.method == "GET" for r in ok.requests)
+    result = I.probe_brevo(store, transport=ok.transport)
+    assert result.outcome == "success"
+    assert result.category == "ok"
+    assert type(result.latency_ms) is int
+    assert 0 <= result.latency_ms < 600_000
+    assert [(r.method, r.url.path) for r in ok.requests] == [("GET", "/v3/account"), ("GET", "/v3/senders")]
     assert not any(r.url.path == "/v3/smtp/email" for r in ok.requests)
     assert I.probe_brevo(store, transport=Hub(answer([{"email": "other@example.test", "active": True}])).transport).category == "configuration_error"
     assert I.probe_brevo(store, transport=Hub(answer([{"email": SENDER, "active": False}])).transport).category == "configuration_error"
