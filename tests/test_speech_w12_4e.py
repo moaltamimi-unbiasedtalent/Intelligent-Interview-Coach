@@ -82,7 +82,7 @@ def test_provider_capability_and_product_authorization_are_separate_and_intersec
 def test_the_authorization_constants_are_false_and_genuine_validation_is_not_claimed():
     assert not policy.SERVER_SPEECH_PROVIDERS_AUTHORIZED and not policy.WHISPER_API_TRANSPORT_AUTHORIZED
     assert not policy.MODEL_DOWNLOADS_AUTHORIZED and not policy.VOICE_CLONING_ENABLED
-    assert policy.GENUINE_MODEL_VALIDATION == {"openai_whisper": "NOT_VERIFIED", "kyutai_pocket_tts": "MODEL_EXECUTION_NOT_VERIFIED"}
+    assert policy.GENUINE_MODEL_VALIDATION == {"openai_whisper": "NOT_VERIFIED", "kyutai_pocket_tts": "MODEL_EXECUTION_NOT_VERIFIED", "pyannote_community_1": "NOT_VERIFIED"}
     assert policy.base_language("de-DE") == "de" and policy.base_language("DE_de") == "de" and policy.base_language("auto") is None and policy.base_language("") is None and policy.base_language("../x") is None
 
 

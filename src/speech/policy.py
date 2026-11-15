@@ -15,8 +15,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 __all__ = ["PRODUCT_SPEECH_LANGUAGES", "EXCLUDED_SPEECH_LANGUAGES", "SERVER_SPEECH_PROVIDERS_AUTHORIZED", "WHISPER_API_TRANSPORT_AUTHORIZED", "MODEL_DOWNLOADS_AUTHORIZED",
-           "VOICE_CLONING_ENABLED", "STT_PROVIDER_IDS", "TTS_PROVIDER_IDS", "ProviderCapability", "WHISPER_CAPABILITY", "KYUTAI_CAPABILITY", "base_language", "effective_languages",
-           "SELECTED_STT_PROVIDER", "SELECTED_TTS_PROVIDER", "GENUINE_MODEL_VALIDATION"]
+            "VOICE_CLONING_ENABLED", "STT_PROVIDER_IDS", "TTS_PROVIDER_IDS", "DIARIZATION_PROVIDER_IDS", "ProviderCapability", "WHISPER_CAPABILITY", "KYUTAI_CAPABILITY", "DIARIZATION_CAPABILITY",
+            "base_language", "effective_languages", "SELECTED_STT_PROVIDER", "SELECTED_TTS_PROVIDER", "SELECTED_DIARIZATION_PROVIDER", "GENUINE_MODEL_VALIDATION", "DIARIZATION_EXECUTION_AUTHORIZED"]
 
 # The canonical BACKEND copy of the product speech boundary. It must equal the frontend lists (``frontend/lib/speech/ttsLocales.ts`` SUPPORTED_TTS_LOCALES and the dictation languages); a test
 # asserts that, so the two cannot drift. Russian stays excluded.
@@ -26,6 +26,11 @@ EXCLUDED_SPEECH_LANGUAGES: tuple[str, ...] = ("ru",)
 # --- authorization (code constants; all False in this wave) --------------------------------------------------------------------------------------------------------------------------
 # Server-side speech providers may execute (transcribe or synthesize) ONLY when this is True. It is False: no provider executes.
 SERVER_SPEECH_PROVIDERS_AUTHORIZED = False
+# Speaker diarization execution. Separate from the speech provider constants so the
+# governed Whisper/Kyutai audio path and its tests keep their exact existing meaning.
+DIARIZATION_EXECUTION_AUTHORIZED = False
+# Hosted diarization that ships candidate audio to a third party. Not offered.
+DIARIZATION_CLOUD_AUTHORIZED = False
 # The hosted OpenAI Whisper API transport sends candidate audio to a third party. It needs its own authorization on top of the one above.
 WHISPER_API_TRANSPORT_AUTHORIZED = False
 # Model weights are NEVER downloaded automatically (Kyutai's are gated and licence-bound; Whisper's are large). They must be placed by an operator after a resource decision.
@@ -33,12 +38,15 @@ MODEL_DOWNLOADS_AUTHORIZED = False
 # Voice cloning is not offered (Kyutai prohibits cloning without explicit lawful consent). Only built-in voices are ever used.
 VOICE_CLONING_ENABLED = False
 # Genuine model execution on real audio has NOT been verified (no weights, no authorization). Recorded as data for the readiness report; never inferred.
-GENUINE_MODEL_VALIDATION = {"openai_whisper": "NOT_VERIFIED", "kyutai_pocket_tts": "MODEL_EXECUTION_NOT_VERIFIED"}
+GENUINE_MODEL_VALIDATION = {"openai_whisper": "NOT_VERIFIED", "kyutai_pocket_tts": "MODEL_EXECUTION_NOT_VERIFIED", "pyannote_community_1": "NOT_VERIFIED"}
 
 STT_PROVIDER_IDS = ("openai_whisper",)
 TTS_PROVIDER_IDS = ("kyutai_pocket_tts",)
 SELECTED_STT_PROVIDER = "openai_whisper"
 SELECTED_TTS_PROVIDER = "kyutai_pocket_tts"
+
+DIARIZATION_PROVIDER_IDS: tuple[str, ...] = ("pyannote_community_1",)
+SELECTED_DIARIZATION_PROVIDER: str = "pyannote_community_1"
 
 
 @dataclass(frozen=True)
@@ -88,3 +96,12 @@ def effective_languages(capability: ProviderCapability, admin_enabled: tuple[str
     if admin_enabled is not None:
         allowed &= set(admin_enabled)
     return tuple(c for c in PRODUCT_SPEECH_LANGUAGES if c in allowed)
+
+
+DIARIZATION_CAPABILITY = ProviderCapability(
+    provider_id="pyannote_community_1", languages=tuple(PRODUCT_SPEECH_LANGUAGES),
+    notes={"licence": "code MIT and weights CC-BY-4.0", "parameters": "about 32 million (segmentation 5.9M + embedding 26.6M)", "model_size_mb": 34,
+           "requires": ["ffmpeg", "git-lfs to place weights (never downloaded by the app)", "pyannote.audio>=4.0.7"],
+           "hf": "gated repository; operator accepts conditions once and places weights locally (offline mode)",
+           "value": "speaker diarization only (who spoke when); no speaker identification or voice-trait analysis",
+           "verification": "official Hugging Face model card and pyannote.ai blog, accessed 2026-11-15; real execution not verified in this repository"})
