@@ -38,7 +38,7 @@ Requirements: Python 3.10+ (CI runs 3.11), Node and npm (CI pins the Node versio
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"            # backend and test dependencies (see pyproject.toml extras for db, speech, ocr)
+pip install -e ".[dev]"            # backend and test dependencies (see pyproject.toml extras for db, speech, ocr, diarization)
 cd frontend && npm install && cd ..
 ```
 
@@ -101,7 +101,7 @@ Private by default and owner-scoped; no fabricated citations, evidence or scores
 - The internal product-coverage gate **fails** (see above); the knowledge base is not committed; international compensation (Compensation V2) is built and **disabled**; no source is qualified for candidate-visible international use.
 - Live evidence is small-sample; no human has rated interview feedback, answers or translations; tool-selection discipline of the live model is imperfect.
 - Privacy notice, terms and AI-transparency pages are engineering drafts without legal review; selective preparation-chat deletion, bulk memory deletion and per-version document deletion do not exist.
-- No hosted deployment, backup restore drill or monitoring was tested; billing is a **mock** (Premium is a preview, `BILLING_ENABLED=false`); server-side speech is disabled and not verified; Google sign-in and live email are not validated live; the rate limiter is per-process unless the optional, unvalidated Redis adapter is configured.
+- No hosted deployment, backup restore drill or monitoring was tested; billing is a **mock** (Premium is a preview, `BILLING_ENABLED=false`); server-side speech is disabled and not verified; the speaker-diarization scaffold (`pyannote Community-1`) is governed and **inactive** (activation, weights and genuine execution are owner-gated — `OD-DIAR-01..04`, see [docs/diarization_pyannote_community_1.md](docs/diarization_pyannote_community_1.md)); Google sign-in and live email are not validated live; the rate limiter is per-process unless the optional, unvalidated Redis adapter is configured.
 - Browser coverage is chromium only; no screen-reader testing; WCAG compliance is not claimed.
 - The full tracked list is the deferred-issues register: [docs/capstone/POST_SUBMISSION_DEFERRED_ISSUES_REGISTER.md](docs/capstone/POST_SUBMISSION_DEFERRED_ISSUES_REGISTER.md); current acceptance state: [docs/capstone/CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md](docs/capstone/CAPSTONE_ACCEPTANCE_LEDGER_CURRENT.md).
 

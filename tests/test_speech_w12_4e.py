@@ -465,7 +465,10 @@ def test_admin_speech_rbac_and_audit(env):
     assert r.status_code == 200
     j = r.json()
     assert j["config"]["stt_enabled"] is False and j["config"]["revision"] == 0 and j["stt"]["operational"] is False and j["authorization"] == {
-        "server_speech_providers": False, "hosted_whisper_api_transport": False, "model_downloads": False, "voice_cloning": False}
+        "server_speech_providers": False, "hosted_whisper_api_transport": False, "model_downloads": False, "voice_cloning": False,
+        "diarization_execution": False, "diarization_cloud": False}
+    assert j["diarization"]["provider"] == "pyannote_community_1" and j["diarization"]["configured"] is False and j["diarization"]["operational"] is False and j["diarization"]["live_authorized"] is False
+    assert j["provider_facts"]["pyannote_community_1"]["value"].startswith("speaker diarization only")
     assert j["language_matrix"]["ru"]["product_authorized"] is False and j["language_matrix"]["nl"]["tts_provider_unverified"] is True and j["language_matrix"]["nl"]["effective_tts"] is False
     assert j["language_matrix"]["en"]["effective_stt"] is True and "not active" in j["note"].lower()
     put = env.c.put(f"{API}/admin/speech", json=body, cookies=adm)

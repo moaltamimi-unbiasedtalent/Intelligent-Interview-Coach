@@ -12,6 +12,17 @@ EUR150 including applicable VAT and all authorized infrastructure charges; effec
 
 OD-HOSTED remains PARTIAL / OPEN: account-specific stock/quota/tax quote, measured capacity, vendor/privacy/security/access/custody/recovery and explicit execution entry still block implementation. Wider OD-RESOURCE staffing, independent reviewers and every other owner decision remain OPEN; OD-BUDGET is separate. [S2 checklist](execution/WAVE4_S2_SECURITY_ENTRY_CHECKLIST.md) is preparation only, with every acceptance OPEN. No PG/LG acceptance or R1.0 package closes.
 
+## Owner decision recorded 2026-11-15 — governed speaker diarization (pyannote Community-1)
+
+Recorded from the owner's replies in the working session of 2026-11-15 (no signature time invented). Engineering scaffold: commit `140d9a69`; feasibility record `docs/diarization_pyannote_community_1.md`. All code authorization constants stay False; this packet grants NO activation, deployment, purchase or provisioning authority.
+
+| ID | Decision | Resolution |
+|---|---|---|
+| OD-DIAR-01 | Pre-activation engineering for the inactive diarization scaffold | **APPROVED** (items 2–5 of the outstanding list): isolated-environment dependency verification, README/CLAUDE/licensing documentation, status-dashboard engineering row and the Admin-surface readiness note. Genuine model execution, weight download and any real-audio run remain excluded until OD-DIAR-03/04 prerequisites are met. |
+| OD-DIAR-02 | First product feature when diarization is activated | Owner selected **LIVE/REALTIME**. Recorded as the owner's direction with the engineering caveat from the feasibility research: `pyannote/speaker-diarization-community-1` is batch-first (no streaming mode; the premium `precision-2/3` streaming line is cloud/paid and out of scope). Realtime therefore needs its own windowing design and a GPU-class deployment resource decision BEFORE activation, in addition to OD-DIAR-04. |
+| OD-DIAR-03 | Where the weights live | **SPEECH_DIARIZATION_MODEL_DIR** (self-hosted operator layout): an operator accepts the gated Hugging Face conditions once and clones the ~34 MB repository there via git-lfs. The application never downloads weights and never holds a Hugging Face token; `MODEL_DOWNLOADS_AUTHORIZED` stays False. |
+| OD-DIAR-04 | Legal/consent gate for voice processing | **Legal review packet required BEFORE activation evidence surfaces.** CC-BY-4.0 (weights) / MIT (code) attribution is recorded now (licensing docs); disclosure and consent surfaces in all seven language packs are prerequisites for any candidate-facing use. |
+
 ## Owner-approved decisions (Phase 00 sign-off, 2026-10-21)
 
 | ID | Decision | Resolution |
