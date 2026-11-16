@@ -43,6 +43,26 @@ def category_key(budget_class: str, category: str) -> str:
 
 
 @dataclass(frozen=True)
+class _ReservationBinding:
+    ledger_identity: object
+    policy_hash: str
+    entry_id: int
+    fingerprint: str
+    operation: str
+    endpoint: str
+
+
+@dataclass(frozen=True)
+class _SettlementReceipt:
+    """Process-local evidence of a newly committed 07B settlement."""
+
+    entry_id: int
+    endpoint: str
+    binding: _ReservationBinding = field(repr=False)
+    outcome: str = field(default="settled", init=False)
+
+
+@dataclass(frozen=True)
 class Reservation:
     entry_id: int
     budget_class: str
@@ -50,6 +70,7 @@ class Reservation:
     worst_case: int
     endpoint: str = "chat"
     capability: UUID | None = field(default=None, repr=False)
+    _binding: _ReservationBinding | None = field(default=None, repr=False)
 
 
 class DbBudgetLedger:
@@ -57,6 +78,7 @@ class DbBudgetLedger:
 
     def __init__(self, session_factory: sessionmaker, *, clock: Callable[[], float] = time.time) -> None:
         self._sf = session_factory
+        self._receipt_identity = object()
         self._clock = clock
         self._known: set[str] = set()
 
@@ -226,8 +248,11 @@ class DbBudgetLedger:
                 except IntegrityError:
                     s.rollback()
                     raise BudgetError("duplicate_in_flight", "An identical request is already in flight; it is not sent twice.") from None
+                entry_id = entry.id
                 s.commit()
-                return Reservation(entry.id, budget_class, category, worst_case, endpoint)
+                binding = _ReservationBinding(self._receipt_identity, config.raw_hash, entry_id,
+                                               fingerprint, operation, endpoint) if governed_07b else None
+                return Reservation(entry_id, budget_class, category, worst_case, endpoint, _binding=binding)
         except BudgetError:
             raise
         except SQLAlchemyError:
@@ -265,10 +290,15 @@ class DbBudgetLedger:
 
     # ------------------------------------------------------------------ settlement
     def settle(self, reservation: Reservation, *, outcome: str, committed: int = 0, input_tokens: int | None = None, output_tokens: int | None = None,
-               est_cost: int | None = None, provider_cost: int | None = None, status_code: int | None = None, latency_ms: int | None = None, error_category: str | None = None) -> None:
+               est_cost: int | None = None, provider_cost: int | None = None, status_code: int | None = None, latency_ms: int | None = None, error_category: str | None = None) -> _SettlementReceipt | None:
         """Close a reservation. ``unknown`` keeps the full worst case; ``rejected`` (a determinate provider refusal) releases the money but the call stays counted."""
         if outcome not in ("settled", "rejected", "unknown"):
             raise ValueError(outcome)
+        binding = reservation._binding
+        if binding is not None and (binding.ledger_identity is not self._receipt_identity
+                                    or binding.entry_id != reservation.entry_id
+                                    or binding.endpoint != reservation.endpoint):
+            raise BudgetError("settlement_refused", "The reservation does not match the active ledger and request.")
         try:
             with self._sf() as s:
                 # Use the same global lock order as admission. No new call can race
@@ -279,26 +309,41 @@ class DbBudgetLedger:
                 if type(committed) is not int or committed < 0:
                     raise BudgetError("usage_invalid", "The reported cost is invalid; the reservation remains held.")
                 overrun = committed > reservation.worst_case
-                if (overrun and outcome == "unknown" and status_code == 429 and error_category == "contradictory_charge"
+                if (overrun and outcome == "unknown" and status_code in (200, 429) and error_category == "contradictory_charge"
                         and s.get_bind().dialect.name == "sqlite"
                         and self._entries_held(s) + committed - reservation.worst_case > SQLITE_MAX_INTEGER):
                     # Unrepresentable total exposure still stops admission and keeps
                     # the original hold. SQLite must not promote counters to REAL.
                     committed = 0
                 delta = (committed - reservation.worst_case) if outcome == "settled" else (-reservation.worst_case if outcome == "rejected" else max(committed - reservation.worst_case, 0))
-                done = s.execute(update(AiBudgetEntry).where(AiBudgetEntry.id == reservation.entry_id, AiBudgetEntry.state == "reserved")
+                conditions = [AiBudgetEntry.id == reservation.entry_id, AiBudgetEntry.state == "reserved"]
+                if binding is not None:
+                    if s.get(AiBudgetControl, "policy:" + binding.policy_hash) is None:
+                        raise BudgetError("policy_mismatch", "The reservation's approved budget policy could not be verified.")
+                    conditions.extend((
+                        AiBudgetEntry.budget_class == reservation.budget_class,
+                        AiBudgetEntry.category == reservation.category,
+                        AiBudgetEntry.endpoint == reservation.endpoint,
+                        AiBudgetEntry.reserved_micro_usd == reservation.worst_case,
+                        AiBudgetEntry.fingerprint == binding.fingerprint,
+                        AiBudgetEntry.operation == binding.operation,
+                    ))
+                done = s.execute(update(AiBudgetEntry).where(*conditions)
                                  .values(state=outcome, reserved_micro_usd=max(committed, reservation.worst_case) if outcome == "unknown" else reservation.worst_case, committed_micro_usd=committed if outcome == "settled" else 0, input_tokens=input_tokens, output_tokens=output_tokens,
                                          est_cost_micro_usd=est_cost, provider_cost_micro_usd=provider_cost, status_code=status_code, latency_ms=latency_ms,
                                          error_category=error_category, settled_ts=self._clock()))
                 if done.rowcount != 1:                        # already settled (idempotent)
                     s.rollback()
-                    return
+                    return None
                 if delta:
                     for key in (class_key(reservation.budget_class), category_key(reservation.budget_class, reservation.category)):
                         s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == key).values(held_micro_usd=AiBudgetControl.held_micro_usd + delta))
                 if overrun:
                     s.execute(update(AiBudgetControl).where(AiBudgetControl.scope_key == GLOBAL).values(killed=True, kill_reason="overrun"))
                 s.commit()
+            if binding is not None and outcome == "settled":
+                return _SettlementReceipt(reservation.entry_id, reservation.endpoint, binding)
+            return None
         except SQLAlchemyError:
             # The reservation stays open at its worst case (it is never released silently); the failure is not hidden from the caller's accounting.
             raise BudgetError("ledger_error", "The budget ledger could not record the settlement; the reservation stays held at its worst case.") from None

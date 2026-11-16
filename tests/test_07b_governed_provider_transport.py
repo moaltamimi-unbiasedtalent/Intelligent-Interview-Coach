@@ -1075,6 +1075,203 @@ def test_ambiguous_429_retains_durable_exposure(env, asynchronous, body, reporte
         engine.dispose()
 
 
+def test_sqlite_settlement_receipt_names_exact_committed_row_once(env):
+    from dataclasses import FrozenInstanceError, replace
+
+    gov, engine, factory = _build(env)
+    try:
+        request = _request()
+        _, _, _, fingerprint, operation = gov.prepare(request, "chat", {})
+        reservation, model, started = gov.reserve(request, "chat", {})
+        gov.ledger.accept_07b_handoff(reservation, lambda: None)
+        binding = reservation._binding
+        wrong = replace(reservation, _binding=replace(binding, fingerprint="0" * 64))
+        assert gov.ledger.settle(wrong, outcome="settled", committed=20) is None
+        with pytest.raises(BudgetError) as mismatch:
+            gov.ledger.settle(replace(reservation, _binding=replace(binding, policy_hash="0" * 64)),
+                              outcome="settled", committed=20)
+        assert mismatch.value.reason == "policy_mismatch"
+        _assert_single_07b_row(factory, fingerprint, "reserved")
+
+        receipt = gov.settle_response(reservation, model, httpx.Response(200, json=body_usage()), started)
+        with factory() as session:
+            row = session.get(AiBudgetEntry, receipt.entry_id)
+            assert (row.id, row.fingerprint, row.operation, row.endpoint, row.state, row.committed_micro_usd) == (
+                reservation.entry_id, fingerprint, operation, "chat", "settled", 20,
+            )
+        assert receipt.binding.ledger_identity is gov.ledger._receipt_identity
+        assert receipt.binding.policy_hash == gov.config.raw_hash
+        assert receipt.binding.fingerprint == fingerprint and receipt.outcome == "settled"
+        assert not hasattr(receipt, "capability")
+        with pytest.raises(FrozenInstanceError):
+            receipt.entry_id = 0
+        prior = _assert_single_07b_row(factory, fingerprint, "settled")
+        assert gov.ledger.settle(reservation, outcome="settled", committed=20) is None
+        assert _ledger_rows(factory) == prior
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize(("stage", "disconnect", "expected"), [
+    ("before_commit", False, "reserved"),
+    ("before_commit", True, "reserved"),
+    ("after_commit", True, "settled"),
+])
+def test_sqlite_commit_failure_never_reaches_receipt_channel(env, stage, disconnect, expected):
+    from sqlalchemy import event
+    from sqlalchemy.exc import DisconnectionError, OperationalError
+
+    gov, engine, factory = _build(env)
+    calls = []
+
+    def fail(session):
+        if disconnect and stage == "before_commit":
+            session.connection().connection.driver_connection.close()
+            return
+        if disconnect:
+            raise DisconnectionError("synthetic loss of commit acknowledgement")
+        raise OperationalError("COMMIT", None, OSError("synthetic rollback"))
+
+    def handler(_):
+        calls.append("accepted")
+        event.listen(factory, stage, fail)
+        return httpx.Response(200, json=body_usage())
+
+    request = _request()
+    _, _, worst, fingerprint, _ = gov.prepare(request, "chat", {})
+    try:
+        with gov.prototype_client(handler) as client, gov._capture_07b_settlement(client) as proofs:
+            try:
+                with pytest.raises(BudgetError) as exc:
+                    gov.send_sync(httpx.Client.send, client, request, {})
+                assert exc.value.reason == "ledger_error"
+                assert not proofs
+            finally:
+                event.remove(factory, stage, fail)
+        assert calls == ["accepted"]
+        snapshot = _assert_single_07b_row(factory, fingerprint, expected)
+        assert snapshot[0][0][2:] == (worst, 20 if expected == "settled" else 0)
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
+@pytest.mark.parametrize("usage", [
+    {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 0},
+    {"prompt_tokens": 10, "input_tokens": 11, "completion_tokens": 5, "total_tokens": 15},
+    {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": True},
+    '{"prompt_tokens":10,"completion_tokens":5,"total_tokens":0,"total_tokens":15}',
+])
+def test_contradictory_200_usage_remains_held_on_sqlite_restart(env, asynchronous, usage):
+    gov, engine, factory = _build(env)
+    calls = []
+
+    def provider(_):
+        calls.append("accepted")
+        if isinstance(usage, str):
+            body = body_usage()
+            body.pop("usage")
+            wire = json.dumps(body).removesuffix("}") + ',"usage":' + usage + "}"
+            return httpx.Response(200, content=wire)
+        return httpx.Response(200, json={**body_usage(), "usage": usage})
+
+    try:
+        _, _, worst, fingerprint, _ = gov.prepare(_request(), "chat", {})
+        with pytest.raises(BudgetError) as exc:
+            _dispatch(gov, _request(), provider, asynchronous=asynchronous)
+        assert exc.value.reason == "outcome_unknown"
+        before = _assert_single_07b_row(factory, fingerprint, "unknown")
+        assert before[0][0][2:] == (worst, 0)
+        with factory() as session:
+            row, = session.scalars(select(AiBudgetEntry)).all()
+            assert row.error_category == "contradictory_charge"
+        assert gov.status()["settled_usd"] == "0.000000" and gov.status()["integrity"]["consistent"]
+        with pytest.raises(BudgetError) as blocked:
+            _dispatch(gov, _request(body=_chat("Synthetic distinct request")), provider, asynchronous=asynchronous)
+        assert blocked.value.reason == "evaluation_stopped" and calls == ["accepted"]
+    finally:
+        engine.dispose()
+
+    restarted, engine, _ = _build(env)
+    try:
+        with pytest.raises(BudgetError) as blocked:
+            _dispatch(restarted, _request(body=_chat("Synthetic distinct request")), provider, asynchronous=asynchronous)
+        assert blocked.value.reason == "unknown_outcome_no_retry"
+        assert calls == ["accepted"] and _ledger_rows(factory) == before
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("size", [65535, 65536, 65537], ids=["below-bound", "at-bound", "above-bound"])
+@pytest.mark.parametrize(("usage_tail", "metadata"), [
+    pytest.param(b'"total_tokens":15,"cost":0.005,"cost":0', b'', id="high-then-zero"),
+    pytest.param(b'"total_tokens":15,"cost":0,"cost":0.005', b'', id="zero-then-high"),
+    pytest.param(b'"total_tokens":15,"cost":"0.005","cost":null', b'', id="high-then-null"),
+    pytest.param(b'"total_tokens":0,"total_tokens":15,"cost":0.005', b'', id="contradictory-tokens"),
+    pytest.param(b'"total_tokens":15,"cost":0.005,"cost":1e99999999999999999999999999,"cost":0',
+                 b'', id="unrepresentable-cost"),
+    pytest.param(b'"total_tokens":15,"cost":0.005',
+                 b',"metadata_number":1e99999999999999999999999999', id="unrepresentable-metadata"),
+])
+def test_sqlite_ambiguous_200_cost_preserves_highest_exposure_without_receipt(env, size, usage_tail, metadata):
+    gov, engine, factory = _build(env)
+    body = body_usage()
+    body.pop("usage")
+    prefix = json.dumps(body).encode().removesuffix(b"}") + b',"padding":"'
+    suffix = b'"' + metadata + b',"usage":{"prompt_tokens":10,"completion_tokens":5,' + usage_tail + b'}}'
+    raw = prefix + b"x" * (size - len(prefix) - len(suffix)) + suffix
+    assert len(raw) == size
+    calls = []
+
+    def handler(_):
+        calls.append("accepted")
+        return httpx.Response(200, content=raw)
+
+    req = _request()
+    _, _, worst, fingerprint, _ = gov.prepare(req, "chat", {})
+    try:
+        with gov.prototype_client(handler) as client, gov._capture_07b_settlement(client) as proofs:
+            with pytest.raises(BudgetError) as exc:
+                gov.send_sync(httpx.Client.send, client, req, {})
+            assert exc.value.reason == "outcome_unknown" and not proofs
+        assert calls == ["accepted"] and gov._stopped_07b
+        rows, _ = _assert_single_07b_row(factory, fingerprint, "unknown")
+        assert rows[0][2:] == (max(5000, worst), 0)
+        with factory() as session:
+            row, = session.scalars(select(AiBudgetEntry)).all()
+            assert (row.error_category, row.provider_cost_micro_usd) == ("contradictory_charge", 5000)
+        restarted, restart_engine, _ = _build(env)
+        try:
+            with pytest.raises(BudgetError) as blocked:
+                _dispatch(restarted, _request(body=_chat("Distinct synthetic request")), handler)
+            assert blocked.value.reason == ("kill_switch" if 5000 > worst else "unknown_outcome_no_retry")
+            assert calls == ["accepted"]
+        finally:
+            restart_engine.dispose()
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
+def test_consistent_200_usage_with_token_details_settles(env, asynchronous):
+    gov, engine, factory = _build(env)
+    response = body_usage()
+    response["usage"].update(
+        total_tokens=15,
+        prompt_tokens_details={"cached_tokens": 4},
+        completion_tokens_details={"reasoning_tokens": 2},
+    )
+    try:
+        _, _, _, fingerprint, _ = gov.prepare(_request(), "chat", {})
+        assert _dispatch(gov, _request(), lambda _: httpx.Response(200, json=response),
+                         asynchronous=asynchronous).status_code == 200
+        snapshot = _assert_single_07b_row(factory, fingerprint, "settled")
+        assert snapshot[0][0][-1] == 20
+        assert gov.status()["settled_usd"] == "0.000020"
+    finally:
+        engine.dispose()
+
+
 @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
 def test_429_unrepresentable_total_preserves_hold_and_kills(env, asynchronous):
     gov, engine, factory = _build(env)

@@ -641,6 +641,7 @@ def write_artifacts(out: Path, run: dict, evaluator, stamp: str) -> None:
         "git_commit": _git_sha(),
         **evaluator.safe_dict(),  # never includes the API key
     }
+    run_config["evaluation_method"] = run.get("evaluation_method", {"scope": "method_unverified"})
     # allow_nan=False is a fail-loud backstop: no NaN/inf can reach JSON.
     (out / "run_config.json").write_text(
         json.dumps(run_config, indent=2, allow_nan=False), encoding="utf-8")
@@ -670,10 +671,23 @@ def _avg(rows, name) -> str:
 
 def summary_markdown(run: dict, run_config: dict) -> str:
     m = run["metrics"]
+    method = run_config.get("evaluation_method", {})
+    if "protocol_id" in method:
+        method_summary = (
+            f"Scoring method `{method['protocol_id']}` v{method['protocol_version']} · "
+            f"{method['scope']} · "
+            f"{method['response_relevancy_generated_questions']} generated question(s) per case for Response Relevancy."
+        )
+        if method["scope"] == "governed_07b":
+            method_summary += (" Reuses validated settled responses within this run. "
+                               "Historical three-question thresholds require separate qualification for this method.")
+    else:
+        method_summary = "Scoring method unverified for this run."
     lines = [
         "# RAGAS — generation quality\n",
         f"Run {run_config['timestamp']} · RAGAS {run_config['ragas_version']} · "
         f"evaluator `{run_config['evaluator_model']}` · {run['case_count']} case(s).",
+        method_summary,
         "Measured values (baseline — not pass/fail). Optional secondary layer; the "
         "deterministic retrieval evaluations remain the primary gate.\n",
         "## Execution status\n",

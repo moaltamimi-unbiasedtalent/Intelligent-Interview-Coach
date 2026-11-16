@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.llm.budget.config import BudgetConfig, GOVERNED_07B_OPERATIONS, micro_to_usd, usd_to_micro
 from src.llm.budget.errors import BudgetError
-from src.llm.budget.ledger import Reservation, SQLITE_MAX_INTEGER
+from src.llm.budget.ledger import Reservation, SQLITE_MAX_INTEGER, _ReservationBinding, _SettlementReceipt
 
 RUNTIME_ROLE = "ask4mo_07b_runtime"
 SCHEMA_OWNER = "ask4mo_07b_owner"
@@ -109,6 +109,7 @@ class Postgres07BLedger:
 
     def __init__(self, session_factory, config: BudgetConfig) -> None:
         self._sf = session_factory
+        self._receipt_identity = object()
         with session_factory() as session:
             self._url = session.get_bind().url
         self._policy = database_policy(config)
@@ -178,7 +179,8 @@ class Postgres07BLedger:
                     CAST(:policy AS jsonb), :operation, :model, :endpoint, :fingerprint, :worst)
             """), {"policy": self._policy_json, "operation": operation, "model": model,
                    "endpoint": endpoint, "fingerprint": fingerprint, "worst": worst_case}).one()
-        return Reservation(entry_id, budget_class, category, worst_case, endpoint, token)
+        binding = _ReservationBinding(self._receipt_identity, config.raw_hash, entry_id, fingerprint, operation, endpoint)
+        return Reservation(entry_id, budget_class, category, worst_case, endpoint, token, _binding=binding)
 
     def accept_07b_handoff(self, reservation: Reservation, accept: Callable[[], None]) -> None:
         with self._transaction() as session:
@@ -190,7 +192,12 @@ class Postgres07BLedger:
 
     def settle(self, reservation: Reservation, *, outcome: str, committed: int = 0, input_tokens: int | None = None,
                output_tokens: int | None = None, est_cost: int | None = None, provider_cost: int | None = None,
-               status_code: int | None = None, latency_ms: int | None = None, error_category: str | None = None) -> None:
+               status_code: int | None = None, latency_ms: int | None = None, error_category: str | None = None) -> _SettlementReceipt | None:
+        binding = reservation._binding
+        if (binding is None or binding.ledger_identity is not self._receipt_identity
+                or binding.policy_hash != self._policy["hash"]
+                or binding.entry_id != reservation.entry_id or binding.endpoint != reservation.endpoint):
+            raise BudgetError("settlement_refused", "The reservation does not match the active PostgreSQL ledger and policy.")
         with self._transaction() as session:
             state = session.scalar(text("""
                 SELECT ask4mo_07b.settle(:id, :token, :outcome, :cost, :input, :output,
@@ -200,6 +207,9 @@ class Postgres07BLedger:
                    "latency": latency_ms, "error": error_category, "estimated": est_cost, "reported": provider_cost})
         if state == "unknown" and outcome != "unknown":
             raise BudgetError("outcome_unknown", "The PostgreSQL 07B ledger retained uncertain exposure.")
+        if state == outcome == "settled":
+            return _SettlementReceipt(reservation.entry_id, reservation.endpoint, binding)
+        return None
 
     def snapshot(self, config: BudgetConfig, budget_class: str) -> dict[str, Any]:
         cls = config.classes[budget_class]
