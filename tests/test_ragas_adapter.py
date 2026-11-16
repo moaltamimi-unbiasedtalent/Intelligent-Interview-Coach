@@ -241,6 +241,19 @@ def test_L_run_writes_all_artifacts(tmp_path) -> None:
     assert "secret" not in (out / "results.json").read_text()
 
 
+
+def test_legacy_run_config_does_not_inherit_governed_scoring_method(tmp_path) -> None:
+    from src.copilot.evaluation import ragas_runner as runner
+
+    run = _fake_run_dict()
+    runner.write_artifacts(tmp_path, run, ra.EvaluatorConfig(api_key="synthetic"), "20260101_000000")
+    run_config = json.loads((tmp_path / "run_config.json").read_text())
+    assert run_config["evaluation_method"] == {"scope": "method_unverified"}
+    assert "Scoring method unverified" in (tmp_path / "summary.md").read_text()
+    run_config.pop("evaluation_method")
+    assert "Scoring method unverified" in runner.summary_markdown(run, run_config)
+
+
 def test_M_second_run_does_not_overwrite_first(tmp_path) -> None:
     from src.copilot.evaluation import ragas_runner as runner
 

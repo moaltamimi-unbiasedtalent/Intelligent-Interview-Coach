@@ -25,6 +25,8 @@ import math
 import os
 import threading
 import time
+from contextlib import contextmanager
+from contextvars import ContextVar
 from concurrent.futures import CancelledError as SyncCancelledError
 from decimal import Decimal
 from typing import Any, Callable, Mapping
@@ -37,7 +39,7 @@ from src.llm.budget.config import (
     check_07b_handoff_deadline, hosted, load_config, require_approved_marker, resolve_budget_class, usd_to_micro, validate_hosted_approval,
 )
 from src.llm.budget.errors import BudgetError
-from src.llm.budget.ledger import SQLITE_MAX_INTEGER, DbBudgetLedger, Reservation
+from src.llm.budget.ledger import SQLITE_MAX_INTEGER, DbBudgetLedger, Reservation, _SettlementReceipt
 from src.llm.budget.postgres_07b import Postgres07BLedger, validate_postgres_url
 
 HOSTED_POLICY_VERSION = 2
@@ -54,7 +56,7 @@ GOVERNED_07B_CHAT_FIELDS = {
 }
 GOVERNED_07B_EMBED_FIELDS = {"model", "input", "dimensions", "encoding_format"}
 DETERMINATE_REJECTIONS = (400, 401, 402, 403, 404, 422, 429)
-MAX_429_EVIDENCE_BYTES = 64 * 1024
+MAX_CHARGE_EVIDENCE_BYTES = 64 * 1024
 MAX_LEDGER_USD = Decimal(SQLITE_MAX_INTEGER) / MICRO
 CHARGE_TOKEN_FIELDS = {
     "prompt_tokens", "completion_tokens", "input_tokens", "output_tokens", "total_tokens",
@@ -72,6 +74,12 @@ def estimate_tokens(text: str) -> int:
     return max(1, len(text.encode("utf-8")))
 
 
+def _request_fingerprint(method: str, target: str, body: dict) -> str:
+    return hashlib.sha256(f"{method}|{target}|".encode() + json.dumps(
+        body, sort_keys=True, ensure_ascii=False, default=str,
+    ).encode()).hexdigest()
+
+
 def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     body = dict(pairs)
     if len(body) != len(pairs):
@@ -85,6 +93,80 @@ class _ChargeObject(tuple):
 
 def _reject_nonfinite_json(value: str) -> None:
     raise ValueError("non-finite JSON number")
+
+
+class _ContradictoryUsage(ValueError):
+    """A governed response supplied incompatible usage or charge evidence."""
+
+
+def _supported_charge(value: Any) -> Decimal:
+    if type(value) not in (str, int, Decimal) or len(str(value)) > 64:
+        raise ValueError("unsupported charge amount")
+    cost = Decimal(str(value))
+    if not cost.is_finite() or not 0 <= cost <= MAX_LEDGER_USD:
+        raise ValueError("unsupported charge amount")
+    return cost
+
+
+def _07b_response_evidence(response: httpx.Response) -> tuple[Any, int, bool]:
+    """Collect charge evidence during the existing HTTP 200 JSON decode."""
+    reported = 0
+    contradictory = False
+
+    def read_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+        nonlocal reported, contradictory
+        obj: dict[str, Any] = {}
+        for name, value in pairs:
+            if name in CHARGE_COST_FIELDS:
+                try:
+                    reported = max(reported, usd_to_micro(_supported_charge(value)))
+                except (ValueError, ArithmeticError):
+                    pass  # An invalid amount must not erase other reported evidence.
+            if name in obj and (name in CHARGE_COST_FIELDS or name in (
+                    "usage", "cost_details", "prompt_tokens", "input_tokens",
+                    "completion_tokens", "output_tokens", "total_tokens")):
+                contradictory = True
+            obj[name] = value
+        return obj
+
+    def read_number(value: str, parse: Callable[[str], Any]) -> Any:
+        nonlocal contradictory
+        try:
+            return parse(value)
+        except (ValueError, ArithmeticError):
+            # Keep walking the same response to preserve other charge evidence.
+            contradictory = True
+            return None
+
+    data = response.json(
+        object_pairs_hook=read_object,
+        parse_float=lambda value: read_number(value, Decimal),
+        parse_int=lambda value: read_number(value, int),
+        parse_constant=lambda value: read_number(value, _reject_nonfinite_json),
+    )
+    return data, reported, contradictory
+
+
+def _validate_07b_token_usage(usage: dict, endpoint: str) -> None:
+    # OpenRouter's OpenAI-compatible chat total is prompt + completion. The
+    # embedding endpoint has no completion. Cached and reasoning details
+    # describe parts of those counts and are not added to the total.
+    counts = {}
+    for field, alias in (("prompt_tokens", "input_tokens"), ("completion_tokens", "output_tokens")):
+        supplied = [usage[name] for name in (field, alias) if name in usage]
+        if (any(type(count) is not int or count < 0 for count in supplied)
+                or len(supplied) == 2 and supplied[0] != supplied[1]):
+            raise _ContradictoryUsage
+        if supplied:
+            counts[field] = supplied[0]
+    if endpoint == "embeddings":
+        if counts.get("completion_tokens", 0) != 0:
+            raise _ContradictoryUsage
+        counts["completion_tokens"] = 0
+    if "total_tokens" in usage:
+        total = usage["total_tokens"]
+        if type(total) is not int or total < 0 or len(counts) == 2 and total != sum(counts.values()):
+            raise _ContradictoryUsage
 
 
 def _error_category(status: int | None, exc: BaseException | None = None) -> str | None:
@@ -286,7 +368,7 @@ class BudgetGovernor:
         else:
             category = operation = self.category_for(request, kind)
             target = request.url.path
-        fingerprint = hashlib.sha256(f"{request.method}|{target}|".encode() + json.dumps(body, sort_keys=True, ensure_ascii=False, default=str).encode()).hexdigest()
+        fingerprint = _request_fingerprint(request.method, target, body)
         return model, category, worst, fingerprint, operation
 
     def _validate_07b_body(self, body: dict, kind: str) -> None:
@@ -386,39 +468,55 @@ class BudgetGovernor:
         provider = usd_to_micro(Decimal(str(u["cost"]))) if u.get("cost") is not None else None
         return max(est, provider or 0), tin, tout, est, provider
 
-    def settle_response(self, res: Reservation, model: str, response: httpx.Response, started: float) -> None:
+    def settle_response(self, res: Reservation, model: str, response: httpx.Response, started: float) -> _SettlementReceipt | None:
         ms = int((time.perf_counter() - started) * 1000)
         sc = response.status_code
         led = self.ledger
         assert led is not None
         if sc == 200:
+            observed_charge = 0
             try:
-                data = response.json()
+                if self.governed_07b:
+                    data, observed_charge, contradictory = _07b_response_evidence(response)
+                    if contradictory:
+                        raise _ContradictoryUsage
+                else:
+                    data = response.json()
                 if self.governed_07b and (not isinstance(data, dict) or data.get("model") != model or "error" in data):
                     raise ValueError("unexpected provider response identity")
+                if self.governed_07b and isinstance(data.get("usage"), dict):
+                    _validate_07b_token_usage(data["usage"], res.endpoint)
                 committed, tin, tout, est, prov = self.usage_cost(model, data, endpoint=res.endpoint)
-                bad = False
+                error_category = "usage_missing"
+            except _ContradictoryUsage:
+                committed, tin, tout = None, None, None
+                error_category = "contradictory_charge"
             except Exception:  # noqa: BLE001 - an unreadable body is UNKNOWN, never zero
-                committed, tin, tout, bad = None, None, None, True
+                committed, tin, tout = None, None, None
+                error_category = "malformed_body"
             if committed is None:
                 self._stopped_07b |= self.governed_07b
-                reported = None
-                try:
-                    reported = usd_to_micro(response.json()["usage"]["cost"])
-                except (KeyError, ValueError, TypeError, ArithmeticError):
-                    pass
-                led.settle(res, outcome="unknown", committed=reported or 0, input_tokens=tin, output_tokens=tout, provider_cost=reported, status_code=sc, latency_ms=ms, error_category="malformed_body" if bad else "usage_missing")
+                if error_category == "contradictory_charge":
+                    reported = observed_charge or None
+                else:
+                    reported = None
+                    try:
+                        reported = usd_to_micro(response.json()["usage"]["cost"])
+                    except (KeyError, ValueError, TypeError, ArithmeticError):
+                        pass
+                led.settle(res, outcome="unknown", committed=reported or 0, input_tokens=tin, output_tokens=tout, provider_cost=reported, status_code=sc, latency_ms=ms, error_category=error_category)
                 if self.governed_07b:
                     self._refuse("outcome_unknown", "The provider response could not be reconciled.")
             else:
-                led.settle(res, outcome="settled", committed=committed, input_tokens=tin, output_tokens=tout, est_cost=est, provider_cost=prov, status_code=sc, latency_ms=ms)
+                receipt = led.settle(res, outcome="settled", committed=committed, input_tokens=tin, output_tokens=tout, est_cost=est, provider_cost=prov, status_code=sc, latency_ms=ms)
                 if self.governed_07b and committed > res.worst_case:
                     self._refuse("budget_overrun", "Provider usage exceeded the reservation.")
+                return receipt if self.governed_07b else None
         elif sc in DETERMINATE_REJECTIONS:
             self._stopped_07b |= self.governed_07b
             evidence = None
             if self.governed_07b:
-                evidence = self._rate_limit_charge(response) if sc == 429 else self._rejection_charge(response)
+                evidence = self._ambiguous_charge(response) if sc == 429 else self._rejection_charge(response)
             if evidence is not None:
                 led.settle(res, outcome="unknown", committed=evidence, status_code=sc, latency_ms=ms,
                            error_category="contradictory_charge")
@@ -431,11 +529,11 @@ class BudgetGovernor:
                 self._refuse("outcome_unknown", "The provider response could not be reconciled.")
 
     @staticmethod
-    def _rate_limit_charge(response: httpx.Response) -> int | None:
-        """None means a clean 429, zero means unknown cost, positive means reported exposure."""
+    def _ambiguous_charge(response: httpx.Response) -> int | None:
+        """Find the highest supported amount without collapsing duplicate JSON keys."""
         try:
             body = response.content
-            if len(body) > MAX_429_EVIDENCE_BYTES:
+            if len(body) > MAX_CHARGE_EVIDENCE_BYTES:
                 return 0
             root = json.loads(body, object_pairs_hook=_ChargeObject, parse_float=Decimal,
                               parse_constant=_reject_nonfinite_json)
@@ -463,11 +561,7 @@ class BudgetGovernor:
                     ambiguous |= type(value) is not int or value != 0
                 if key in CHARGE_COST_FIELDS:
                     try:
-                        if type(value) not in (str, int, Decimal) or len(str(value)) > 64:
-                            raise ValueError
-                        cost = Decimal(str(value))
-                        if not cost.is_finite() or not 0 <= cost <= MAX_LEDGER_USD:
-                            raise ValueError
+                        cost = _supported_charge(value)
                         # A positive value remains charge evidence if conversion underflows.
                         ambiguous |= cost > 0
                         reported = max(reported, usd_to_micro(cost))
@@ -513,6 +607,13 @@ class BudgetGovernor:
         client = client_cls(transport=transport, trust_env=False)
         self._prototype_clients.add(client)
         return client
+
+    def _capture_07b_settlement(self, client):
+        transport = getattr(client, "_transport", None)
+        if (client not in self._prototype_clients or not isinstance(transport, _07BPrototypeTransport)
+                or transport.governor is not self):
+            self._refuse("transport_not_qualified", "07B cannot observe settlement on this receiver.")
+        return transport._capture_settlement()
 
     def _prototype_send_options(self, client, kw: dict) -> None:
         if client not in self._prototype_clients or client.event_hooks["request"] or kw.get("stream"):
@@ -605,6 +706,26 @@ class _07BPrototypeTransport(httpx.BaseTransport, httpx.AsyncBaseTransport):
     def __init__(self, governor: BudgetGovernor, handler: Callable) -> None:
         self.governor = governor
         self.handler = handler
+        self._settlements = ContextVar("07b_receiver_settlements", default=None)
+
+    @contextmanager
+    def _capture_settlement(self):
+        if self._settlements.get() is not None:
+            raise BudgetError("evaluation_request_pending", "A settlement capture is already active.")
+        receipts = []
+        token = self._settlements.set(receipts)
+        try:
+            yield receipts
+        finally:
+            self._settlements.reset(token)
+
+    def _publish_settlement(self, reservation, response, receipt):
+        captured = self._settlements.get()
+        if (captured is not None and isinstance(receipt, _SettlementReceipt)
+                and receipt.entry_id == reservation.entry_id
+                and receipt.endpoint == reservation.endpoint
+                and receipt.binding is reservation._binding):
+            captured.append((response, receipt))
 
     def _receive(self, request: httpx.Request, *, task: asyncio.Task | None = None):
         gov = self.governor
@@ -643,7 +764,8 @@ class _07BPrototypeTransport(httpx.BaseTransport, httpx.AsyncBaseTransport):
         except BaseException as exc:
             gov.settle_failure(reservation, started, exc)
             raise
-        gov.settle_response(reservation, model, response, started)
+        receipt = gov.settle_response(reservation, model, response, started)
+        self._publish_settlement(reservation, response, receipt)
         return response
 
     async def _receive_postgres(self, request: httpx.Request):
@@ -682,9 +804,10 @@ class _07BPrototypeTransport(httpx.BaseTransport, httpx.AsyncBaseTransport):
                 gov.settle_failure(reservation, started, exc)
             raise
         if postgres:
-            await asyncio.to_thread(gov.settle_response, reservation, model, response, started)
+            receipt = await asyncio.to_thread(gov.settle_response, reservation, model, response, started)
         else:
-            gov.settle_response(reservation, model, response, started)
+            receipt = gov.settle_response(reservation, model, response, started)
+        self._publish_settlement(reservation, response, receipt)
         return response
 
 

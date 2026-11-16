@@ -170,6 +170,132 @@ def denied(db, actor, statement, args=(), *, state="42501", reason=None):
 
 
 @pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
+def test_postgresql_receiver_publishes_only_exact_committed_receipt(database, asynchronous):
+    db = database
+    gov = build(db)
+    request = _request()
+    _, _, _, fingerprint, operation = gov.prepare(request, "chat", {})
+    captured_reservations = []
+
+    def handler(_):
+        assert db.query("SELECT state, accepted_at IS NOT NULL FROM ask4mo_07b.entry") == [("reserved", True)]
+        return httpx.Response(200, json=body_usage())
+
+    original = gov.reserve
+
+    def record_reservation(*args):
+        result = original(*args)
+        captured_reservations.append(result[0])
+        return result
+
+    gov.reserve = record_reservation
+
+    if asynchronous:
+        async def run():
+            async with gov.prototype_client(handler, asynchronous=True) as client:
+                with gov._capture_07b_settlement(client) as proofs:
+                    response = await gov.send_async(httpx.AsyncClient.send, client, request, {})
+                    return response, proofs
+        response, proofs = asyncio.run(run())
+    else:
+        with gov.prototype_client(handler) as client, gov._capture_07b_settlement(client) as proofs:
+            response = gov.send_sync(httpx.Client.send, client, request, {})
+
+    assert response.status_code == 200 and "settlement_receipt" not in response.extensions
+    (settled_response, receipt), = proofs
+    reservation, = captured_reservations
+    assert settled_response is response and receipt.entry_id == reservation.entry_id
+    assert receipt.binding.policy_hash == gov.config.raw_hash
+    assert receipt.binding.ledger_identity is gov.ledger._receipt_identity
+    assert receipt.binding.fingerprint == fingerprint and receipt.outcome == "settled"
+    assert receipt.endpoint == "chat" and receipt.binding.operation == operation
+    rows = db.query("SELECT id, fingerprint, operation, endpoint, state, committed_micro_usd, settled_at IS NOT NULL FROM ask4mo_07b.entry")
+    assert rows == [(receipt.entry_id, fingerprint, operation, "chat", "settled", 20, True)]
+    denied(db, RUNTIME_ROLE, "SELECT id FROM ask4mo_07b.entry")
+    with pytest.raises(BudgetError) as duplicate:
+        gov.ledger.settle(reservation, outcome="settled", committed=20, status_code=200)
+    assert duplicate.value.reason == "settlement_refused"
+    assert gov.status()["calls_by_state"] == {"settled": 1}
+
+
+@pytest.mark.parametrize(("stage", "failure", "state"), [
+    ("before_commit", "rollback", "reserved"),
+    ("before_commit", "disconnect", "reserved"),
+    ("after_commit", "unconfirmed", "settled"),
+])
+def test_postgresql_failed_or_unconfirmed_commit_emits_no_receipt(database, stage, failure, state):
+    from sqlalchemy import event
+    from sqlalchemy.exc import DisconnectionError, OperationalError
+
+    db = database
+    gov = build(db)
+    calls = []
+
+    def fail(session):
+        if failure == "disconnect":
+            session.connection().connection.driver_connection.close()
+        elif failure == "unconfirmed":
+            raise DisconnectionError("synthetic loss of commit acknowledgement")
+        else:
+            raise OperationalError("COMMIT", None, OSError("synthetic rollback"))
+
+    def handler(_):
+        calls.append("accepted")
+        event.listen(gov.ledger._sf, stage, fail)
+        return httpx.Response(200, json=body_usage())
+
+    request = _request()
+    _, _, _, fingerprint, _ = gov.prepare(request, "chat", {})
+    with gov.prototype_client(handler) as client, gov._capture_07b_settlement(client) as proofs:
+        try:
+            with pytest.raises(BudgetError) as exc:
+                gov.send_sync(httpx.Client.send, client, request, {})
+            assert exc.value.reason == "ledger_error" and not proofs
+        finally:
+            event.remove(gov.ledger._sf, stage, fail)
+    assert calls == ["accepted"]
+    assert db.query("SELECT fingerprint, state, committed_micro_usd, held_micro_usd FROM ask4mo_07b.entry") == [
+        (fingerprint, state, 20 if state == "settled" else None, 0 if state == "settled" else db.reserve_floor),
+    ]
+
+
+@pytest.mark.parametrize("size", [65535, 65536, 65537], ids=["below-bound", "at-bound", "above-bound"])
+@pytest.mark.parametrize(("usage_tail", "metadata"), [
+    pytest.param(b'"total_tokens":15,"cost":0.010,"cost":0', b'', id="conflicting-costs"),
+    pytest.param(b'"total_tokens":0,"total_tokens":15,"cost":0.010', b'', id="contradictory-tokens"),
+    pytest.param(b'"total_tokens":15,"cost":0.010,"cost":1e99999999999999999999999999,"cost":0',
+                 b'', id="unrepresentable-cost"),
+    pytest.param(b'"total_tokens":15,"cost":0.010',
+                 b',"metadata_number":1e99999999999999999999999999', id="unrepresentable-metadata"),
+])
+def test_postgresql_ambiguous_200_cost_retains_null_commit_without_receipt(database, size, usage_tail, metadata):
+    db = database
+    gov = build(db)
+    body = body_usage()
+    body.pop("usage")
+    prefix = json.dumps(body).encode().removesuffix(b"}") + b',"padding":"'
+    suffix = b'"' + metadata + b',"usage":{"prompt_tokens":10,"completion_tokens":5,' + usage_tail + b'}}'
+    raw = prefix + b"x" * (size - len(prefix) - len(suffix)) + suffix
+    assert len(raw) == size
+    calls = []
+
+    def handler(_):
+        calls.append("accepted")
+        return httpx.Response(200, content=raw)
+
+    with gov.prototype_client(handler) as client, gov._capture_07b_settlement(client) as proofs:
+        with pytest.raises(BudgetError) as exc:
+            gov.send_sync(httpx.Client.send, client, _request(), {})
+        assert exc.value.reason == "outcome_unknown" and not proofs
+    rows = db.query("SELECT state, committed_micro_usd, held_micro_usd, reported_micro_usd, error_category FROM ask4mo_07b.entry")
+    assert rows == [("unknown", None, max(db.reserve_floor, 10000), 10000, "contradictory_charge")]
+    assert gov._stopped_07b and db.query("SELECT killed FROM ask4mo_07b.control") == [(True,)]
+    with pytest.raises(BudgetError) as blocked:
+        _dispatch(build(db), _request(body=_chat("Distinct synthetic request")), handler)
+    assert blocked.value.reason == "kill_switch" and calls == ["accepted"]
+
+
+@pytest.mark.parametrize("asynchronous", [False, True], ids=["sync", "async"])
 def test_postgresql_receiver_settles_and_refuses_durable_replay(database, asynchronous):
     db = database
     calls = []
