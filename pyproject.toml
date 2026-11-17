@@ -74,7 +74,13 @@ ocr = [
     "pytesseract>=0.3.10,<1.0",
     "pdf2image>=1.17,<2.0",
 ]
-# Live interview (experimental Gemini Live). Optional backend token minting; the
+# Speaker diarization (pyannote Community-1, governed and INACTIVE). Optional and lazily
+# imported; the base application never imports it. Requires an operator-placed model
+# directory (SPEECH_DIARIZATION_MODEL_DIR) cloned from the gated Hugging Face repo (git-lfs)
+# and a system ffmpeg binary for torchcodec. Weights are CC-BY-4.0 and are never downloaded
+# by the application (MODEL_DOWNLOADS_AUTHORIZED stays False).
+# Install with:  pip install -e ".[diarization]"
+diarization = ["pyannote.audio>=4.0.7,<4.1", "torch>=2.5,<3.0", "torchcodec>=0.3,<2.0", "torchvision"]
 # SDK is imported lazily so a missing package degrades to the fallback.
 # Install with:  pip install -e ".[live]"
 live = [

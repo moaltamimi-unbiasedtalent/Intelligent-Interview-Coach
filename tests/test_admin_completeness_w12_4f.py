@@ -102,7 +102,7 @@ def test_provider_panel_reports_server_speech_without_claiming_it_runs(env):
     j = env.c.get(f"{API}/admin/providers", cookies=adm).json()
     ss = j["speech"]["server_side"]
     assert ss["authorization_state"] == "not_authorized" and ss["stt_operational"] is False and ss["tts_operational"] is False
-    assert ss["genuine_model_validation"] == {"openai_whisper": "NOT_VERIFIED", "kyutai_pocket_tts": "MODEL_EXECUTION_NOT_VERIFIED"}
+    assert ss["genuine_model_validation"] == {"openai_whisper": "NOT_VERIFIED", "kyutai_pocket_tts": "MODEL_EXECUTION_NOT_VERIFIED", "pyannote_community_1": "NOT_VERIFIED"}
     assert j["speech"]["architecture"] == "browser_web_speech"                                  # the active path is unchanged
 
 

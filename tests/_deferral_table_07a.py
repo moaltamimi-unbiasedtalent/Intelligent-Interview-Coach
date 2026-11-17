@@ -218,6 +218,8 @@ ADDITIONAL_GATES: dict[tuple[str, str], str] = {
     ("src.application.usage_quota", "USAGE_QUOTAS_ENFORCED"): "usage quotas are not enforced",
     ("src.application.preparation_pack", "PREPARATION_PACK_GENERATION_ENABLED"): "preparation-pack generation is disabled",
     ("src.application.progress_analytics", "PREMIUM_ANALYTICS_ENABLED"): "premium analytics are disabled",
+    ("src.speech.policy", "DIARIZATION_EXECUTION_AUTHORIZED"): "governed speaker diarization (pyannote Community-1) execution is not authorized (OD-DIAR-01..04; activation is a reviewed owner-gated code change)",
+    ("src.speech.policy", "DIARIZATION_CLOUD_AUTHORIZED"): "hosted diarization that ships candidate audio to a third party is not authorized (always excluded in this build)",
 }
 
 # A gate-like constant is any module-level NAME = True/False whose name ends in one of these (the discovery scan fails when it finds one that is neither in the reconciliation list,

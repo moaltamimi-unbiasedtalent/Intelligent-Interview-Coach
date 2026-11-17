@@ -58,3 +58,23 @@ Notes:
   UK ONS / Civil Service are OGL v3.0; Eurostat is CC BY 4.0. EU/DE portal
   sources (ESCO, KldB, BERUFENET, Entgeltatlas, EQF, DigComp) and CEN's e-CF are
   marked *review required* pending confirmation of reuse terms.
+
+## Model weights (speaker diarization)
+
+| Model | Publisher | Licence (verified 2026-11-15) | Use in this repository |
+| --- | --- | --- | --- |
+| `pyannote/speaker-diarization-community-1` (revision `3533c8cf8e369892e6b79ff1bf80f7b0286a54ee`) | pyannote (Hervé Bredin / pyannoteAI) | Weights **CC BY 4.0** ("will always remain freely accessible"); `pyannote.audio` code **MIT**; gated Hugging Face repository (auto-approval after conditions acceptance) | Governed, **inactive** scaffolding only (`src/speech/diarization.py`). Weights are not committed here and are **never downloaded by the application** (`MODEL_DOWNLOADS_AUTHORIZED` stays False): an operator accepts the gated conditions once and places them in `SPEECH_DIARIZATION_MODEL_DIR`. Self-hosting is allowed; attribution is required |
+
+Attribution and citations that must accompany any redistribution or activation:
+
+- Plaquet, Alexis, and Hervé Bredin. "Powerset multi-class cross entropy loss for neural speaker diarization." *Proc. INTERSPEECH 2023*.
+- Wang, Hongji, et al. "Wespeaker: A research and production oriented speaker embedding learning toolkit." *IEEE ICASSP 2023*.
+- Landini, Federico, Ján Profant, Mireia Diez, and Lukáš Burget. "Bayesian HMM clustering of x-vector sequences (VBx) in speaker diarization." *Computer Speech & Language*, 2022.
+
+Facts, constraints and the activation prerequisites are in
+[diarization_pyannote_community_1.md](diarization_pyannote_community_1.md) and
+`OD-DIAR-01..04` in
+[production/OWNER_DECISION_REGISTER.md](production/OWNER_DECISION_REGISTER.md).
+The per-voice / premium pyannoteAI models (`precision-2/3`) and any hosted
+pyannoteAI service are **out of scope** (paid, third-party egress) and are not
+licensed for use here.

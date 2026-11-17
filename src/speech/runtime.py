@@ -18,6 +18,7 @@ from src.speech.governance import SpeechConfig, SpeechGovernanceService, default
 from src.speech.stt_whisper import FixtureWhisperEngine, LocalWhisperEngine, WhisperEngine, WhisperTranscriptionService
 from src.speech.text import SanitizedTranscript, sanitize_transcript
 from src.speech.tts_kyutai import FixtureTtsEngine, KyutaiPocketTtsService, LocalPocketTtsEngine, SynthesisResult, TtsEngine
+from src.speech.diarization import LocalPyannoteEngine
 from src.speech_service import SpeechError
 
 __all__ = ["SpeechRuntime", "TranscriptionOutcome", "provider_readiness", "fixture_wav"]
@@ -102,11 +103,12 @@ def _fixture_contract_ok(kind: str) -> bool:
 
 class SpeechRuntime:
     def __init__(self, governance: SpeechGovernanceService | None = None, *, stt_engine: WhisperEngine | None = None, tts_engine: TtsEngine | None = None,
-                 config_override: SpeechConfig | None = None) -> None:
+                 diarization_engine: LocalPyannoteEngine | None = None, config_override: SpeechConfig | None = None) -> None:
         self._governance = governance
         self._config_override = config_override
         self.stt_engine = stt_engine if stt_engine is not None else LocalWhisperEngine()
         self.tts_engine = tts_engine if tts_engine is not None else LocalPocketTtsEngine()
+        self.diarization_engine = diarization_engine if diarization_engine is not None else LocalPyannoteEngine()
         self._runner = BoundedRunner(2)
 
     def config(self) -> SpeechConfig:
@@ -149,7 +151,12 @@ class SpeechRuntime:
     # -- views ----------------------------------------------------------------------------------------------------------------------------------------------------------
     def readiness(self) -> dict:
         cfg = self.config()
-        return {"stt": provider_readiness("stt", cfg, self.stt_engine), "tts": provider_readiness("tts", cfg, self.tts_engine)}
+        dep, model = _engine_ready(self.diarization_engine)
+        diarization = {"provider": policy.SELECTED_DIARIZATION_PROVIDER, "configured": False, "dependency_available": dep, "model_available": model, "ready_for_offline_execution": bool(dep and model),
+                       "validated_with_fixture": False, "validated_with_genuine_model": policy.GENUINE_MODEL_VALIDATION.get("pyannote_community_1", "NOT_VERIFIED"),
+                       "live_authorized": bool(policy.DIARIZATION_EXECUTION_AUTHORIZED), "operational": False, "deployment": getattr(self.diarization_engine, "deployment", "none"), "blockers": ["diarization execution is not authorized (code constant)", "genuine model execution: NOT_VERIFIED"],
+                       "note": "Diarization is a separate governed capability. It is inactive in this build."}
+        return {"stt": provider_readiness("stt", cfg, self.stt_engine), "tts": provider_readiness("tts", cfg, self.tts_engine), "diarization": diarization}
 
     def candidate_view(self) -> dict:
         """What the frontend may rely on (no secrets, no provider internals). Server speech is offered per language only when it is executable now; the browser fallback is a separate, governed permission."""

@@ -60,6 +60,7 @@ class SpeechOverview(_Strict):
     config: SpeechConfigView
     stt: ProviderReadiness
     tts: ProviderReadiness
+    diarization: ProviderReadiness
     language_matrix: dict[str, dict]
     provider_facts: dict[str, dict]
     authorization: dict[str, bool]

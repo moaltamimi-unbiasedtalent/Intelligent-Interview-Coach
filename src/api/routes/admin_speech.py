@@ -27,7 +27,8 @@ NOTE = ("Server-side speech is governed here but is NOT active: enabling a provi
 
 def _facts() -> dict:
     return {"openai_whisper": {"languages": list(policy.WHISPER_CAPABILITY.languages), **policy.WHISPER_CAPABILITY.notes},
-            "kyutai_pocket_tts": {"languages": list(policy.KYUTAI_CAPABILITY.languages), "unverified_languages": list(policy.KYUTAI_CAPABILITY.unverified_languages), **policy.KYUTAI_CAPABILITY.notes}}
+            "kyutai_pocket_tts": {"languages": list(policy.KYUTAI_CAPABILITY.languages), "unverified_languages": list(policy.KYUTAI_CAPABILITY.unverified_languages), **policy.KYUTAI_CAPABILITY.notes},
+            "pyannote_community_1": {"languages": list(policy.DIARIZATION_CAPABILITY.languages), **policy.DIARIZATION_CAPABILITY.notes}}
 
 
 @router.get("", response_model=SpeechOverview, summary="Speech governance, provider readiness and the language matrix (no provider is contacted)")
@@ -37,9 +38,10 @@ def speech_overview(_p=Depends(require_permission(perm.FLAGS_READ)), svc=Depends
     except SpeechGovernanceUnavailable:
         raise HTTPException(status_code=503, detail="Speech settings are unavailable right now.")
     readiness = runtime.readiness()
-    return SpeechOverview(environment=svc.environment or "unsupported", config=SpeechConfigView(**cfg.public()), stt=readiness["stt"], tts=readiness["tts"], language_matrix=runtime.capability_matrix(),
+    return SpeechOverview(environment=svc.environment or "unsupported", config=SpeechConfigView(**cfg.public()), stt=readiness["stt"], tts=readiness["tts"], diarization=readiness["diarization"], language_matrix=runtime.capability_matrix(),
                           provider_facts=_facts(), authorization={"server_speech_providers": policy.SERVER_SPEECH_PROVIDERS_AUTHORIZED, "hosted_whisper_api_transport": policy.WHISPER_API_TRANSPORT_AUTHORIZED,
-                                                                   "model_downloads": policy.MODEL_DOWNLOADS_AUTHORIZED, "voice_cloning": policy.VOICE_CLONING_ENABLED}, note=NOTE)
+                                                                   "model_downloads": policy.MODEL_DOWNLOADS_AUTHORIZED, "voice_cloning": policy.VOICE_CLONING_ENABLED,
+                                                                   "diarization_execution": policy.DIARIZATION_EXECUTION_AUTHORIZED, "diarization_cloud": policy.DIARIZATION_CLOUD_AUTHORIZED}, note=NOTE)
 
 
 @router.put("", response_model=SpeechConfigView, summary="Change speech governance (expected revision, required reason, same-transaction audit)")
