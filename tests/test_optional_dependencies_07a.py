@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 # Optional extras and the import names they provide (pyproject.toml [project.optional-dependencies]; redis is declared but remains optional outside the hosted image).
 OPTIONAL_IMPORTS = {
     "speech": ["google.cloud.speech_v2"],
+    "diarization": ["pyannote.audio"],
     "live": ["google.genai"],
     "ocr": ["pytesseract", "pdf2image"],
     "observability": ["langfuse"],
@@ -75,6 +76,19 @@ def test_google_speech_to_text_without_its_sdk_is_a_controlled_unavailable(monke
     with pytest.raises(SpeechError) as exc:
         svc.transcribe(b"RIFF", mime_type="audio/wav", language="en")
     assert exc.value.category in ("unavailable", "provider_error", "empty", "corrupt_audio") and "Traceback" not in str(exc.value)
+
+
+def test_local_diarization_without_pyannote_sdk_refuses_without_loading_weights(monkeypatch, tmp_path):
+    from src.speech.diarization import LocalPyannoteEngine
+    from src.speech.engines import ModelUnavailable
+
+    (tmp_path / "synthetic-weights.marker").write_text("fixture", encoding="utf-8")
+    block(monkeypatch, "pyannote.audio")
+    engine = LocalPyannoteEngine(model_dir=str(tmp_path))
+    assert engine.model_available() is True
+    assert engine.dependency_available() is False
+    with pytest.raises(ModelUnavailable):
+        engine._load()
 
 
 def test_gemini_live_token_minting_without_its_sdk_is_a_controlled_unavailable(monkeypatch):
