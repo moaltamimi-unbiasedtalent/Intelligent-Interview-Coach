@@ -573,6 +573,7 @@ export interface KnowledgeDiagnosticsResponse {
 }
 export interface InterviewSummary {
   id: number;
+  share_generation?: string;
   target_role?: string | null;
   mode?: string | null;
   status?: string | null;
@@ -627,6 +628,7 @@ export interface ModelProfilesResponse {
 /** Full history record from GET /history/interviews/{id} (report already included). */
 export interface InterviewDetail {
   id: number;
+  share_generation?: string;
   configuration?: Record<string, unknown> | null;
   mode?: string | null;
   status?: string | null;
@@ -725,6 +727,7 @@ export interface CapabilitiesAgent {
 export type AgentProfile = "fast" | "balanced" | "advanced";
 
 export interface AgentRunRequest {
+  opportunity_id?: number | null;
   goal: string;
   target_role?: string | null;
   job_description?: string | null;
@@ -859,6 +862,7 @@ export type AgentStatus =
 
 export interface AgentRunResponse {
   run_id: string;
+  opportunity_id?: number | null;
   status: AgentStatus | string;
   response: string;
   /** Stable cause code of a FAILED run (04D); render localized copy from it. */

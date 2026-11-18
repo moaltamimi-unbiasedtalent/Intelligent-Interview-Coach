@@ -171,7 +171,11 @@ def save_completed_interview(
             user_id = resolve_user_id(config, repo)
         if user_id is None:
             return
-        interview_id = repo.save_interview(
+        # Durable API saves lock their source row before writing History. Legacy
+        # repositories without a runtime store retain their explicit save contract.
+        save = (getattr(repo, "save_interview_from_runtime", repo.save_interview)
+                if source_session_id is not None else repo.save_interview)
+        interview_id = save(
             user_id, build_interview_payload(data, mode=mode),
             source_session_id=source_session_id, opportunity_id=opportunity_id,
         )
@@ -191,8 +195,12 @@ def save_completed_interview(
         )
 
 
-def list_interview_reports(repo, user_id: int, window: int | None = None):
+def list_interview_reports(repo, user_id: int, window: int | None = None, *, include_share_generation=False):
     """List a user's saved interviews (repository passthrough)."""
+    from src.repository import InterviewRepository
+
+    if include_share_generation and isinstance(repo, InterviewRepository):
+        return repo.list_interviews(user_id, window, include_share_generation=True)
     # The window argument is passed ONLY when a restriction applies, so the unrestricted call keeps the original repository signature.
     return repo.list_interviews(user_id, window) if window is not None else repo.list_interviews(user_id)
 
@@ -206,10 +214,14 @@ def practice_progress(repo, user_id: int, window: int | None = None) -> dict:
     return repo.dashboard_metrics(user_id, window) if window is not None else repo.dashboard_metrics(user_id)
 
 
-def get_interview_report(repo, user_id: int, interview_id: int, window: int | None = None):
+def get_interview_report(repo, user_id: int, interview_id: int, window: int | None = None, *, include_share_generation=False):
     """Fetch one saved interview's detail, scoped to ``user_id``.
 
     The repository filters by ``user_id``, so one user can never read another
     user's report (returns ``None`` when the id is not theirs).
     """
+    from src.repository import InterviewRepository
+
+    if include_share_generation and isinstance(repo, InterviewRepository):
+        return repo.get_interview(user_id, interview_id, window, include_share_generation=True)
     return repo.get_interview(user_id, interview_id, window) if window is not None else repo.get_interview(user_id, interview_id)

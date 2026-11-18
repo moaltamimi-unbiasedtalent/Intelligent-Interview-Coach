@@ -26,7 +26,7 @@ def list_interviews(
     policy=Depends(get_history_access_policy),
 ) -> InterviewListResponse:
     window = policy.window_for(user_id)
-    rows = history_service.list_interview_reports(repo, user_id, window)
+    rows = history_service.list_interview_reports(repo, user_id, window, include_share_generation=True)
     access = {"restricted": False, "window": None, "hidden_count": 0}
     if window is not None:                                       # only a restricted caller costs the extra count query
         access = {"restricted": True, "window": window, "hidden_count": max(0, repo.count_completed(user_id) - len(rows))}
@@ -42,7 +42,7 @@ def get_interview(
     policy=Depends(get_history_access_policy),
 ) -> InterviewDetailResponse:
     # An owned interview outside the caller's window raises HistoryRestricted (403 history_not_available); a foreign or missing id is still a 404.
-    detail = history_service.get_interview_report(repo, user_id, report_id, policy.window_for(user_id))
+    detail = history_service.get_interview_report(repo, user_id, report_id, policy.window_for(user_id), include_share_generation=True)
     if detail is None:
         raise HTTPException(status_code=404, detail="Interview not found.")
     return InterviewDetailResponse(interview=detail)
@@ -60,13 +60,14 @@ def delete_interview(
     """Hard-delete a completed interview (questions, answers, evaluations, report), the resumable session it
     was saved from, and any share grant of its report. Foreign/unknown ids return 404 (no disclosure);
     a repeat delete is 404, never a 5xx. Metadata-only audit (no answer text)."""
-    deleted, source_session = repo.delete_interview_with_source(user_id, report_id)
+    from src.application.history_deletion import delete_completed_interview
+    from src.api.routes.interview import _STORE_ERRORS, _translate_store_error
+
+    try:
+        deleted = delete_completed_interview(
+            repo=repo, store=store, sharing=sharing, audit=audit, user_id=user_id, report_id=report_id)
+    except _STORE_ERRORS as exc:
+        raise _translate_store_error(exc) from None
     if not deleted:
         raise HTTPException(status_code=404, detail="Interview not found.")
-    if source_session:
-        store.discard(source_session, user_id)
-    sharing.invalidate_on_delete(owner_user_id=user_id, resource_type="interview_report",
-                                 resource_id=str(report_id))
-    audit.record(event_type="interview.deleted", actor_user_id=user_id,
-                 target_type="interview", target_id=str(report_id))
     return {"deleted": True}

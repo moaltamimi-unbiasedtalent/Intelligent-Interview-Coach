@@ -68,6 +68,8 @@ class InterviewApplicationService:
             client.close()
 
     def require_configured(self) -> None:
+        if self._injected is not None:
+            return
         if not self._config.is_configured:
             raise ConfigurationError(
                 "No OpenRouter API key is configured; this action needs a model."

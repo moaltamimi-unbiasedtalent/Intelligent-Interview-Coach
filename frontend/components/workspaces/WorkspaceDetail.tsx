@@ -394,7 +394,7 @@ function ShareItemForm({ workspaceId, disabled, onShared, onError }: {
   const { t } = useI18n();
   const ids = useId();
   const [type, setType] = useState<"story" | "interview_report">("story");
-  const [items, setItems] = useState<Array<{ id: string; label: string }>>([]);
+  const [items, setItems] = useState<Array<{ id: string; label: string; generation?: string }>>([]);
   const [loaded, setLoaded] = useState(false);
   const [itemId, setItemId] = useState("");
   const [consent, setConsent] = useState(false);
@@ -404,6 +404,7 @@ function ShareItemForm({ workspaceId, disabled, onShared, onError }: {
     let live = true;
     setLoaded(false);
     setItemId("");
+    setConsent(false);
     const load = loadShareableItems(type, api);
     load.then((rows) => { if (live) { setItems(rows); setLoaded(true); } })
       .catch(() => { if (live) { setItems([]); setLoaded(true); } });
@@ -412,13 +413,25 @@ function ShareItemForm({ workspaceId, disabled, onShared, onError }: {
 
   const submit = async () => {
     if (!itemId || !consent) return;
+    const selected = items.find((item) => item.id === itemId);
+    if (type === "interview_report" && !selected?.generation) return;
     setSending(true);
     try {
-      await api.shares.create(workspaceId, type, itemId, true);
+      if (type === "interview_report") {
+        await api.shares.create(workspaceId, type, itemId, true, { expectedReportGeneration: selected!.generation });
+      } else {
+        await api.shares.create(workspaceId, type, itemId, true);
+      }
       setConsent(false);
       setItemId("");
       await onShared();
     } catch (e) {
+      if (type === "interview_report" && e instanceof ApiError && e.status === 409) {
+        // Refresh the choices, never the consent or a pending POST.
+        setConsent(false);
+        setItemId("");
+        try { setItems(await loadShareableItems(type, api)); } catch { setItems([]); }
+      }
       onError(e);
     } finally {
       setSending(false);
@@ -431,14 +444,14 @@ function ShareItemForm({ workspaceId, disabled, onShared, onError }: {
       <div className="flex flex-wrap items-end gap-2">
         <div className="grid gap-1">
           <label htmlFor={`${ids}-type`} className="text-xs font-semibold">{t("wsMgmt.shareType")}</label>
-          <select id={`${ids}-type`} className={selectCls} value={type} onChange={(e) => setType(e.target.value as "story" | "interview_report")}>
+          <select id={`${ids}-type`} className={selectCls} value={type} disabled={sending} onChange={(e) => { setConsent(false); setType(e.target.value as "story" | "interview_report"); }}>
             <option value="story">{t("wsMgmt.typeStory")}</option>
             <option value="interview_report">{t("wsMgmt.typeReport")}</option>
           </select>
         </div>
         <div className="grid gap-1">
           <label htmlFor={`${ids}-item`} className="text-xs font-semibold">{t("wsMgmt.shareItem")}</label>
-          <select id={`${ids}-item`} className={selectCls} value={itemId} disabled={items.length === 0} onChange={(e) => setItemId(e.target.value)}>
+          <select id={`${ids}-item`} className={selectCls} value={itemId} disabled={sending || items.length === 0} onChange={(e) => { setConsent(false); setItemId(e.target.value); }}>
             <option value="" />
             {items.map((i) => <option key={i.id} value={i.id}>{i.label}</option>)}
           </select>
@@ -446,10 +459,11 @@ function ShareItemForm({ workspaceId, disabled, onShared, onError }: {
       </div>
       {loaded && items.length === 0 && <p className="text-sm text-muted">{t("wsMgmt.shareNoItems")}</p>}
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" className="mt-1" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+        <input type="checkbox" className="mt-1" checked={consent} disabled={sending} onChange={(e) => setConsent(e.target.checked)} />
         <span>{t("wsMgmt.shareConsent")}</span>
       </label>
-      <div><Button disabled={disabled || sending || !itemId || !consent} onClick={() => void submit()}>{t("wsMgmt.shareAction")}</Button></div>
+      <div><Button disabled={disabled || sending || !itemId || !consent ||
+        (type === "interview_report" && !items.find((item) => item.id === itemId)?.generation)} onClick={() => void submit()}>{t("wsMgmt.shareAction")}</Button></div>
     </CardBody></Card>
   );
 }

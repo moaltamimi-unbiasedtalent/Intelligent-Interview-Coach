@@ -13,6 +13,7 @@ concurrent callers cannot both win.
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import datetime, timezone
 
 from sqlalchemy import func, select, update
@@ -31,6 +32,7 @@ from src.persistence import (
     WORKSPACE_STATUS_ACTIVE,
     WORKSPACE_STATUS_DEACTIVATED,
     ShareGrant,
+    Interview,
     Subscription,
     User,
     Workspace,
@@ -47,6 +49,10 @@ __all__ = ["WorkspaceRepository", "purge_workspace", "mask_email",
 # Bounded growth (04B): a workspace is a small collaboration space, not a directory.
 MAX_PENDING_INVITATIONS = 50
 MAX_ACTIVE_MEMBERS = 100
+
+
+class ReportGenerationConflict(Exception):
+    """The sharing request no longer identifies the selected report incarnation."""
 
 
 def _aware(dt: datetime | None) -> datetime | None:
@@ -514,40 +520,97 @@ class WorkspaceRepository:
 
     # -- sharing --------------------------------------------------------------
 
+    @contextmanager
+    def report_share_transaction(self, *, owner_user_id: int, resource_id: str, expected_report_generation: str | None = None):
+        """Protect the exact report through owner verification and grant creation.
+
+        No external I/O belongs in this boundary. Owner verifiers only read the
+        application database. Pools that alias a nested reader to this write
+        connection cannot supply the required transaction isolation.
+        """
+        from sqlalchemy.pool import AssertionPool, SingletonThreadPool, StaticPool
+        from src.interview.session_repository import begin_write_transaction
+
+        try:
+            report_id = int(resource_id)
+        except (TypeError, ValueError):
+            yield None
+            return
+        if not 0 < report_id <= 2**63 - 1:
+            yield None
+            return
+        with self._sf() as db:
+            if isinstance(db.get_bind().pool, (AssertionPool, SingletonThreadPool, StaticPool)):
+                yield None
+                return
+            begin_write_transaction(db)
+            report = db.scalar(select(Interview.id).where(
+                Interview.id == report_id, Interview.user_id == owner_user_id,
+            ).with_for_update())
+            if report is None:
+                yield None
+                return
+            from src.interview.report_generation import current_generation
+
+            generation = current_generation(db, owner_user_id, report_id)
+            if generation is None or generation != expected_report_generation:
+                raise ReportGenerationConflict()
+            db.info["report_share_binding"] = (owner_user_id, str(report_id), generation, db.get_transaction())
+            try:
+                yield db
+                db.commit()
+            finally:
+                db.info.pop("report_share_binding", None)
+
     def create_share(self, *, owner_user_id: int, workspace_id: int, resource_type: str,
-                     resource_id: str, permission: str) -> int | None:
-        """Create or re-activate a VIEW share of an owned resource into an ACTIVE workspace the owner is an active member of.
-        Returns None when either condition no longer holds (checked in the same transaction as the write)."""
-        with self._sf() as s:
-            ws = s.get(Workspace, workspace_id, with_for_update=True)
-            if ws is None or ws.status != WORKSPACE_STATUS_ACTIVE:
+                     resource_id: str, permission: str, report_transaction=None,
+                     expected_report_generation: str | None = None) -> int | None:
+        """Create a VIEW grant; reports require the still-open verified transaction."""
+        if resource_type == "interview_report":
+            db = report_transaction
+            if (db is None or not db.in_transaction()
+                    or db.get_bind() is not self._sf.kw.get("bind")
+                    or db.info.get("report_share_binding") != (
+                        owner_user_id, resource_id, expected_report_generation, db.get_transaction())):
                 return None
-            member = s.scalar(select(WorkspaceMembership.id).where(
-                WorkspaceMembership.workspace_id == workspace_id,
-                WorkspaceMembership.user_id == owner_user_id,
-                WorkspaceMembership.status == MEMBERSHIP_STATUS_ACTIVE))
-            if member is None:
-                return None
-            existing = s.scalar(select(ShareGrant).where(
-                ShareGrant.owner_user_id == owner_user_id,
-                ShareGrant.workspace_id == workspace_id,
-                ShareGrant.resource_type == resource_type,
-                ShareGrant.resource_id == resource_id))
-            if existing is not None:
-                if existing.status != SHARE_STATUS_ACTIVE:
-                    existing.created_at = utcnow()      # a re-consent is a new grant moment
-                existing.status = SHARE_STATUS_ACTIVE
-                existing.permission = permission
-                existing.revoked_at = None
-                s.commit()
-                return existing.id
-            grant = ShareGrant(
-                owner_user_id=owner_user_id, workspace_id=workspace_id,
-                resource_type=resource_type, resource_id=resource_id,
-                permission=permission, status=SHARE_STATUS_ACTIVE)
-            s.add(grant)
-            s.commit()
-            return grant.id
+            return self._create_share_in_transaction(
+                db, owner_user_id, workspace_id, resource_type, resource_id, permission)
+        with self._sf() as db:
+            result = self._create_share_in_transaction(
+                db, owner_user_id, workspace_id, resource_type, resource_id, permission)
+            db.commit()
+            return result
+
+    @staticmethod
+    def _create_share_in_transaction(db, owner_user_id, workspace_id, resource_type, resource_id, permission):
+        ws = db.get(Workspace, workspace_id, with_for_update=True)
+        if ws is None or ws.status != WORKSPACE_STATUS_ACTIVE:
+            return None
+        member = db.scalar(select(WorkspaceMembership.id).where(
+            WorkspaceMembership.workspace_id == workspace_id,
+            WorkspaceMembership.user_id == owner_user_id,
+            WorkspaceMembership.status == MEMBERSHIP_STATUS_ACTIVE))
+        if member is None:
+            return None
+        existing = db.scalar(select(ShareGrant).where(
+            ShareGrant.owner_user_id == owner_user_id,
+            ShareGrant.workspace_id == workspace_id,
+            ShareGrant.resource_type == resource_type,
+            ShareGrant.resource_id == resource_id))
+        if existing is not None:
+            if existing.status != SHARE_STATUS_ACTIVE:
+                existing.created_at = utcnow()
+            existing.status = SHARE_STATUS_ACTIVE
+            existing.permission = permission
+            existing.revoked_at = None
+            db.flush()
+            return existing.id
+        grant = ShareGrant(owner_user_id=owner_user_id, workspace_id=workspace_id,
+                           resource_type=resource_type, resource_id=resource_id,
+                           permission=permission, status=SHARE_STATUS_ACTIVE)
+        db.add(grant)
+        db.flush()
+        return grant.id
 
     def revoke_share(self, *, share_id: int, owner_user_id: int) -> bool:
         """Revoke a share — ONLY the owner may (owner-scoped)."""
@@ -656,6 +719,12 @@ class WorkspaceRepository:
         return self._bulk_revoke(
             ShareGrant.owner_user_id == owner_user_id, ShareGrant.resource_type == resource_type,
             ShareGrant.resource_id == resource_id)
+
+    def invalidate_shares_in_transaction(self, session, *, owner_user_id: int, resource_type: str,
+                                         resource_id: str) -> int:
+        """Same revocation rule, using the caller's transaction without committing."""
+        return self._revoke_where(session, ShareGrant.owner_user_id == owner_user_id,
+                                  ShareGrant.resource_type == resource_type, ShareGrant.resource_id == resource_id)
 
     def revoke_member_shares_into_workspace(self, *, user_id: int, workspace_id: int) -> int:
         """Revoke a member's outbound shares into a workspace (call on leave/remove)."""

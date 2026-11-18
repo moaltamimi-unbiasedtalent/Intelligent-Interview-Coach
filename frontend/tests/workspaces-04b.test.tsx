@@ -62,7 +62,7 @@ beforeEach(() => {
   api.shares.mine.mockResolvedValue({ shares: [] });
   api.shares.withMe.mockResolvedValue({ shares: [] });
   api.stories.list.mockResolvedValue({ stories: [{ id: 5, title: "Led a launch" }] });
-  api.history.list.mockResolvedValue({ interviews: [{ id: 9, target_role: "PM", status: "completed" }, { id: 10, target_role: "Draft", status: "in_progress" }] });
+  api.history.list.mockResolvedValue({ interviews: [{ id: 9, target_role: "PM", status: "completed", share_generation: "1".repeat(32) }, { id: 10, target_role: "Draft", status: "in_progress" }] });
   push.mockReset();
   window.history.pushState({}, "", "/");
 });
@@ -367,6 +367,52 @@ describe("Sharing into a workspace", () => {
     fireEvent.click(button);
     await waitFor(() => expect(api.shares.create).toHaveBeenCalledWith(7, "story", "5", true));
     expect(await screen.findByText(t("wsMgmt.shareDone"))).toBeInTheDocument();
+  });
+
+  it("binds report consent to the selected generation and requires fresh consent after a stale refusal", async () => {
+    api.shares.create.mockRejectedValueOnce(new ApiError({ status: 409, code: "conflict", message: "changed", kind: "conflict", requestId: null }));
+    wrap(<WorkspaceDetail workspaceId={7} />);
+    const button = await screen.findByRole("button", { name: t("wsMgmt.shareAction") });
+    fireEvent.change(screen.getByLabelText(t("wsMgmt.shareType")), { target: { value: "interview_report" } });
+    await screen.findByRole("option", { name: "PM #9" });
+    fireEvent.change(screen.getByLabelText(t("wsMgmt.shareItem")), { target: { value: "9" } });
+    const consent = screen.getByRole("checkbox", { name: t("wsMgmt.shareConsent") });
+    fireEvent.click(consent);
+    api.history.list.mockResolvedValue({ interviews: [{ id: 9, target_role: "PM", status: "completed", share_generation: "2".repeat(32) }] });
+    fireEvent.click(button);
+    await waitFor(() => expect(api.shares.create).toHaveBeenCalledWith(7, "interview_report", "9", true, { expectedReportGeneration: "1".repeat(32) }));
+    await waitFor(() => expect(consent).not.toBeChecked());
+    expect(screen.getByLabelText(t("wsMgmt.shareItem"))).toHaveValue("");
+    expect(button).toBeDisabled();
+    expect(api.shares.create).toHaveBeenCalledTimes(1);
+    api.shares.create.mockResolvedValue({ share_id: 1, status: "active" });
+    fireEvent.change(screen.getByLabelText(t("wsMgmt.shareItem")), { target: { value: "9" } });
+    expect(button).toBeDisabled();
+    fireEvent.click(consent);
+    fireEvent.click(button);
+    await waitFor(() => expect(api.shares.create).toHaveBeenLastCalledWith(7, "interview_report", "9", true, { expectedReportGeneration: "2".repeat(32) }));
+    expect(api.shares.create).toHaveBeenCalledTimes(2);
+  });
+
+  it("clears consent when the selection changes and refuses a report without generation evidence", async () => {
+    api.history.list.mockResolvedValue({ interviews: [{ id: 9, target_role: "PM", status: "completed" }] });
+    wrap(<WorkspaceDetail workspaceId={7} />);
+    const button = await screen.findByRole("button", { name: t("wsMgmt.shareAction") });
+    await screen.findByRole("option", { name: "Led a launch" });
+    fireEvent.change(screen.getByLabelText(t("wsMgmt.shareItem")), { target: { value: "5" } });
+    const consent = screen.getByRole("checkbox", { name: t("wsMgmt.shareConsent") });
+    fireEvent.click(consent);
+    expect(button).toBeEnabled();
+    fireEvent.change(screen.getByLabelText(t("wsMgmt.shareItem")), { target: { value: "" } });
+    expect(consent).not.toBeChecked();
+    fireEvent.click(consent);
+    fireEvent.change(screen.getByLabelText(t("wsMgmt.shareType")), { target: { value: "interview_report" } });
+    await screen.findByRole("option", { name: "PM #9" });
+    expect(consent).not.toBeChecked();
+    fireEvent.change(screen.getByLabelText(t("wsMgmt.shareItem")), { target: { value: "9" } });
+    fireEvent.click(consent);
+    expect(button).toBeDisabled();
+    expect(api.shares.create).not.toHaveBeenCalled();
   });
 
   it("offers only COMPLETED interviews as reports, and says honestly when there is nothing to share", async () => {

@@ -168,7 +168,8 @@ def test_deleting_a_shared_interview_revokes_its_grant():
     wid = _workspace_with_member(c, mail, a, b)
     iid = repo.save_interview(ida, _payload())
     sh = c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report",
-                                         "resource_id": str(iid)}, cookies=cookies_for(a))
+                                         "resource_id": str(iid), "expected_report_generation":
+            c.get(f"/api/v1/history/interviews/{iid}", cookies=cookies_for(a)).json()["interview"]["share_generation"]}, cookies=cookies_for(a))
     assert sh.status_code in (200, 201), sh.text
     assert len(c.get("/api/v1/shares/mine", cookies=cookies_for(a)).json()["shares"]) == 1
     assert c.delete(f"/api/v1/history/interviews/{iid}", cookies=cookies_for(a)).status_code == 200
@@ -181,7 +182,8 @@ def test_revoke_share_removes_member_access_and_foreign_revoke_fails():
     wid = _workspace_with_member(c, mail, a, b)
     iid = repo.save_interview(ida, _payload())
     assert c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report",
-                                           "resource_id": str(iid)}, cookies=cookies_for(a)).status_code in (200, 201)
+                                           "resource_id": str(iid), "expected_report_generation":
+            c.get(f"/api/v1/history/interviews/{iid}", cookies=cookies_for(a)).json()["interview"]["share_generation"]}, cookies=cookies_for(a)).status_code in (200, 201)
     sid = c.get("/api/v1/shares/mine", cookies=cookies_for(a)).json()["shares"][0]["id"]
     assert c.get(f"/api/v1/shares/resource/interview_report/{iid}", cookies=cookies_for(b)).status_code == 200
     assert c.delete(f"/api/v1/shares/{sid}", cookies=cookies_for(b)).status_code in (403, 404)  # not owner
