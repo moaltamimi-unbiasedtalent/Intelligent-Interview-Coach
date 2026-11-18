@@ -66,6 +66,18 @@ def _check_ports(*ports: int) -> None:
                 raise SystemExit(f"port {p} is already in use")
 
 
+def _synthetic_invocation_counts(calls) -> dict[str, int]:
+    """Count the shared interview fixture's fixed operations, including Deep Dive.
+
+    Retain names/counts only; never turn an arbitrary schema name into evidence.
+    """
+    allowed = ("InterviewStrategy", "InterviewQuestion", "BranchQuestion", "AnswerEvaluation", "FinalInterviewReport")
+    observed = tuple(calls)
+    if any(name not in allowed for name in observed):
+        raise AssertionError("unexpected synthetic interview operation")
+    return {name: observed.count(name) for name in allowed}
+
+
 # ------------------------------------------------------------------ the API process (internal subcommand: serve)
 
 def _prepare_test_database(engine, state: Path, args: argparse.Namespace) -> None:
@@ -128,10 +140,7 @@ def serve(args: argparse.Namespace) -> int:
     count_path = state / "provider-counts.json"
     def record_counts():
         calls = fixture_client.calls if fixture_client is not None else []
-        allowed = ("InterviewStrategy", "InterviewQuestion", "AnswerEvaluation", "FinalInterviewReport")
-        if any(name not in allowed for name in calls):
-            raise AssertionError("unexpected synthetic interview operation")
-        count_path.write_text(json.dumps({name: calls.count(name) for name in allowed}), encoding="utf-8")
+        count_path.write_text(json.dumps(_synthetic_invocation_counts(calls)), encoding="utf-8")
         os.chmod(count_path, 0o600)
     record_counts()
     if fixture_client is not None:
@@ -276,7 +285,7 @@ def run(args: argparse.Namespace) -> int:
                 strategy_calls = 0 if args.variant == "keyless" else 1
                 question_calls = 1 if args.variant == "healthy" else 0
                 if calls != {"InterviewStrategy": strategy_calls, "InterviewQuestion": question_calls,
-                             "AnswerEvaluation": 0, "FinalInterviewReport": 0}:
+                             "BranchQuestion": 0, "AnswerEvaluation": 0, "FinalInterviewReport": 0}:
                     raise AssertionError("disposable interview invocation counts did not match the scenario")
                 if args.variant == "provider_down":
                     status, active, payload = rows[0]

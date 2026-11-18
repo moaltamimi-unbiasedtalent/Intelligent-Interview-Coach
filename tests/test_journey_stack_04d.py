@@ -58,6 +58,25 @@ def _ask(client: F.FixtureChatClient, schema_name: str, **extra):
     return cls.model_validate(json.loads(result.content))
 
 
+@pytest.mark.parametrize("schema_name", [*SCHEMAS, "BranchQuestion"])
+def test_shared_invocation_counter_accepts_each_real_fixture_operation(schema_name):
+    client = F.FixtureChatClient("healthy")
+    cls = getattr(models, schema_name)
+    client.create_chat_completion(model="fixture", messages=_messages(1),
+        response_format=build_structured_response_format(cls))
+    counts = S._synthetic_invocation_counts(client.calls)
+    assert set(counts) == {*SCHEMAS, "BranchQuestion"}
+    assert counts[schema_name] == 1 and sum(counts.values()) == 1
+    assert client.calls == [schema_name]
+
+
+def test_shared_invocation_counter_refuses_unknown_names_without_disclosing_them():
+    with pytest.raises(AssertionError) as error:
+        S._synthetic_invocation_counts(["InterviewStrategy", "SYNTHETIC_PRIVATE_SCHEMA"])
+    assert str(error.value) == "unexpected synthetic interview operation"
+    assert S._synthetic_invocation_counts([]) == dict.fromkeys([*SCHEMAS, "BranchQuestion"], 0)
+
+
 # ---------------------------------------------------------------------------------------------------------------------------------- the fixtures
 def test_the_fixtures_are_one_synthetic_file_shared_with_the_browser_suite():
     fx = F.load_fixtures()

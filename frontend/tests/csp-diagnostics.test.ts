@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { BrowserDiagnostics, consoleClassification, DIAGNOSTIC_LIMIT, observeBaselineOperation, safePageErrorKind, safeSource, safeViolationSnapshot, loginRequestFacts, loginResponseFacts } from "../csp/diagnostics";
+import { BrowserDiagnostics, safeRequestFailure, safeAssetHeaders, consoleClassification, DIAGNOSTIC_LIMIT, observeBaselineOperation, safePageErrorKind, safeSource, safeViolationSnapshot, loginRequestFacts, loginResponseFacts } from "../csp/diagnostics";
 
 const privateText = "candidate-canary@example.invalid password-canary cookie-canary token-canary private-candidate-answer";
 const privateUrl = `https://user:password-canary@app.staging.example.com/private-candidate-answer?token=token-canary#cookie-canary`;
@@ -190,6 +190,99 @@ describe("synthetic login diagnostic privacy", () => {
     for (let i = 0; i < DIAGNOSTIC_LIMIT + 5; i++) d.loginResponse(422, envelope("validation_error", privateText), "sign_in_form");
     expect(d.snapshot().retained_events).toBe(DIAGNOSTIC_LIMIT);
     expect(d.snapshot().dropped_events).toBe(5);
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
+  });
+});
+
+
+describe("bounded script failure attribution", () => {
+  it.each([
+    ["ERR_BLOCKED_BY_CSP", "csp_blocked"], ["ERR_BLOCKED_BY_CLIENT", "client_blocked"],
+    ["ERR_ABORTED", "aborted"], ["ERR_CONTENT_DECODING_FAILED", "encoding"],
+    ["ERR_BLOCKED_BY_ORB", "response_blocked"], ["ERR_BLOCKED_BY_RESPONSE", "response_blocked"],
+    ["ERR_HTTP_RESPONSE_CODE_FAILURE", "response"], ["ERR_NETWORK_CHANGED", "network_changed"],
+    ["ERR_CONTENT_LENGTH_MISMATCH", "encoding"], ["ERR_HTTP2_PROTOCOL_ERROR", "http_protocol"],
+    ["ERR_SSL_PROTOCOL_ERROR", "tls"], ["ERR_CONNECTION_RESET", "connection"],
+    ["ERR_NAME_NOT_RESOLVED", "dns"], ["ERR_TIMED_OUT", "timeout"],
+  ])("exports only an exact allowlisted %s", (code, category) => {
+    expect(safeRequestFailure(`net::${code}`)).toEqual({ failure: code, failure_category: category });
+    expect(safeRequestFailure(code)).toEqual({ failure: code, failure_category: category });
+    for (const raw of [`net::${code} ${privateText}`, `${privateText} ${code}`, `net::${code}\n${privateText}`]) {
+      expect(safeRequestFailure(raw)).toEqual({ failure: "redacted", failure_category: "unknown" });
+    }
+  });
+
+  it.each([undefined, "net::ERR_UNKNOWN_PRIVATE", "ERR_FAILED" + "x".repeat(200), privateText])("redacts unknown failures", raw => {
+    expect(safeRequestFailure(raw)).toEqual({ failure: "redacted", failure_category: "unknown" });
+  });
+
+  it.each([
+    ["application/javascript; charset=utf-8", "gzip", "javascript", "gzip"],
+    [" TEXT/JAVASCRIPT ; private=canary", "BR", "javascript", "br"],
+    ["text/html", "identity", "html", "identity"],
+    ["application/json", "deflate", "json", "deflate"],
+    ["text/plain", "zstd", "plain_text", "zstd"],
+    ["application/octet-stream", "gzip, br", "binary", "multiple"],
+    [undefined, undefined, "missing", "missing"],
+    [privateText, privateText, "other", "other"],
+    ["x".repeat(1025), "x".repeat(129), "other", "other"],
+    ["application/javascript", "gzip, private-value", "javascript", "other"],
+  ])("projects MIME and encoding to fixed categories", (contentType, contentEncoding, mime, encoding) => {
+    expect(safeAssetHeaders(contentType, contentEncoding)).toEqual({ mime_category: mime, encoding_category: encoding });
+  });
+
+  it.each([["ChunkLoadError", "chunk_load"], ["NetworkError", "network"], ["AbortError", "aborted"], ["SecurityError", "security"], ["URIError", "uri"], ["EvalError", "eval"]])("retains only a named page-error category for %s", (kind, category) => {
+    const error = new Error(privateText); error.name = kind; error.stack = privateText;
+    const d = new BrowserDiagnostics(); d.pageError("sign_in_form", error);
+    expect(d.snapshot().events[0]).toMatchObject({ error_kind: kind, error_category: category, text: "[redacted page error]" });
+    error.name = `${kind} ${privateText}`; d.pageError("sign_in_form", error);
+    expect(d.snapshot().events[1]).toMatchObject({ error_kind: "other", error_category: "unknown" });
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
+  });
+
+  it("correlates 200 script metadata with its failure using the existing opaque source identity", () => {
+    const d = new BrowserDiagnostics();
+    const url = `https://app.staging.example.com/_next/static/${privateText}.js?token=token-canary`;
+    d.assetResponse({ url, resourceType: "script", status: 200, contentType: `text/javascript; private=${privateText}`, contentEncoding: "gzip" }, "sign_in_form");
+    d.request("request_failed", { url, method: "GET", resourceType: "script", error: "net::ERR_CONTENT_DECODING_FAILED" }, "sign_in_form");
+    const events = d.snapshot().events;
+    expect(events[0]).toMatchObject({ status: 200, mime_category: "javascript", encoding_category: "gzip", source_id: "source-1" });
+    expect(events[1]).toMatchObject({ source_id: "source-1", failure_category: "encoding" });
+    expect(d.snapshot().counts.asset_response).toBe(1); expect(d.snapshot().counts.request_failed).toBe(1);
+    for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
+  });
+
+  it("keeps retention limits and snapshot isolation for the new fields", () => {
+    const d = new BrowserDiagnostics();
+    const url = "https://app.staging.example.com/_next/static/fixture.js";
+    for (let i = 0; i < DIAGNOSTIC_LIMIT + 3; i++) d.assetResponse({ url, resourceType: "script", status: 200, contentType: "application/javascript", contentEncoding: "br" }, "sign_in_form");
+    const snap = d.snapshot(); snap.events[0].mime_category = privateText;
+    expect(d.snapshot().events[0].mime_category).toBe("javascript");
+    expect(d.snapshot().retained_events).toBe(DIAGNOSTIC_LIMIT); expect(d.snapshot().dropped_events).toBe(3);
+    expect(d.snapshot().groups[0].count).toBe(DIAGNOSTIC_LIMIT + 3);
+  });
+});
+
+
+describe("diagnostic-only hook boundary", () => {
+  it("passes only the two selected response header values to asset diagnostics", () => {
+    const source = readFileSync("csp/hydration.spec.ts", "utf8");
+    expect(source).toContain('contentType: response.headers()["content-type"], contentEncoding: response.headers()["content-encoding"]');
+    expect(source).not.toContain("headers: response.headers()");
+  });
+  it("retains all previously supported exact failure codes", () => {
+    for (const code of ["ERR_ABORTED", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_CERT_AUTHORITY_INVALID", "ERR_FAILED", "ERR_CONNECTION_RESET", "ERR_TIMED_OUT", "ERR_HTTP2_PROTOCOL_ERROR", "ERR_INCOMPLETE_CHUNKED_ENCODING", "ERR_CONNECTION_CLOSED", "ERR_CONTENT_DECODING_FAILED", "ERR_CONTENT_LENGTH_MISMATCH", "ERR_EMPTY_RESPONSE", "ERR_INVALID_RESPONSE"]) {
+      expect(safeRequestFailure(`net::${code}`).failure).toBe(code);
+    }
+  });
+  it("redacts unknown headers and page-error names even when they contain recognizable words", () => {
+    const d = new BrowserDiagnostics();
+    d.assetResponse({ url: "https://app.staging.example.com/_next/static/fixture.js", resourceType: "script", status: 200,
+      contentType: `text/javascript-${privateText}`, contentEncoding: `gzip-${privateText}` }, "sign_in_form");
+    const error = new Error(privateText); error.name = "ChunkLoadError" + "x".repeat(1000); error.stack = privateText;
+    d.pageError("sign_in_form", error);
+    expect(d.snapshot().events[0]).toMatchObject({ mime_category: "other", encoding_category: "other" });
+    expect(d.snapshot().events[1]).toMatchObject({ error_kind: "other", error_category: "unknown" });
     for (const canary of privateText.split(" ")) expect(JSON.stringify(d.snapshot())).not.toContain(canary);
   });
 });

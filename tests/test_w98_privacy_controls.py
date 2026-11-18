@@ -287,3 +287,23 @@ def test_opportunity_delete_unlinks_interviews_but_keeps_them():
     with repo.session_factory() as s:
         row = s.get(P.Interview, iid)
         assert row is not None and row.opportunity_id is None
+
+
+@pytest.mark.parametrize("fault", [None, "unscoped", "false_success", "refuse_owner"])
+def test_deletion_evaluator_exercises_real_ownership_and_mutation(fault, monkeypatch):
+    from scripts import eval_privacy_controls as evaluator
+    from src.application import history_deletion
+
+    original = history_deletion.delete_completed_interview
+    if fault == "unscoped":
+        def unscoped(**kwargs):
+            # Deliberately break the application boundary only in this fixture.
+            # Every fresh evaluator database creates the target owner first.
+            kwargs["user_id"] = 1
+            return original(**kwargs)
+        monkeypatch.setattr(history_deletion, "delete_completed_interview", unscoped)
+    elif fault == "false_success":
+        monkeypatch.setattr(history_deletion, "delete_completed_interview", lambda **kwargs: True)
+    elif fault == "refuse_owner":
+        monkeypatch.setattr(history_deletion, "delete_completed_interview", lambda **kwargs: False)
+    assert evaluator.delete_routes_owner_scoped() is (fault is None)

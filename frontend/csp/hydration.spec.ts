@@ -36,7 +36,8 @@ test("CSP real edge: baseline refusal or secure hydrated synthetic journey", asy
         } catch { diagnostics.loginResponse(response.status(), null, stage); }
       })());
     }
-    diagnostics.assetResponse({ url: response.url(), resourceType: response.request().resourceType(), status: response.status() }, result.stage);
+    diagnostics.assetResponse({ url: response.url(), resourceType: response.request().resourceType(), status: response.status(),
+      contentType: response.headers()["content-type"], contentEncoding: response.headers()["content-encoding"] }, result.stage);
     if (response.status() >= 400) diagnostics.request("http_error", { url: response.url(), method: response.request().method(), resourceType: response.request().resourceType(), status: response.status() }, result.stage);
   });
   page.on("console", message => {
