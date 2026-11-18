@@ -272,9 +272,9 @@ def test_two_process_change_after_observation_is_not_silently_accepted(f, monkey
         if not changed:
             # A genuinely separate interpreter/connection commits after the SELECT
             # and before deletion begins its write transaction.
-            child = subprocess.run([sys.executable, '-B', str(Path(__file__).resolve()), '--writer',
-                                    f.url, sid, str(f.owner), mode], capture_output=True, text=True, timeout=20)
-            assert child.returncode == 0, 'synthetic writer did not complete'
+            child = subprocess.run([sys.executable, '-B', "-m", "tests.test_history_atomic_deletion", '--writer',
+                                    f.url, sid, str(f.owner), mode], capture_output=True, text=True, timeout=20, cwd=str(Path(__file__).resolve().parents[1]))
+            assert child.returncode == 0, ("WORKER_SOURCE_IMPORT_FAILURE" if "ModuleNotFoundError" in child.stderr else "WORKER_EARLY_EXIT")
             changed.append(f.snapshot())
         return observed
     monkeypatch.setattr(f.store, 'deletion_identity', pause)

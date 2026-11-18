@@ -29,7 +29,11 @@ f = atomic_fixture  # Reuse the real, parametrized SQLite/PostgreSQL fixture.
 def _receive(child):
     assert ready.select([child.stdout], [], [], 20)[0], 'synthetic worker timed out'
     line = child.stdout.readline()
-    assert line, 'synthetic worker ended before its observation'
+    if not line:
+        child.wait(timeout=5)
+        error = child.stderr.read(16384)
+        category = "WORKER_SOURCE_IMPORT_FAILURE" if "ModuleNotFoundError" in error else "WORKER_EARLY_EXIT"
+        raise AssertionError(f"{category}; exit={child.returncode}")
     return json.loads(line)
 
 
@@ -44,9 +48,10 @@ def test_report_identity_stays_locked_through_consent_and_commit(f, legacy):
         with f.sf() as db:
             db.execute(update(P.Interview).where(P.Interview.id == rid).values(source_session_id=None)); db.commit()
         f.store.discard(sid, f.owner)
-    child = subprocess.Popen([sys.executable, '-B', str(Path(__file__).resolve()), '--share',
+    child = subprocess.Popen([sys.executable, '-B', "-m", "tests.test_history_identity_binding", '--share',
                               f.url, str(f.owner), str(f.workspace), str(rid)],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             cwd=str(Path(__file__).resolve().parents[1]))
     attempted = Event()
     listening = False
     waiting_pid = []

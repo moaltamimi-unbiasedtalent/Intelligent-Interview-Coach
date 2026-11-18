@@ -18,6 +18,7 @@ Every service here is:
 from __future__ import annotations
 
 import contextvars
+import json
 import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
@@ -58,11 +59,28 @@ _CALL_EXTRA: contextvars.ContextVar[dict] = contextvars.ContextVar("interview_ca
 class ServiceError(Exception):
     """Base class for controlled service errors (safe to show to a user)."""
 
-    def __init__(self, message: str, *, code: str | None = None) -> None:
+    def __init__(self, message: str, *, code: str | None = None, usage_receipt: UsageRecord | None = None) -> None:
         super().__init__(message)
         self.message = message
         # 04D: a stable bounded code (constants.AI_FAILURE_CODES) when the cause is "no usable AI credential" or "the provider failed"; None for every other cause.
         self.code = code
+        # Immutable, bounded metadata only. Neither caller-owned models nor raw
+        # responses are retained; every accessor returns an independently validated copy.
+        if usage_receipt is not None:
+            if not isinstance(usage_receipt, UsageRecord):
+                raise TypeError("A validated UsageRecord is required.")
+            record = UsageRecord.model_validate(usage_receipt.model_dump())
+            payload = json.dumps(record.model_dump(), allow_nan=False, separators=(",", ":")).encode()
+            if len(payload) > 4096:
+                raise ValueError("The usage receipt exceeds its metadata bound.")
+            self._usage_receipt_json = payload
+        else:
+            self._usage_receipt_json = None
+
+    @property
+    def usage_receipt(self) -> UsageRecord | None:
+        return (UsageRecord.model_validate_json(self._usage_receipt_json)
+                if self._usage_receipt_json is not None else None)
 
 
 class ServiceInputError(ServiceError):
@@ -207,26 +225,32 @@ class BaseGenerationService:
                 obj = self._run_defensive(
                     schema, messages, settings, supported, overrides, billed
                 )
-        except _TruncatedOutput as exc:
+        except _TruncatedOutput:
             self._log_attempt_failure(
                 task, schema, settings.model, "truncated",
                 strict=caps.supports_strict_schema, reason="finish_reason=length",
                 results=list(billed),
             )
-            self._record_billed(settings.model, billed)
+            usage = self._record_billed(settings.model, billed)
             raise ModelResponseError(
                 "The response was cut off because it reached the output-token "
                 "limit. Increase 'Maximum output tokens' in the developer "
-                "settings and try again."
-            ) from exc
+                "settings and try again.", usage_receipt=usage
+            ) from None
         except ResponseParseError as exc:
             self._log_attempt_failure(
                 task, schema, settings.model, "final",
                 strict=caps.supports_strict_schema, reason=exc.message,
                 results=list(billed),
             )
-            self._record_billed(settings.model, billed)
-            raise ModelResponseError(exc.message) from exc
+            usage = self._record_billed(settings.model, billed)
+            raise ModelResponseError(exc.message, usage_receipt=usage) from None
+        except ServiceError as exc:
+            # Output refusals and failed repair transports can follow a billable
+            # response. Preserve only usage actually observed, never fabricate a
+            # receipt for an invocation whose outcome/charge remains unknown.
+            usage = self._record_billed(settings.model, billed)
+            raise type(exc)(exc.message, code=exc.code, usage_receipt=usage) from None
 
         usage = self._build_usage(settings.model, billed)
         self._pricing.record_usage(usage)
@@ -246,6 +270,8 @@ class BaseGenerationService:
             messages, settings, response_format, supported, require_parameters=True
         )
         billed.append(result)
+        if result.finish_reason == "length":
+            raise _TruncatedOutput()
         self._guard_output(result.content)
         try:
             # 06C: under provider-enforced strict output the content IS the JSON object, so it is parsed EXACTLY (no fence or preamble extraction). A wrapped reply
@@ -273,6 +299,8 @@ class BaseGenerationService:
         primary = self._call_model(messages, settings, response_format, supported)
         attempt_results.append(primary)
         billed.append(primary)
+        if primary.finish_reason == "length":
+            raise _TruncatedOutput()
         self._guard_output(primary.content)
 
         def repair(bad_text: str, error: str) -> str:
@@ -282,6 +310,8 @@ class BaseGenerationService:
             )
             attempt_results.append(repaired)
             billed.append(repaired)
+            if repaired.finish_reason == "length":
+                raise _TruncatedOutput()
             # The repaired text is model output too: same safety scan as primary.
             self._guard_output(repaired.content)
             return repaired.content
@@ -322,7 +352,7 @@ class BaseGenerationService:
             reason,
         )
 
-    def _record_billed(self, model: str, billed: list[ChatResult]) -> None:
+    def _record_billed(self, model: str, billed: list[ChatResult]) -> UsageRecord | None:
         """Record usage for calls that were made but did not yield a result.
 
         Failed attempts still consume tokens the provider bills for, so their
@@ -330,7 +360,10 @@ class BaseGenerationService:
         object is returned.
         """
         if billed:
-            self._pricing.record_usage(self._build_usage(model, billed))
+            usage = self._build_usage(model, billed)
+            self._pricing.record_usage(usage)
+            return usage
+        return None
 
     def _effective_max_tokens(self, settings: ModelSettings) -> int:
         """Never request more output than the model itself allows.

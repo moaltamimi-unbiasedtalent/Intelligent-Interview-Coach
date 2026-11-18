@@ -7,6 +7,7 @@ SessionData schemas unchanged. Fault fixtures never open development databases.
 from __future__ import annotations
 
 import json
+import select as ready
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -34,6 +35,17 @@ from tests import _interview_factories as f
 from tests.test_api import _FakeClient, _FakeEval, _FakeReport
 from tests.test_durable_session_store import _factory
 from tests.test_interview_idempotency import _CountingDomain
+
+
+def _worker_line(child):
+    assert ready.select([child.stdout], [], [], 20)[0], "WORKER_HANDSHAKE_TIMEOUT"
+    line = child.stdout.readline()
+    if not line:
+        child.wait(timeout=5)
+        error = child.stderr.read(16384)
+        category = "WORKER_SOURCE_IMPORT_FAILURE" if "ModuleNotFoundError" in error else "WORKER_EARLY_EXIT"
+        raise AssertionError(f"{category}; exit={child.returncode}")
+    return line
 
 
 def _service(domain):
@@ -415,8 +427,9 @@ def test_successful_credential_preflight_retries_a_conclusively_undispatched_key
         with repo.session_factory() as db:
             from sqlalchemy import select
 
-            row = db.scalar(select(InterviewSession))
-            assert row.idempotency_key == headers["Idempotency-Key"] and row.active_operation is None
+            # Configuration refusal is conclusively pre-dispatch: even an
+            # idempotent request must not allocate an empty/orphan session.
+            assert db.scalar(select(InterviewSession)) is None
         fake = F.install_offline_interview_services(app, "healthy")
         created = client.post(f"{API}/interviews", json=CREATE, headers=headers, cookies=cookies)
         assert created.status_code == 200
@@ -527,15 +540,16 @@ def test_separate_process_claim_cannot_replace_committed_intent(ctx):
         process.stdin.flush()
 
     def receive(process):
-        line = process.stdout.readline()
+        line = _worker_line(process)
         assert line, "the fixture worker ended without its expected observation"
         return json.loads(line)
 
     try:
         for label in ("a", "b"):
-            child = subprocess.Popen([sys.executable, "-B", str(Path(__file__).resolve()), "worker", url,
+            child = subprocess.Popen([sys.executable, "-B", "-m", "tests.test_practice_setup_fencing", "worker", url,
                                       sid, str(owner), "claim_race_" + label],
-                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             cwd=str(Path(__file__).resolve().parents[1]))
             children.append(child)
             observed = receive(child)
             assert observed["stage"] == ("prepared" if label == "a" else "checked")
@@ -619,10 +633,11 @@ def test_all_practice_routes_return_consistent_safe_setup_errors(tmp_path, phase
 
 def test_process_crash_before_intent_is_conclusively_undispatched_and_retryable(ctx):
     store, sf, owner, sid, url = ctx
-    child = subprocess.Popen([sys.executable, "-B", str(Path(__file__).resolve()), "worker", url, sid, str(owner), "acquired"],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    child = subprocess.Popen([sys.executable, "-B", "-m", "tests.test_practice_setup_fencing", "worker", url, sid, str(owner), "acquired"],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             cwd=str(Path(__file__).resolve().parents[1]))
     try:
-        boundary = json.loads(child.stdout.readline())
+        boundary = json.loads(_worker_line(child))
         assert boundary["stage"] == "acquired" and ":" not in boundary["lease"]
         assert boundary["strategies"] == boundary["questions"] == 0
         child.kill()
@@ -640,10 +655,11 @@ def test_process_crash_before_intent_is_conclusively_undispatched_and_retryable(
 @pytest.mark.parametrize("stage", ["intent", "during_strategy", "after_strategy", "during_question", "results"])
 def test_process_crash_at_each_setup_boundary_holds_same_key(ctx, stage):
     store, sf, owner, sid, url = ctx
-    child = subprocess.Popen([sys.executable, "-B", str(Path(__file__).resolve()), "worker", url, sid, str(owner), stage],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    child = subprocess.Popen([sys.executable, "-B", "-m", "tests.test_practice_setup_fencing", "worker", url, sid, str(owner), stage],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             cwd=str(Path(__file__).resolve().parents[1]))
     try:
-        boundary = json.loads(child.stdout.readline())
+        boundary = json.loads(_worker_line(child))
         assert boundary["stage"] == stage and boundary["lease"].endswith(":dispatch")
         child.kill()
         child.wait(timeout=10)
@@ -662,10 +678,11 @@ def test_process_crash_at_each_setup_boundary_holds_same_key(ctx, stage):
 @pytest.mark.parametrize("stage", ["during_strategy", "during_question"])
 def test_live_process_with_expired_intent_allows_no_replacement_dispatch(ctx, stage):
     store, sf, owner, sid, url = ctx
-    child = subprocess.Popen([sys.executable, "-B", str(Path(__file__).resolve()), "worker", url, sid, str(owner), stage],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    child = subprocess.Popen([sys.executable, "-B", "-m", "tests.test_practice_setup_fencing", "worker", url, sid, str(owner), stage],
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                             cwd=str(Path(__file__).resolve().parents[1]))
     try:
-        boundary = json.loads(child.stdout.readline())
+        boundary = json.loads(_worker_line(child))
         assert boundary["stage"] == stage
         _expire(sf, sid)
         retry = _CountingDomain()
@@ -674,7 +691,7 @@ def test_live_process_with_expired_intent_allows_no_replacement_dispatch(ctx, st
         assert retry.strategies == retry.questions == 0
         child.stdin.write("continue\n")
         child.stdin.flush()
-        assert json.loads(child.stdout.readline()) == {"result": "committed", "strategies": 1, "questions": 1}
+        assert json.loads(_worker_line(child)) == {"result": "committed", "strategies": 1, "questions": 1}
         child.wait(timeout=10)
         _setup(store, owner, sid, retry)
         assert retry.strategies == retry.questions == 0

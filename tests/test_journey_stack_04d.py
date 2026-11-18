@@ -11,6 +11,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from fastapi import Request
 from fastapi.testclient import TestClient
 
 from scripts.e2e import journey_fakes as F
@@ -194,14 +195,86 @@ def test_start_interview_to_report_completes_on_a_healthy_hosted_like_stack(labe
 
 
 def test_a_down_provider_fails_the_start_once_without_claiming_success_or_retrying(labelled_languages):
+    from concurrent.futures import ThreadPoolExecutor
+    from sqlalchemy import select
+    from src import persistence as P
+    from src.api import dependencies as deps
+    from src.interview.session_repository import DurableInterviewSessionStore
     app, repo, fake = _world("provider_down")
     c, ck = _signed_in(app, repo, "down@example.com")
-    r = c.post("/api/v1/interviews", json=CREATE, cookies=ck)
-    assert r.status_code == 503 and r.json()["error"]["code"] in ("service_unavailable", "ai_provider_unavailable")
-    assert "current_question" not in r.json() and "session_id" not in r.json()
-    assert fake.calls == ["InterviewStrategy"], "the provider was called exactly once: no silent retry into duplicates"
-    assert c.get("/api/v1/history/interviews", cookies=ck).json()["interviews"] == []
-    assert PW not in r.text
+    key = {"Idempotency-Key": "synthetic-provider-down"}
+    try:
+        r = c.post("/api/v1/interviews", json=CREATE, cookies=ck, headers=key)
+        assert r.status_code == 409 and r.json()["error"]["code"] == "practice_setup_outcome_uncertain"
+        assert "current_question" not in r.json() and "session_id" not in r.json()
+        assert fake.calls == ["InterviewStrategy"]
+        with repo.session_factory() as db:
+            row = db.scalar(select(P.InterviewSession))
+            before = (row.session_id, row.version, row.active_operation, row.state_payload)
+            assert row.active_operation.endswith(":hold") and row.idempotency_key == key["Idempotency-Key"]
+            assert row.state_payload["usage_records"] == []  # no response: no fabricated cost receipt
+        app.dependency_overrides[deps.get_session_store] = lambda: DurableInterviewSessionStore(repo.session_factory)
+        real_factory = app.dependency_overrides[deps.get_interview_service]
+        configuration_checks = []
+        def unavailable(request: Request):
+            from src.application.errors import ConfigurationError
+            svc = real_factory(request)
+            def refuse():
+                configuration_checks.append(True)
+                raise ConfigurationError("synthetic configuration unavailable after dispatch")
+            svc.require_configured = refuse
+            return svc
+        app.dependency_overrides[deps.get_interview_service] = unavailable
+        def retry(_):
+            response = c.post("/api/v1/interviews", json=CREATE, cookies=ck, headers=key)
+            assert response.status_code == 409 and response.json()["error"]["code"] == "practice_setup_outcome_uncertain"
+        with ThreadPoolExecutor(max_workers=3) as pool:
+            list(pool.map(retry, range(3)))
+        assert fake.calls == ["InterviewStrategy"] and configuration_checks == []
+        with repo.session_factory() as db:
+            rows = db.scalars(select(P.InterviewSession)).all()
+            assert len(rows) == 1
+            row = rows[0]
+            assert (row.session_id, row.version, row.active_operation, row.state_payload) == before
+        assert c.get("/api/v1/history/interviews", cookies=ck).json()["interviews"] == []
+        assert PW not in r.text
+    finally:
+        c.__exit__(None, None, None)
+
+
+def test_keyless_refusal_allocates_nothing_and_existing_recovery_precedes_credentials(labelled_languages):
+    from src.api import dependencies as deps
+    from src.application.errors import ConfigurationError
+    from sqlalchemy import select, func
+    from src import persistence as P
+    app, repo, fake = _world("healthy")
+    c, ck = _signed_in(app, repo, "keyless@example.invalid")
+    real_factory = app.dependency_overrides[deps.get_interview_service]
+    def unavailable(request: Request):
+        svc = real_factory(request)
+        def refuse():
+            raise ConfigurationError("synthetic unavailable configuration")
+        svc.require_configured = refuse
+        return svc
+    app.dependency_overrides[deps.get_interview_service] = unavailable
+    try:
+        for headers in ({}, {"Idempotency-Key": "synthetic-empty-key"}):
+            r = c.post("/api/v1/interviews", json=CREATE, cookies=ck, headers=headers)
+            assert r.status_code == 503 and r.json()["error"]["code"] == "ai_not_configured"
+        with repo.session_factory() as db:
+            assert db.scalar(select(func.count()).select_from(P.InterviewSession)) == 0
+            assert db.scalar(select(func.count()).select_from(P.Interview)) == 0
+        assert fake.calls == []
+        app.dependency_overrides[deps.get_interview_service] = real_factory
+        key = {"Idempotency-Key": "synthetic-completed-setup"}
+        created = c.post("/api/v1/interviews", json=CREATE, cookies=ck, headers=key)
+        assert created.status_code == 200
+        app.dependency_overrides[deps.get_interview_service] = unavailable
+        recovered = c.post("/api/v1/interviews", json=CREATE, cookies=ck, headers=key)
+        assert recovered.status_code == 200 and recovered.json()["session_id"] == created.json()["session_id"]
+        assert fake.calls == ["InterviewStrategy", "InterviewQuestion"]
+    finally:
+        c.__exit__(None, None, None)
 
 
 def test_registration_in_a_hosted_like_stack_is_refused_without_an_invitation(labelled_languages):

@@ -48,10 +48,11 @@ for (const [index, locale] of languagesToRun().entries()) {
       expect((await state(page)).activeCount).toBe(1);
       return;
     }
-    const expectedCode = VARIANT === "keyless" ? "ai_not_configured" : "ai_provider_unavailable";
-    const copy = VARIANT === "keyless" ? "states.aiNotConfigured" : "states.aiProviderUnavailable";
+    const expectedCode = VARIANT === "keyless" ? "ai_not_configured" : "practice_setup_outcome_uncertain";
+    const expectedStatus = VARIANT === "keyless" ? 503 : 409;
+    const copy = VARIANT === "keyless" ? "states.aiNotConfigured" : "states.conflict";
     const other = VARIANT === "keyless" ? "states.aiProviderUnavailable" : "states.aiNotConfigured";
-    expect(response.status()).toBe(503);
+    expect(response.status()).toBe(expectedStatus);
     const body = await response.json();
     expect(body.error.code).toBe(expectedCode);
     expect(JSON.stringify(body)).not.toMatch(/openrouter|sk-or-|bearer\s+[a-z0-9]|api[ _-]?key|traceback/i);
@@ -64,7 +65,7 @@ for (const [index, locale] of languagesToRun().entries()) {
     const second = page.waitForResponse(r => new URL(r.url()).pathname === "/api/v1/interviews" && r.request().method() === "POST");
     await page.getByRole("button", { name: T(locale, "practice.start") }).click();
     const retry = await second;
-    expect(retry.status()).toBe(503);
+    expect(retry.status()).toBe(expectedStatus);
     expect((await retry.json()).error.code).toBe(expectedCode);
     await expect(page.getByRole("alert").filter({ hasText: T(locale, copy) })).toBeVisible();
     expect(requests).toHaveLength(2);

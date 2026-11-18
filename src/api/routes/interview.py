@@ -409,7 +409,7 @@ def _load_create_retry(
     store: DurableInterviewSessionStore, session_id: str, user_id: int, *, is_handoff: bool,
     opportunity_id: int | None,
 ) -> InterviewStateResponse | None:
-    if is_handoff and store.opportunity_id_for(session_id, user_id) != opportunity_id:
+    if store.opportunity_id_for(session_id, user_id) != opportunity_id:
         raise ConflictError("The existing practice session does not match this handoff.")
     existing = _load(store, session_id, user_id)
     if existing.data.state != _INCOMPLETE_SETUP or existing.data.questions:
@@ -489,6 +489,23 @@ def create_interview(
     configuration = _apply_governed_context(configuration, body, user_id=user_id, request=request, session_factory=repo.session_factory)
     configuration = _resolve_coaching_default(configuration, user_id=user_id, request=request)
 
+    # Recover an existing owned attempt before checking credentials: a held
+    # dispatch must not become a misleading configuration error or a new attempt.
+    if key:
+        existing_id = store.find_idempotent_session(user_id, key)
+        if existing_id is not None:
+            recovered = _load_create_retry(store, existing_id, user_id, is_handoff=is_handoff, opportunity_id=opportunity_id)
+            if recovered is not None:
+                return recovered
+
+    # Credential configuration is checked before allocating a new attempt or committing dispatch intent.
+    # An injected offline service supplies its own synthetic implementation.
+    try:
+        svc.require_configured()
+    except ConfigurationError:
+        raise CodedHTTPException(503, constants.AI_NOT_CONFIGURED, constants.AI_FAILURE_MESSAGES[constants.AI_NOT_CONFIGURED]) from None
+
+
     if key:
         session_id, created = store.create_or_get(user_id, key, opportunity_id=opportunity_id)
         if not created:
@@ -498,12 +515,6 @@ def create_interview(
     else:
         session_id = store.create(user_id, opportunity_id=opportunity_id)
 
-    # Credential configuration is checked before committing any dispatch intent.
-    # An injected offline service supplies its own synthetic implementation.
-    try:
-        svc.require_configured()
-    except ConfigurationError:
-        raise CodedHTTPException(503, constants.AI_NOT_CONFIGURED, constants.AI_FAILURE_MESSAGES[constants.AI_NOT_CONFIGURED]) from None
 
     try:
         with store.mutate(session_id, user_id, operation="create") as session:

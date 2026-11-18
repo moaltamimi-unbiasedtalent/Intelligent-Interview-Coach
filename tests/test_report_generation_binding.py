@@ -130,13 +130,18 @@ def test_prelock_request_refuses_reused_id_even_with_identical_timestamps(f, leg
     token = generation(f, rid)
     with f.sf() as db:
         old_time = db.get(P.Interview, rid).created_at
-    child = subprocess.Popen([sys.executable, '-B', str(Path(__file__).resolve()), '--prelock',
+    child = subprocess.Popen([sys.executable, '-B', "-m", "tests.test_report_generation_binding", '--prelock',
         f.url, str(f.owner), str(f.workspace), str(rid), token], stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        cwd=str(Path(__file__).resolve().parents[1]))
     def receive():
         assert ready.select([child.stdout], [], [], 20)[0], 'synthetic worker timed out'
         line = child.stdout.readline()
-        assert line, 'synthetic worker ended early'
+        if not line:
+            child.wait(timeout=5)
+            error = child.stderr.read(16384)
+            category = "WORKER_SOURCE_IMPORT_FAILURE" if "ModuleNotFoundError" in error else "WORKER_EARLY_EXIT"
+            raise AssertionError(f"{category}; exit={child.returncode}")
         return json.loads(line)
     try:
         assert receive() == {'selected_request_paused_before_lock': True}

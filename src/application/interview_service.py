@@ -30,6 +30,12 @@ def _fail(session: SessionManager, exc: ServiceError, recover_to: SessionState, 
 
     The record is one bounded operational event: subsystem, operation, outcome ``unavailable`` and the cause CODE only. Never the provider's text, a key, a URL, a prompt, a
     candidate answer or an identity. Recording never affects the candidate's operation."""
+    # The domain already recorded this attempt in pricing. Transfer one validated
+    # copy into session state before the store persists the uncertainty hold.
+    # Do not call pricing.record_usage again or deduplicate equal-cost distinct calls.
+    usage = exc.usage_receipt
+    if usage is not None:
+        session.record_usage(usage)
     code = getattr(exc, "code", None)
     session.enter_error(exc.message, recover_to=recover_to, code=code)
     if code in constants.AI_FAILURE_CODES:

@@ -123,7 +123,25 @@ def serve(args: argparse.Namespace) -> int:
     from scripts.e2e import journey_fakes as F
 
     fixtures = F.load_fixtures()
-    F.install_offline_interview_services(app, args.variant, fixtures)
+    fixture_client = F.install_offline_interview_services(app, args.variant, fixtures)
+    # Local synthetic metadata only; no request payload, credentials or browser traces.
+    count_path = state / "provider-counts.json"
+    def record_counts():
+        calls = fixture_client.calls if fixture_client is not None else []
+        allowed = ("InterviewStrategy", "InterviewQuestion", "AnswerEvaluation", "FinalInterviewReport")
+        if any(name not in allowed for name in calls):
+            raise AssertionError("unexpected synthetic interview operation")
+        count_path.write_text(json.dumps({name: calls.count(name) for name in allowed}), encoding="utf-8")
+        os.chmod(count_path, 0o600)
+    record_counts()
+    if fixture_client is not None:
+        original_completion = fixture_client.create_chat_completion
+        def counted_completion(**kwargs):
+            try:
+                return original_completion(**kwargs)
+            finally:
+                record_counts()
+        fixture_client.create_chat_completion = counted_completion
     if args.variant in ("healthy", "provider_down"):
         from src.application import agent_service
 
@@ -250,10 +268,31 @@ def run(args: argparse.Namespace) -> int:
                 with sqlite3.connect(f"file:{state / 'journey.db'}?mode=ro", uri=True) as db:
                     counts = {table: db.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
                               for table in ("interview_sessions", "interviews", "reports")}
-                expected = {"interview_sessions": 1 if args.variant == "healthy" else 0, "interviews": 0, "reports": 0}
+                    rows = db.execute("SELECT status, active_operation, state_payload FROM interview_sessions").fetchall()
+                calls = json.loads((state / "provider-counts.json").read_text(encoding="utf-8"))
+                expected = {"interview_sessions": 0 if args.variant == "keyless" else 1, "interviews": 0, "reports": 0}
                 if counts != expected:
                     raise AssertionError("disposable interview persistence did not match the scenario")
-                print(f"Focused connected Start Interview: 1 PASS; variant={args.variant}; locale={langs[0]}; disposable persistence PASS")
+                strategy_calls = 0 if args.variant == "keyless" else 1
+                question_calls = 1 if args.variant == "healthy" else 0
+                if calls != {"InterviewStrategy": strategy_calls, "InterviewQuestion": question_calls,
+                             "AnswerEvaluation": 0, "FinalInterviewReport": 0}:
+                    raise AssertionError("disposable interview invocation counts did not match the scenario")
+                if args.variant == "provider_down":
+                    status, active, payload = rows[0]
+                    payload = json.loads(payload)
+                    if status != "ERROR" or not (active or "").endswith(":hold") or payload.get("questions") or payload.get("usage_records"):
+                        raise AssertionError("disposable failed setup hold did not match the scenario")
+                elif args.variant == "healthy":
+                    status, active, payload = rows[0]
+                    payload = json.loads(payload)
+                    if status != "AWAITING_ANSWER" or active is not None or len(payload.get("questions") or []) != 1 or len(payload.get("usage_records") or []) != 2:
+                        raise AssertionError("disposable ready setup did not match the scenario")
+                print("Focused connected Start Interview: " + json.dumps({
+                    "result": "PASS", "variant": args.variant, "locale": langs[0],
+                    "persistence": counts, "synthetic_invocations": calls,
+                    "uncertainty_hold": args.variant == "provider_down",
+                }, sort_keys=True))
     finally:
         if args.focused_start:
             _stop_owned_process_group(web)

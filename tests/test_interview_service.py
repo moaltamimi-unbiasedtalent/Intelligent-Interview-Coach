@@ -279,13 +279,20 @@ class TestTokenBudgetHardening:
         # finish_reason == "length" means the budget was exhausted; a fresh
         # attempt with the same budget cannot succeed, so it must not be retried.
         client = TruncatingClient()
-        service = InterviewService(client, _pricing())
+        pricing = _pricing()
+        service = InterviewService(client, pricing)
         with pytest.raises(ModelResponseError) as excinfo:
             service.generate_strategy(_config(), _settings())
         assert "output-token limit" in str(excinfo.value)
-        # One attempt only (primary + its single repair), then stop — not the
-        # full GENERATION_MAX_ATTEMPTS * 2 calls.
-        assert client.calls == 2
+        # Explicit truncation stops after the primary response: no repair call
+        # can complete within the same exhausted budget. Preserve observed usage.
+        assert client.calls == 1
+        receipt = excinfo.value.usage_receipt
+        assert receipt is not None and len(pricing.records) == 1
+        assert receipt == pricing.records[0]
+        assert (receipt.prompt_tokens, receipt.completion_tokens, receipt.total_tokens) == (100, 50, 150)
+        assert receipt.reported_cost == 0.001
+        assert receipt is not excinfo.value.usage_receipt
 
     def test_request_budget_capped_to_model_max_completion(self) -> None:
         # A configured budget ABOVE the model's advertised completion limit is
