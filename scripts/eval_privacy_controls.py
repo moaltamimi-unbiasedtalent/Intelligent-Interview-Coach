@@ -100,6 +100,87 @@ def _read(rel: str) -> str:
     return p.read_text(encoding="utf-8") if p.exists() else ""
 
 
+def delete_routes_owner_scoped() -> bool:
+    """Exercise the actual route and atomic helper, rather than a method-name spelling.
+
+    Identity is supplied only by this isolated evaluator's dependency. No provider
+    or existing application database participates in this behavioral gate.
+    """
+    from fastapi import Header, HTTPException
+    from fastapi.testclient import TestClient
+    from sqlalchemy import select
+    from sqlalchemy.pool import StaticPool
+
+    from src.api import dependencies as deps
+    from src.api.main import create_app
+    from src.application.sharing_service import SharingService
+    from src.auth_repository import AuditRepository
+    from src.interview.session_repository import DurableInterviewSessionStore
+    from src.workspace_repository import WorkspaceRepository
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    client = None
+    try:
+        Base.metadata.create_all(engine)
+        sf = make_session_factory(engine)
+        repo, store = InterviewRepository(sf), DurableInterviewSessionStore(sf)
+        with sf() as db:
+            owner, other = P.User(subject="delete-owner", provider="test"), P.User(subject="delete-other", provider="test")
+            db.add_all([owner, other]); db.flush()
+            owner_id, other_id = owner.id, other.id
+            db.commit()
+        owner_sid, other_sid = store.create(owner_id), store.create(other_id)
+        payload = {"configuration": {"target_role": "Synthetic role"}, "status": "completed", "questions": []}
+        owner_report = repo.save_interview(owner_id, payload, source_session_id=owner_sid)
+        other_report = repo.save_interview(other_id, payload, source_session_id=other_sid)
+        audit = AuditRepository(sf)
+        sharing = SharingService(workspaces=WorkspaceRepository(sf), audit=audit)
+        app = create_app()
+        def identity(x_evaluator_user: str | None = Header(default=None)):
+            if x_evaluator_user not in (str(owner_id), str(other_id)):
+                raise HTTPException(401, "Authentication required.")
+            return int(x_evaluator_user)
+        def dependency(value):
+            return lambda: value
+        for dep, value in ((deps.get_repository, repo), (deps.get_session_store, store),
+                           (deps.get_sharing_service, sharing), (deps.get_audit_repository, audit)):
+            app.dependency_overrides[dep] = dependency(value)
+        app.dependency_overrides[deps.get_current_user_id] = identity
+        client = TestClient(app, raise_server_exceptions=False)
+        def snapshot():
+            with sf() as db:
+                return {name: [repr(tuple(row)) for row in db.execute(
+                    select(Base.metadata.tables[name]).order_by(*Base.metadata.tables[name].primary_key.columns))]
+                    for name in ("interviews", "interview_sessions", "audit_events")}
+        path = f"/api/v1/history/interviews/{owner_report}"
+        before = snapshot()
+        if client.delete(path, headers={"X-Evaluator-User": str(other_id)}).status_code != 404 or snapshot() != before:
+            return False
+        if client.delete(path).status_code != 401 or snapshot() != before:
+            return False
+        accepted = client.delete(path, headers={"X-Evaluator-User": str(owner_id)})
+        if accepted.status_code != 200 or accepted.json() != {"deleted": True}:
+            return False
+        with sf() as db:
+            events = db.scalars(select(P.AuditEvent).where(P.AuditEvent.event_type == "interview.deleted")).all()
+            intact = (db.get(P.Interview, owner_report) is None and db.get(P.InterviewSession, owner_sid) is None
+                      and db.get(P.Interview, other_report) is not None and db.get(P.InterviewSession, other_sid) is not None
+                      and len(events) == 1 and events[0].actor_user_id == owner_id
+                      and events[0].event_type == "interview.deleted" and events[0].target_id == str(owner_report))
+        after = snapshot()
+        return bool(intact
+                    and all(len(after[name]) == len(before[name]) - 1 and set(after[name]).issubset(before[name])
+                            for name in ("interviews", "interview_sessions"))
+                    and len(after["audit_events"]) == len(before["audit_events"]) + 1
+                    and set(before["audit_events"]).issubset(after["audit_events"])
+                    and client.delete(path, headers={"X-Evaluator-User": str(owner_id)}).status_code == 404
+                    and snapshot() == after)
+    finally:
+        if client is not None:
+            client.close()
+        engine.dispose()
+
+
 def run() -> dict[str, tuple[bool, str]]:
     out: dict[str, tuple[bool, str]] = {}
 
@@ -141,11 +222,8 @@ def run() -> dict[str, tuple[bool, str]]:
     check("no_fabricated_legal_history", ex["legal_acceptance"] == {"recorded": False},
           "acceptance history is reported as not recorded, never invented")
 
-    history = _read("src/api/routes/history.py")
-    delete_block = history.split("def delete_interview")[1] if "def delete_interview" in history else ""
-    check("delete_routes_owner_scoped",
-          "get_current_user_id" in delete_block and "delete_interview_with_source(user_id" in delete_block,
-          "identity from the session; repository filters by user_id")
+    check("delete_routes_owner_scoped", delete_routes_owner_scoped(),
+          "real route: foreign/anonymous refusal without mutation; owned atomic deletion; other owner preserved; repeat 404")
 
     retry = _read("frontend/lib/api/retry.ts")
     idem = retry.split("function isIdempotent")[1].split("}")[0] if "function isIdempotent" in retry else ""

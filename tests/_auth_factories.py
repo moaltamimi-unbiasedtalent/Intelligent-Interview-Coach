@@ -37,6 +37,12 @@ def build_auth_app(env: str = "test"):
 
     app = create_app(ApiSettings(env=env, frontend_origins=("http://localhost:3000",)))
     app.dependency_overrides[deps.get_repository] = lambda: repo
+    # Direct calls inside get_session_store do not use FastAPI's dependency
+    # override. Bind it explicitly to this fixture's database, just like memory.
+    from src.interview.session_repository import DurableInterviewSessionStore
+
+    session_store = DurableInterviewSessionStore(repo.session_factory)
+    app.dependency_overrides[deps.get_session_store] = lambda: session_store
     # get_memory_service/get_memory_repository build their repository by calling get_repository(request)
     # directly (not via Depends), so a repository override alone does NOT reach them: memory writes would
     # land in the configured (dev) DB. Override the service seam too (this was the TD-W9-02 leak path).

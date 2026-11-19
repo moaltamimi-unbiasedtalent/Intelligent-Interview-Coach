@@ -112,9 +112,10 @@ def test_history_repair_after_durable_save_failure(tmp_path):
     # Scenario B: history row committed, but the durable saved_report_id save failed.
     repo, _sf, alice, _bob = _repo(tmp_path)
     session = _completed_session()
+    source_id = DurableInterviewSessionStore(_sf).create(alice)
 
     history_service.save_completed_interview(session, config=None, repo=repo, user_id=alice,
-                                             source_session_id="sess-9")
+                                             source_session_id=source_id)
     first_id = session.data.saved_report_id
     assert first_id is not None
 
@@ -124,7 +125,7 @@ def test_history_repair_after_durable_save_failure(tmp_path):
 
     # Retry repairs from the existing History row — no duplicate.
     history_service.save_completed_interview(session, config=None, repo=repo, user_id=alice,
-                                             source_session_id="sess-9")
+                                             source_session_id=source_id)
     assert session.data.saved_report_id == first_id
     assert session.data.save_failed is False
     assert len(repo.list_interviews(alice)) == 1

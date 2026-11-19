@@ -73,13 +73,15 @@ def _run_matrix(kind: str):
     try:
         rid = _resource(kind, c, repo, a)
         base = "/api/v1/shares"
+        generation = ({"expected_report_generation": c.get(f"/api/v1/history/interviews/{rid}",
+            cookies=cookies_for(a)).json()["interview"]["share_generation"]} if kind == "interview_report" else {})
 
         # non-owner cannot share the resource (bob doesn't own alice's resource).
-        assert c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid},
+        assert c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid, **generation},
                       cookies=cookies_for(b)).status_code == 403
 
         # owner shares into the workspace.
-        r = c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid},
+        r = c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid, **generation},
                    cookies=cookies_for(a))
         assert r.status_code == 200, r.text
         share_id = r.json()["share_id"]
@@ -99,7 +101,7 @@ def _run_matrix(kind: str):
         assert c.get(f"{base}/resource/{kind}/{rid}", cookies=cookies_for(b)).status_code == 404
 
         # ownership remains with alice: she can still read her own resource by re-sharing.
-        c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid}, cookies=cookies_for(a))
+        c.post(base, json={"workspace_id": wid, "consent": True, "resource_type": kind, "resource_id": rid, **generation}, cookies=cookies_for(a))
         assert c.get(f"{base}/resource/{kind}/{rid}", cookies=cookies_for(b)).status_code == 200
 
         # source deletion removes access (no resurrection from a stale grant).
@@ -126,7 +128,8 @@ def test_cross_workspace_share_cannot_be_read_from_another_workspace():
     try:
         # mallory creates her OWN workspace; bob is only in alice's workspace.
         rid = _seed_report(repo, _uid(c, a))
-        c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": rid},
+        c.post("/api/v1/shares", json={"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": rid,
+            "expected_report_generation": c.get(f"/api/v1/history/interviews/{rid}", cookies=cookies_for(a)).json()["interview"]["share_generation"]},
                cookies=cookies_for(a))
         # mallory (member of a different, own workspace) still cannot read alice's shared report.
         c.post("/api/v1/workspaces", json={"name": "Mallory WS"}, cookies=cookies_for(m))

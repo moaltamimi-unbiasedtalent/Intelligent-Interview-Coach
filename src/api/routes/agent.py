@@ -24,7 +24,7 @@ from src.application.agent_service import (
     RunNotFoundError,
     RunNotResumableError,
 )
-from src.api.dependencies import get_agent_service, get_current_user_id, get_model_profile_policy, get_request_id
+from src.api.dependencies import get_agent_service, get_current_user_id, get_model_profile_policy, get_repository, get_request_id
 from src.api.guards import cost_limit, require_not_paused
 from src.api.schemas.agent import (
     AgentContinueRequest,
@@ -55,6 +55,7 @@ def _to_response(result) -> AgentRunResponse:
         presentation=presentation,
         failure_code=getattr(result, "failure_code", None),
         run_id=result.run_id,
+        opportunity_id=result.opportunity_id,
         status=result.status,
         response=result.response,
         tools_used=result.tools_used,
@@ -109,12 +110,13 @@ def run_agent(
     request_id: str = Depends(get_request_id),
     _cost=Depends(cost_limit("cost_agent_user")),
     model_policy=Depends(get_model_profile_policy),
+    repo=Depends(get_repository),
 ) -> AgentRunResponse:
-    prepared = _prepare_request(body, request, user_id, model_policy)
+    prepared = _prepare_request(body, request, user_id, model_policy, repo)
     return _to_response(service.run(prepared, request_id=request_id))
 
 
-def _prepare_request(body, request, user_id, model_policy):
+def _prepare_request(body, request, user_id, model_policy, repo):
     # W12.4D-P2-C: authorize the profile BEFORE the service or any model is touched. While the rollout gate is disabled this returns exactly what the candidate
     # sent (today's behaviour); when enabled a Basic account can only use Fast.
     chosen_profile = model_policy.authorize(user_id, body.profile, workflow="agent")
@@ -122,6 +124,11 @@ def _prepare_request(body, request, user_id, model_policy):
     from src.language_activation import require_locale_activated
 
     require_locale_activated(body.conversation_language)
+    if body.opportunity_id is not None:
+        from src.opportunity_repository import OpportunityRepository
+
+        if OpportunityRepository(repo.session_factory).get(user_id, body.opportunity_id) is None:
+            raise HTTPException(status_code=404, detail="Opportunity not found.")
     # Owner-scoped: a candidate may SELECT a stored JD instead of pasting it (P10B Wave 4). The
     # server resolves the document text (never the client); an explicit pasted JD takes priority,
     # and a foreign/missing id resolves to no JD (never another user's data).
@@ -137,6 +144,7 @@ def _prepare_request(body, request, user_id, model_policy):
     return AppAgentRunRequest(
         goal=body.goal, target_role=body.target_role, job_description=job_description,
         candidate_background=body.candidate_background, user_id=str(user_id),
+        opportunity_id=body.opportunity_id,
         profile=chosen_profile.value if chosen_profile is not None else None,
         enable_current_market_research=body.enable_current_market_research,
         conversation_language=body.conversation_language, coaching_style=body.coaching_style)
@@ -164,9 +172,10 @@ async def stream_agent_run(
     _pause=Depends(require_not_paused("agent")),
     service=Depends(get_agent_service), request_id: str = Depends(get_request_id),
     _cost=Depends(cost_limit("cost_agent_user")), model_policy=Depends(get_model_profile_policy),
+    repo=Depends(get_repository),
 ):
     manager = await run_in_threadpool(_streamer, service)
-    prepared = await run_in_threadpool(_prepare_request, body, request, user_id, model_policy)
+    prepared = await run_in_threadpool(_prepare_request, body, request, user_id, model_policy, repo)
     run_id = await manager.start(prepared, request_id)
     return StreamingResponse(manager.events(run_id, str(user_id), request_id, serialize=lambda result: _to_response(result).model_dump(mode="json")), media_type="text/event-stream",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})

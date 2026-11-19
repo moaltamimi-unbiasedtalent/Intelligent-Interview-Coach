@@ -72,6 +72,7 @@ class ShareRequest(BaseModel):
     resource_id: str = Field(max_length=128)
     # Explicit consent: the sharer acknowledges that every active member of the workspace can view this one item.
     consent: bool = False
+    expected_report_generation: str | None = Field(default=None, min_length=32, max_length=32, pattern=r"^[0-9a-f]{32}$", strict=True)
 
 
 # -- workspaces ---------------------------------------------------------------
@@ -202,7 +203,7 @@ def create_share(body: ShareRequest, user_id: int = Depends(get_current_user_id)
                  svc=Depends(get_sharing_service)) -> dict:
     return _guard(lambda: svc.share(user_id=user_id, workspace_id=body.workspace_id,
                                    resource_type=body.resource_type, resource_id=body.resource_id,
-                                   consent=body.consent))
+                                   consent=body.consent, expected_report_generation=body.expected_report_generation))
 
 
 @shares_router.delete("/{share_id}", summary="Revoke a share (owner only)")

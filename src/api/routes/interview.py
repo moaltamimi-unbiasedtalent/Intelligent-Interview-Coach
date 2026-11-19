@@ -25,6 +25,7 @@ from src import constants
 from src.ai_protection import ai_operation
 from src.api.coded_errors import CodedHTTPException
 from src.api.dependencies import (
+    get_agent_service,
     get_history_access_policy,
     get_model_profile_policy,
     get_app_config,
@@ -43,6 +44,7 @@ from src.api.schemas.interview import (
     DeepDiveStateOut,
     InterviewOptionsResponse,
     InterviewStateResponse,
+    PreparationContextIn,
     QuestionOut,
     ReportResponse,
 )
@@ -52,6 +54,7 @@ from src.application.model_profile_access import PRACTICE_DEFAULT_PROFILE
 from src.llm.models import effective_interview_profile, model_id
 from src.application.errors import (
     ConflictError,
+    ConfigurationError,
     MissingHandoffConfigError,
     UnavailableServiceError,
     ValidationError,
@@ -62,12 +65,16 @@ from src.interview.session_repository import (
     OperationInProgressError,
     SessionConflictError,
     SessionNotFoundError,
+    SetupInProgressError,
+    SetupOutcomeUncertainError,
 )
 from src.session_manager import SessionManager, SessionState
 
 router = APIRouter(prefix="/interviews", tags=["interviews"])
+_STORE_ERRORS = (SessionNotFoundError, OperationInProgressError, SessionConflictError, SetupOutcomeUncertainError)
 
 _MAX_IDEMPOTENCY_KEY = 200
+_AGENT_HANDOFF_KEY_PREFIX = "agent-handoff:"
 # 04A: story text copied into a session is wrapped in these markers (see src/documents/repository.py) so its use is attributed and a story delete can strip it.
 _STORY_MARK = re.compile(r"\[\[STORY (\d+) BEGIN\]\]")
 
@@ -306,6 +313,8 @@ def _load(store: DurableInterviewSessionStore, session_id: str, user_id: int) ->
         return store.load_state(session_id, user_id)
     except SessionNotFoundError:
         raise ValidationError("Unknown interview session.") from None
+    except (OperationInProgressError, SetupOutcomeUncertainError) as exc:
+        raise _translate_store_error(exc) from None
 
 
 def _guard_completed_history(session: SessionManager, user_id: int, policy, repo) -> None:
@@ -332,11 +341,16 @@ def _guard_session_profile(session: SessionManager, user_id: int, model_policy) 
 
 
 def _translate_store_error(exc: Exception) -> Exception:
+    if isinstance(exc, SetupOutcomeUncertainError):
+        return CodedHTTPException(409, "practice_setup_outcome_uncertain",
+                                 "The outcome of this practice setup could not be confirmed. Please contact support before starting another attempt.")
     if isinstance(exc, SessionNotFoundError):
         return ValidationError("Unknown interview session.")
-    if isinstance(exc, OperationInProgressError):
-        return ConflictError(
+    if isinstance(exc, SetupInProgressError):
+        return CodedHTTPException(409, "interview_operation_in_progress",
             "Another step of this interview is already being processed. Please wait a moment.")
+    if isinstance(exc, OperationInProgressError):
+        return ConflictError("Another step of this interview is already being processed. Please wait a moment.")
     if isinstance(exc, SessionConflictError):
         return ConflictError(
             "This interview session changed in another tab. Reload the latest version.")
@@ -353,9 +367,9 @@ def _raise_if_setup_failed(session: SessionManager) -> None:
     by moving the session to ERROR (recording the safe cause) WITHOUT re-raising. If we
     then blindly ran the next step, ``add_question`` would reject the ERROR state and
     raise a confusing "Cannot add a question from state ERROR" that MASKS the real cause.
-    Instead, surface the original safe message and stop — the state machine is untouched,
-    and because ``store.mutate`` does not persist on exception the durable session stays
-    in bare SETUP so an idempotent retry re-runs setup cleanly."""
+    Raise the safe cause immediately so the next setup step is skipped. The durable
+    setup boundary retains dispatch intent and available results or usage for
+    reconciliation, preventing an uncertain attempt from automatically running again."""
     if session.data.state is SessionState.ERROR:
         # 04D: a missing AI credential and a provider failure are DIFFERENT facts. Each gets its own stable code and fixed copy (never the provider's text), so the client can tell
         # the candidate "this environment has no AI configured" from "the AI service failed this time, try again". Nothing was started in either case.
@@ -367,6 +381,40 @@ def _raise_if_setup_failed(session: SessionManager) -> None:
             session.data.error
             or "We couldn't set up your interview right now. Please try again."
         )
+
+
+def _bind_agent_handoff(body: CreateInterviewRequest, request: Request, user_id: int, run_id: str) -> CreateInterviewRequest:
+    """Use the owned, approved Mo checkpoint as the authority for a reserved handoff key."""
+    from src.application.agent_service import RunNotFoundError
+
+    if not 1 <= len(run_id) <= 64:
+        raise ValidationError("The practice handoff key is invalid.")
+    try:
+        run = get_agent_service(request).get_run(run_id, str(user_id))
+    except RunNotFoundError:
+        raise HTTPException(status_code=404, detail="Preparation run not found.") from None
+    if not run.handoff_approved or run.preparation_context is None:
+        raise ConflictError("This preparation run has no approved practice handoff.")
+    if body.opportunity_id is not None and body.opportunity_id != run.opportunity_id:
+        raise ConflictError("The selected opportunity does not match this practice handoff.")
+    if body.configuration is not None:
+        raise ValidationError("An approved practice handoff uses its saved preparation context.")
+    return body.model_copy(update={
+        "opportunity_id": run.opportunity_id,
+        "preparation_context": PreparationContextIn.model_validate(run.preparation_context),
+    })
+
+
+def _load_create_retry(
+    store: DurableInterviewSessionStore, session_id: str, user_id: int, *, is_handoff: bool,
+    opportunity_id: int | None,
+) -> InterviewStateResponse | None:
+    if store.opportunity_id_for(session_id, user_id) != opportunity_id:
+        raise ConflictError("The existing practice session does not match this handoff.")
+    existing = _load(store, session_id, user_id)
+    if existing.data.state != _INCOMPLETE_SETUP or existing.data.questions:
+        return _state(session_id, existing)
+    return None
 
 
 def _run_setup(svc: InterviewApplicationService, session: SessionManager, configuration, profile=None) -> None:
@@ -406,12 +454,13 @@ def create_interview(
     chosen_profile = model_policy.authorize(user_id, body.model_profile, workflow="practice")
     if chosen_profile is PRACTICE_DEFAULT_PROFILE and not model_policy.decide(user_id).enforced:
         chosen_profile = None
-    configuration = _build_configuration(body)
-    # Owner-scoped governed context: a selected JD document + approved evidence (Wave 4).
-    # Resolved lazily — only when the request actually selected document/evidence context.
-    configuration = _apply_governed_context(configuration, body, user_id=user_id, request=request, session_factory=repo.session_factory)
-    # Default the coaching tone from the account preference when unset (Wave 2; feedback wording only).
-    configuration = _resolve_coaching_default(configuration, user_id=user_id, request=request)
+
+    key = (idempotency_key or "").strip()
+    if len(key) > _MAX_IDEMPOTENCY_KEY:
+        raise ValidationError("The idempotency key is too long.")
+    is_handoff = key.startswith(_AGENT_HANDOFF_KEY_PREFIX)
+    if is_handoff:
+        body = _bind_agent_handoff(body, request, user_id, key.removeprefix(_AGENT_HANDOFF_KEY_PREFIX))
 
     # Optional Opportunity link (P10B Wave 6): verify OWNERSHIP server-side before attaching a
     # session to it. Resolved lazily - only when a link was requested - so the common path adds no
@@ -426,42 +475,61 @@ def create_interview(
         if opp_service.get(user_id, opportunity_id) is None:
             raise HTTPException(status_code=404, detail="Opportunity not found.")
 
-    key = (idempotency_key or "").strip()
+    # On reload, the client has the approved checkpoint but may no longer have
+    # the missing details it filled in when first creating this session.
+    if is_handoff:
+        existing_id = store.find_idempotent_session(user_id, key)
+        if existing_id is not None:
+            recovered = _load_create_retry(store, existing_id, user_id, is_handoff=True, opportunity_id=opportunity_id)
+            if recovered is not None:
+                return recovered
+
+    configuration = _build_configuration(body)
+    # Resolve candidate-selected documents and approved evidence only when requested.
+    configuration = _apply_governed_context(configuration, body, user_id=user_id, request=request, session_factory=repo.session_factory)
+    configuration = _resolve_coaching_default(configuration, user_id=user_id, request=request)
+
+    # Recover an existing owned attempt before checking credentials: a held
+    # dispatch must not become a misleading configuration error or a new attempt.
     if key:
-        if len(key) > _MAX_IDEMPOTENCY_KEY:
-            raise ValidationError("The idempotency key is too long.")
+        existing_id = store.find_idempotent_session(user_id, key)
+        if existing_id is not None:
+            recovered = _load_create_retry(store, existing_id, user_id, is_handoff=is_handoff, opportunity_id=opportunity_id)
+            if recovered is not None:
+                return recovered
+
+    # Credential configuration is checked before allocating a new attempt or committing dispatch intent.
+    # An injected offline service supplies its own synthetic implementation.
+    try:
+        svc.require_configured()
+    except ConfigurationError:
+        raise CodedHTTPException(503, constants.AI_NOT_CONFIGURED, constants.AI_FAILURE_MESSAGES[constants.AI_NOT_CONFIGURED]) from None
+
+
+    if key:
         session_id, created = store.create_or_get(user_id, key, opportunity_id=opportunity_id)
         if not created:
-            existing = _load(store, session_id, user_id)
-            # A completed-or-in-progress prior create is returned as-is (never reset).
-            # Only a create that stopped in bare SETUP with no question is resumed.
-            if existing.data.state != _INCOMPLETE_SETUP or existing.data.questions:
-                return _state(session_id, existing)
+            recovered = _load_create_retry(store, session_id, user_id, is_handoff=is_handoff, opportunity_id=opportunity_id)
+            if recovered is not None:
+                return recovered
     else:
         session_id = store.create(user_id, opportunity_id=opportunity_id)
 
-    used_story_ids = [int(i) for i in dict.fromkeys(_STORY_MARK.findall(configuration.candidate_background or ""))]
-    if used_story_ids:
-        # 04A attribution: ids only (ownership re-verified inside), recorded before setup so a later story delete can find and strip the text copied into
-        # this session. Covers both the per-story selection and the blanket "use my evidence" option.
-        from src.documents.repository import StoryRepository as _Stories
-
-        _Stories(repo.session_factory).record_uses(user_id=user_id, story_ids=used_story_ids, session_id=session_id)
 
     try:
         with store.mutate(session_id, user_id, operation="create") as session:
-            _run_setup(svc, session, configuration, chosen_profile)
-    except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
+            # The first request may have completed while this one waited to claim
+            # the lease. Only a session still in bare SETUP can dispatch setup work.
+            if session.data.state == _INCOMPLETE_SETUP and not session.data.questions:
+                used_story_ids = [int(i) for i in dict.fromkeys(_STORY_MARK.findall(configuration.candidate_background or ""))]
+                if used_story_ids:
+                    # Record owner-scoped use so a later story deletion can strip the copied text.
+                    from src.documents.repository import StoryRepository
+
+                    StoryRepository(repo.session_factory).record_uses(user_id=user_id, story_ids=used_story_ids, session_id=session_id)
+                _run_setup(svc, session, configuration, chosen_profile)
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
-    except (CodedHTTPException, UnavailableServiceError):
-        # 04D: a start that failed before ANY question existed must leave nothing behind. Otherwise every failed press of Start (the AI not configured, or the provider down)
-        # left an empty "SETUP" session in the candidate's resumable list: a claim that an interview was started when none was. Discard it (best effort, owner-scoped) and
-        # re-raise the same safe error; a retry then starts one fresh setup, never a second one beside it.
-        try:
-            store.discard(session_id, user_id)
-        except Exception:  # noqa: BLE001 - cleanup must never mask the real, safe error
-            pass
-        raise
     return _state(session_id, session)
 
 
@@ -522,7 +590,10 @@ def delete_interview(
 ) -> dict:
     """Discard a user-owned in-progress session (idempotency mapping removed with it).
     Completed interview history is never deleted here."""
-    store.discard(session_id, user_id)
+    try:
+        store.discard(session_id, user_id)
+    except _STORE_ERRORS as exc:
+        raise _translate_store_error(exc) from None
     return {"deleted": True, "session_id": session_id}
 
 
@@ -540,7 +611,7 @@ def submit_answer(
         with store.mutate(session_id, user_id, operation="submit_answer") as session:
             _guard_session_profile(session, user_id, model_policy)
             svc.submit_answer(session, body.answer)
-    except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     last = _eval_out(session.data.evaluations[-1]) if session.data.evaluations else None
     return _state(session_id, session, last_evaluation=last)
@@ -560,7 +631,7 @@ def next_question(
         with store.mutate(session_id, user_id, operation="next_question") as session:
             _guard_session_profile(session, user_id, model_policy)
             svc.advance(session)
-    except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     return _state(session_id, session)
 
@@ -575,7 +646,7 @@ def complete_interview(
         with store.mutate(session_id, user_id) as session:
             if session.data.state != SessionState.INTERVIEW_COMPLETE:
                 session.end_interview_early()
-    except (SessionNotFoundError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     return _state(session_id, session)
 
@@ -595,7 +666,7 @@ def recover_interview(
             if session.data.state != SessionState.ERROR:
                 raise ValidationError("This interview is not in a recoverable error state.")
             session.recover_from_error()
-    except (SessionNotFoundError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     return _state(session_id, session)
 
@@ -621,7 +692,7 @@ def start_deep_dive(
             _guard_completed_history(session, user_id, policy, repo)
             _guard_session_profile(session, user_id, model_policy)
             svc.start_deep_dive(session, body.mode)
-    except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     return _state(session_id, session)
 
@@ -644,7 +715,7 @@ def submit_deep_dive_answer(
             _guard_completed_history(session, user_id, policy, repo)
             _guard_session_profile(session, user_id, model_policy)
             svc.submit_branch_answer(session, body.answer)
-    except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     last = _eval_out(session.data.branch_evaluations[-1]) if session.data.branch_evaluations else None
     return _state(session_id, session, last_evaluation=last)
@@ -671,7 +742,7 @@ def next_deep_dive(
             if not session.can_go_deeper():
                 raise ValidationError("No further deep-dive level is available right now.")
             svc.generate_branch_question(session)
-    except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     return _state(session_id, session)
 
@@ -689,7 +760,7 @@ def return_from_deep_dive(
         with store.mutate(session_id, user_id) as session:
             _guard_completed_history(session, user_id, policy, repo)
             session.return_to_main_interview()
-    except (SessionNotFoundError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     # Returning to the main interview lands on the just-completed main question's
     # evaluation (state is INTERVIEW_IN_PROGRESS, not awaiting), so surface it the
@@ -733,7 +804,7 @@ def generate_report(
             if session.data.report is None:
                 _guard_session_profile(session, user_id, model_policy)      # only when a provider call is actually needed; an existing report stays readable
                 svc.generate_report(session)
-    except (SessionNotFoundError, OperationInProgressError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     if session.data.report is None:
         # Generation failed (state persisted as ERROR); nothing to save to History.
@@ -749,7 +820,7 @@ def generate_report(
             history_service.save_completed_interview(
                 session, config, repo=repo, user_id=user_id, source_session_id=session_id,
                 opportunity_id=opp_id)
-    except (SessionNotFoundError, SessionConflictError) as exc:
+    except _STORE_ERRORS as exc:
         raise _translate_store_error(exc) from None
     data = session.data
     # §11: report the saved id only when History genuinely holds the row; otherwise the

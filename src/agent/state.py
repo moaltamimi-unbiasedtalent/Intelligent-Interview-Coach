@@ -28,6 +28,8 @@ class AgentState(TypedDict, total=False):
     # Identity / run bookkeeping.
     run_id: str
     user_id: str | None
+    # Owner-validated run metadata, never set by a tool or model.
+    opportunity_id: int | None
 
     # Request context (short-term).
     goal: str

@@ -10,14 +10,22 @@ const createInterview = vi.fn();
 const interviewOptions = vi.fn();
 const push = vi.fn();
 const replace = vi.fn();
+const getOpportunity = vi.fn();
 let searchRun: string | null = null;
+let searchOpportunity: number | null = null;
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace }),
-  useSearchParams: () => new URLSearchParams(searchRun ? `run=${searchRun}` : ""),
+  useSearchParams: () => {
+    const params = new URLSearchParams();
+    if (searchRun) params.set("run", searchRun);
+    if (searchOpportunity) params.set("opportunity", String(searchOpportunity));
+    return params;
+  },
 }));
 vi.mock("@/lib/api/client", () => ({
   api: {
+    opportunities: { get: (...args: unknown[]) => getOpportunity(...args) },
     agent: {
       start: (...a: unknown[]) => start(...a),
       getRun: (...a: unknown[]) => getRun(...a),
@@ -51,7 +59,7 @@ function runResponse(over: Record<string, unknown> = {}) {
   };
 }
 
-beforeEach(() => { searchRun = null; capsRef.current.agent_coach_enabled = true; });
+beforeEach(() => { searchRun = null; searchOpportunity = null; capsRef.current.agent_coach_enabled = true; });
 afterEach(() => vi.clearAllMocks());
 
 describe("Agent Coach", () => {
@@ -109,9 +117,43 @@ describe("Agent Coach", () => {
     // No fabricated "General"/"senior": only the PreparationContext is sent.
     expect(body).not.toHaveProperty("industry_or_sector");
     expect(body).not.toHaveProperty("career_level");
+    expect(body).not.toHaveProperty("opportunity_id");
     // A stable idempotency key derived from the run id (safe: no private content).
     expect(opts).toEqual({ idempotencyKey: "agent-handoff:run_1" });
     await waitFor(() => expect(push).toHaveBeenCalledWith("/practice?session=sess_9&from=coach"));
+  });
+
+  it("starts Mo with the selected Opportunity and keeps explicit role and pasted JD edits", async () => {
+    searchOpportunity = 21;
+    getOpportunity.mockResolvedValue({ id: 21, target_role: "Prefilled role", jd_available: true, job_description_document_id: 41 });
+    start.mockResolvedValue(runResponse({ opportunity_id: 21 }));
+    render(<AgentPrepareWorkspace />);
+    const role = await screen.findByDisplayValue("Prefilled role");
+    await userEvent.clear(role);
+    await userEvent.type(role, "Edited role");
+    await userEvent.type(screen.getByLabelText("What interview are you preparing for?"), "Prep");
+    await userEvent.type(screen.getByLabelText(/job description/i, { selector: "textarea" }), "Edited job description");
+    await userEvent.click(screen.getByRole("button", { name: "Start preparing" }));
+    expect(start).toHaveBeenCalledWith(expect.objectContaining({
+      opportunity_id: 21, target_role: "Edited role", job_description: "Edited job description", job_description_document_id: undefined,
+    }));
+  });
+
+  it("uses the pinned association from a restored run instead of a different Opportunity in the URL", async () => {
+    searchRun = "run_1";
+    searchOpportunity = 99;
+    getRun.mockResolvedValue(runResponse({
+      opportunity_id: 21,
+      handoff_approved: true,
+      preparation_context: { target_role: "Product Manager", industry: "Tech", seniority: "senior" },
+    }));
+    createInterview.mockResolvedValue({ session_id: "sess_9" });
+    render(<AgentPrepareWorkspace />);
+    await waitFor(() => expect(createInterview).toHaveBeenCalledWith(
+      expect.objectContaining({ opportunity_id: 21 }), { idempotencyKey: "agent-handoff:run_1" },
+    ));
+    expect(createInterview).toHaveBeenCalledTimes(1);
+    expect(start).not.toHaveBeenCalled();
   });
 
   it("asks for missing industry/career level (never fabricates) then retries with the same key", async () => {

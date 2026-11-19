@@ -123,8 +123,12 @@ def models_fetcher() -> list[dict]:
     return [{"id": model_id(p), "pricing": {"prompt": "0.0000006", "completion": "0.0000018"}, "supported_parameters": params} for p in ModelProfile]
 
 
+LINKED_HANDOFF_GOAL = "Prepare the offline linked Practice fixture."
+LINKED_HANDOFF_JD = "Synthetic role description for the linked Practice fixture."
+
+
 class ScriptedAgentModel:
-    """Mo's chat model: a plain final answer (no tool calls) so the REAL agent graph, checkpoint and ownership index run without a provider."""
+    """Mo's fixture model. One explicit test goal exercises the real handoff tools."""
 
     def __init__(self, variant: str = "healthy", fixtures: dict | None = None) -> None:
         self.variant = variant
@@ -136,12 +140,21 @@ class ScriptedAgentModel:
         return self
 
     def invoke(self, messages):  # noqa: ANN001
-        from langchain_core.messages import AIMessage
+        from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
         with self._lock:
             self.calls += 1
         if self.variant == "provider_down":
             raise RuntimeError("provider unavailable")      # the agent maps any model exception to its safe 'model unavailable' failure
+        if any(isinstance(message, HumanMessage) and message.content == LINKED_HANDOFF_GOAL for message in messages):
+            calls = [
+                ("AnalyzeJobDescription", {"job_description": LINKED_HANDOFF_JD}),
+                ("RequestPracticeHandoff", {"ready": True}),
+            ]
+            completed = sum(isinstance(message, ToolMessage) for message in messages)
+            if completed < len(calls):
+                name, args = calls[completed]
+                return AIMessage(content="", tool_calls=[{"name": name, "args": args, "id": f"linked-fixture-{completed}"}])
         return AIMessage(content=self._reply)
 
 
@@ -178,7 +191,17 @@ def install_offline_interview_services(app, variant: str = "healthy", fixtures: 
 
 
 class NoRetrievalCareerService:
-    """Stands in for the Career service where a hosted-like offline stack cannot build its vector store. Any use is a loud error, never a silent empty result."""
+    """Allow only the synthetic handoff's role analysis. Retrieval always fails."""
+
+    def analyze_job_description(self, description: str):
+        from types import SimpleNamespace
+
+        from src.copilot.tools.schemas import RoleRequirements
+
+        if description != LINKED_HANDOFF_JD:
+            raise ValueError("The offline journey stack only analyses its synthetic fixture.")
+        role = RoleRequirements(role_title=load_fixtures()["opportunity"]["role"], seniority="senior")
+        return SimpleNamespace(ok=True, value=role, execution=SimpleNamespace(status="ok", error=None))
 
     def __getattr__(self, name: str):
         raise RuntimeError(f"retrieval is not available in the offline journey stack ({name})")

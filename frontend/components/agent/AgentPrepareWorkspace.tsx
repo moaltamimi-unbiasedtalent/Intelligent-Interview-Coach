@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/errors";
 import { RecentRuns } from "./RecentRuns";
@@ -67,10 +67,13 @@ export function AgentPrepareWorkspace({ initialDraft, streamEnabled = false }: {
   const account = useAuthOptional()?.account;
   const conversationLanguage = account?.conversation_language ?? undefined;
   const coachingStyle = account?.coaching_style ?? undefined;
+  const rawOpportunity = useSearchParams()?.get("opportunity");
+  const parsedOpportunity = rawOpportunity && /^\d+$/.test(rawOpportunity) ? Number(rawOpportunity) : NaN;
+  const opportunityId = Number.isSafeInteger(parsedOpportunity) && parsedOpportunity > 0 ? parsedOpportunity : undefined;
   const startRun = useCallback(
     (req: Parameters<typeof start>[0]) =>
-      start({ ...req, conversation_language: conversationLanguage, coaching_style: coachingStyle }),
-    [start, conversationLanguage, coachingStyle],
+      start({ ...req, opportunity_id: opportunityId, conversation_language: conversationLanguage, coaching_style: coachingStyle }),
+    [start, conversationLanguage, coachingStyle, opportunityId],
   );
 
   // Home → Prepare handoff. Auto-start EXACTLY ONCE from a "start" draft, and only
@@ -132,6 +135,7 @@ export function AgentPrepareWorkspace({ initialDraft, streamEnabled = false }: {
         />
         {streamProgress}
         <FirstMessageForm
+          key={opportunityId}
           onStart={startRun}
           busy={busy}
           error={error}
@@ -477,7 +481,7 @@ function HandoffRunner({
   run,
   runId,
 }: {
-  run: { handoff_approved: boolean; preparation_context?: unknown };
+  run: { handoff_approved: boolean; preparation_context?: unknown; opportunity_id?: number | null };
   runId: string;
 }) {
   const t = useT();
@@ -499,7 +503,11 @@ function HandoffRunner({
         // Send the PreparationContext (backend derives industry/seniority→career_level);
         // include user-supplied gap-fillers only when the backend asked for them.
         const session = await api.interviews.create(
-          { preparation_context: ctx as never, ...(extra ?? {}) },
+          {
+            preparation_context: ctx as never,
+            ...(run.opportunity_id != null ? { opportunity_id: run.opportunity_id } : {}),
+            ...(extra ?? {}),
+          },
           { idempotencyKey },
         );
         // `from=coach` lets Practice show honest "prepared in Coach" provenance (P4);
@@ -519,7 +527,7 @@ function HandoffRunner({
         }
       }
     },
-    [router, run.preparation_context, idempotencyKey, t],
+    [router, run.preparation_context, run.opportunity_id, idempotencyKey, t],
   );
 
   useEffect(() => {
