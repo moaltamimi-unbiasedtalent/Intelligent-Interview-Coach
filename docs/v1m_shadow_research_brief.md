@@ -25,6 +25,31 @@ The existing deterministic baseline remains the authority. V1M can be evaluated
 only as a shadow label and cannot make an interview, retrieve private evidence,
 save memory, approve handoff, or alter a candidate answer.
 
+## How the feature fits Ask4Mo
+
+```mermaid
+flowchart LR
+    C[Candidate request] --> ASK[Ask4Mo existing pipeline]
+    ASK --> D{Existing deterministic<br/>decision and routing}
+    D --> RET[Retrieve career evidence]
+    D --> TOOL[Allow-listed specialists or tools]
+    D --> CLAR[Clarify ambiguous information]
+    D --> ANSW[Grounded coaching answer]
+
+    FIX[Committed synthetic fixtures<br/>never candidate-private data] -. shadow evaluation only .-> EVAL[V1M shadow evaluator]
+    EVAL -. POST /v1/systemone .-> V1M[(V1M System One)]
+    V1M -. closed label + confidence .-> EVAL
+    EVAL -. metrics only .-> REPORT[Research report]
+
+    D ===|authoritative: unchanged| ASK
+    REPORT -.-|no automatic effect| D
+```
+
+The main Ask4Mo pipeline is never re-routed through V1M. The provider receives
+only synthetic fixtures or bounded caller-supplied state for an explicit
+research run. Its returned label is recorded for comparison, never written to
+candidate state and never used to execute a tool or change an answer.
+
 ## Use cases
 
 1. **Career retrieval need**
@@ -52,6 +77,40 @@ save memory, approve handoff, or alter a candidate answer.
    - Baseline: deterministic role ambiguity and missing-input checks.
    - Benefit if qualified: earlier, explicit clarification instead of guessing.
 
+```mermaid
+flowchart TD
+    STATE[One bounded state] --> CHOOSE{Choose the closed decision}
+    CHOOSE --> R[Career retrieval need]
+    CHOOSE --> A[Target role ambiguity]
+    CHOOSE --> U[Small talk versus candidate question]
+    CHOOSE --> S[Specialist call]
+    CHOOSE --> C[Continue versus clarify]
+
+    R --> RL[retrieval_needed / retrieval_not_needed]
+    A --> AL[role_ambiguous / role_unambiguous]
+    U --> UL[smalltalk / candidate_question]
+    S --> SL[specialist_needed / specialist_not_needed]
+    C --> CL[continue_without_clarification / needs_clarification]
+
+    RL --> TH{Confidence at or above<br/>configured threshold?}
+    AL --> TH
+    UL --> TH
+    SL --> TH
+    CL --> TH
+
+    TH -->|yes| LAB[Emit a single fixed label]
+    TH -->|no| UNC[Emit uncertain]
+    TH -->|timeout or invalid result| ERR[Emit provider unavailable]
+
+    LAB -. compare only .-> BASE[Existing deterministic baseline]
+    UNC -. compare only .-> BASE
+    ERR -. fallback .-> BASE
+    BASE -. never automatically overridden .-> PROD[Ask4Mo production decision]
+```
+
+The closed label sets prevent V1M from producing free-form routing instructions.
+Every outcome can fall back to the existing deterministic decision.
+
 ## Initial evidence
 
 One synthetic choice-primitive run reached valid V1M responses for 8 of 10
@@ -67,6 +126,22 @@ responses were roughly 675–963 ms. This does not qualify V1M for activation.
 
 This evidence is insufficient for activation and may vary with routing
 instructions, threshold, model revision, network, and fixture quality.
+
+```mermaid
+pie title 30-case shadow run outcome
+    "Exact label matches" : 10
+    "Non-exact labels" : 12
+    "Provider timeouts" : 8
+```
+
+| Measured result | Count | Stakeholder meaning |
+|---|---:|---|
+| Exact expected-label matches | 10 | Weak evidence of usefulness |
+| Non-exact returned labels | 12 | Reliability gap remains |
+| Provider timeouts | 8 | Operational risk remains |
+| Uncertain labels | 0 | No abstention at the 0.85 threshold |
+
+The evidence distribution does not justify production control of routing.
 
 ## Privacy and security
 
@@ -103,3 +178,27 @@ Keep V1M in shadow mode unless all owner/technical gates pass:
 - privacy review is complete;
 - the owner approves activation;
 - a fallback and rollback are tested.
+
+```mermaid
+flowchart TD
+    START[Research spike] --> E1[Held-out fixture quality >= 95%]
+    E1 -->|no| HOLD[Remain shadow-only]
+    E1 -->|yes| E2[Provider error rate < 1%]
+    E2 -->|no| HOLD
+    E2 -->|yes| E3[p95 latency meets budget]
+    E3 -->|no| HOLD
+    E3 -->|yes| E4[Privacy and data review passed]
+    E4 -->|no| HOLD
+    E4 -->|yes| E5[Fallback and rollback passed]
+    E5 -->|no| HOLD
+    E5 -->|yes| OWNER[Explicit owner activation decision]
+    OWNER -->|approved| PROD[Limited controlled activation]
+    OWNER -->|not approved| HOLD
+
+    HOLD --> MONITOR[Continue synthetic shadow evaluation]
+    PROD --> OBSERVE[Observe metrics and re-review]
+
+    style HOLD fill:#f4cccc,stroke:#b45f06
+    style PROD fill:#d7ead8,stroke:#3d743f
+    style MONITOR fill:#ead1dc,stroke:#8e5566
+```

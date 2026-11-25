@@ -16,7 +16,37 @@ Implementation:
 - `src/copilot/rag/v1m_pilot.py`
 - `scripts/eval_v1m_pilot.py`
 - `evaluations/v1m/pilot_cases.json`
+- `evaluations/v1m/micro_decision_cases.json`
 - `tests/test_v1m_pilot.py`
+
+## Technical shadow flow
+
+```mermaid
+sequenceDiagram
+    participant E as Evaluator
+    participant P as V1M pilot adapter
+    participant V as V1M /v1/systemone
+    participant B as Deterministic baseline
+
+    E->>P: Synthetic fixture + use case
+    P->>P: Check pilot flag and offline switch
+    P->>P: Resolve closed choice and bound state to 512 chars
+    P->>V: POST fixed choice payload
+    alt Valid 200 choice response
+        V-->>P: choice, probabilities, confidence
+        P->>P: Validate label and confidence threshold
+    else Timeout, provider error, or invalid schema
+        V-->>P: bounded provider_error or invalid_response
+    end
+    P-->>E: safe result + latency
+    E->>B: Compute existing deterministic label
+    B-->>E: baseline label
+    E->>E: Record match, non-match, timeout, or uncertain
+```
+
+The adapter never sends candidate documents, interview answers, memory,
+retrieved passages, or approval decisions. It returns no provider text to a
+candidate UI and has no candidate-routing effect.
 
 ## Implemented micro-decisions
 
