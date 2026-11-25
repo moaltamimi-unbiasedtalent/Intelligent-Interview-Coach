@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"id": "retrieval-1", "state": "What skills does a data analyst need?", "expected": "retrieval_needed"},
+    {"id": "retrieval-2", "state": "What is the typical salary range for a nurse in Germany?", "expected": "retrieval_needed"},
+    {"id": "retrieval-3", "state": "What responsibilities does a software engineer have?", "expected": "retrieval_needed"},
+    {"id": "retrieval-4", "state": "How should I answer a behavioural interview question?", "expected": "retrieval_needed"},
+    {"id": "retrieval-5", "state": "What qualifications are required for a regulated profession?", "expected": "retrieval_needed"},
+    {"id": "no-retrieval-1", "state": "Hello, how are you?", "expected": "retrieval_not_needed"},
+    {"id": "no-retrieval-2", "state": "Thank you for the guidance.", "expected": "retrieval_not_needed"},
+    {"id": "no-retrieval-3", "state": "What can you help me with?", "expected": "retrieval_not_needed"},
+    {"id": "no-retrieval-4", "state": "Please keep this answer brief.", "expected": "retrieval_not_needed"},
+    {"id": "no-retrieval-5", "state": "You are welcome.", "expected": "retrieval_not_needed"}
+  ]
+}
