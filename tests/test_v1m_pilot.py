@@ -1,0 +1,116 @@
+"""Offline tests for the V1M deterministic-decision pilot."""
+
+from __future__ import annotations
+
+import httpx
+import pytest
+
+from src.core import secrets
+from src.copilot.rag.v1m_pilot import classify_retrieval_need
+
+
+def test_disabled_never_dispatches(monkeypatch):
+    def unexpected(*args, **kwargs):
+        pytest.fail("transport must not run")
+
+    result = classify_retrieval_need("What skills do analysts need?", enabled=False, transport=unexpected)
+    assert result.status == "disabled"
+
+
+def test_missing_key_never_dispatches(monkeypatch):
+    monkeypatch.setattr(secrets, "read_setting", lambda name: None)
+
+    def unexpected(*args, **kwargs):
+        pytest.fail("transport must not run")
+
+    result = classify_retrieval_need("What skills do analysts need?", enabled=True, transport=unexpected)
+    assert result.status == "not_configured"
+
+
+def test_synthetic_choice_is_parsed_without_affecting_route(monkeypatch):
+    monkeypatch.setattr(secrets, "read_setting", lambda name: "fixture-key")
+
+    seen = {}
+
+    def transport(method, url, **kwargs):
+        seen["method"] = method
+        seen["url"] = url
+        seen["payload"] = kwargs["json"]
+        return httpx.Response(
+            200,
+            json={
+                "model": "rev-latest",
+                "answers": {
+                    "retrieval_needed": {
+                        "type": "choice",
+                        "choice": "retrieval_needed",
+                        "confidence": 0.92,
+                        "probabilities": {"retrieval_needed": 0.92, "retrieval_not_needed": 0.08},
+                    }
+                },
+            },
+        )
+
+    result = classify_retrieval_need(
+        "What skills do analysts need?",
+        enabled=True,
+        threshold=0.85,
+        transport=transport,
+    )
+    assert result.status == "ok"
+    assert result.label == "retrieval_needed"
+    assert result.probability == 0.92
+    assert seen["method"] == "POST"
+    assert seen["payload"]["state"] == "What skills do analysts need?"
+    assert seen["payload"]["questions"]["retrieval_needed"]["type"] == "choice"
+
+
+@pytest.mark.parametrize(
+    ("choice", "confidence", "expected"),
+    [
+        ("retrieval_needed", 0.92, "retrieval_needed"),
+        ("retrieval_not_needed", 0.92, "retrieval_not_needed"),
+        ("retrieval_needed", 0.5, "uncertain"),
+    ],
+)
+def test_threshold_and_uncertainty(monkeypatch, choice, confidence, expected):
+    monkeypatch.setattr(secrets, "read_setting", lambda name: "fixture-key")
+
+    def transport(method, url, **kwargs):
+        return httpx.Response(
+            200,
+            json={
+                "answers": {
+                    "retrieval_needed": {
+                        "type": "choice",
+                        "choice": choice,
+                        "confidence": confidence,
+                        "probabilities": {
+                            "retrieval_needed": confidence if choice == "retrieval_needed" else 1.0 - confidence,
+                            "retrieval_not_needed": confidence if choice == "retrieval_not_needed" else 1.0 - confidence,
+                        },
+                    }
+                }
+            },
+        )
+
+    result = classify_retrieval_need(
+        "synthetic state",
+        enabled=True,
+        threshold=0.85,
+        transport=transport,
+    )
+    assert result.label == expected
+
+
+@pytest.mark.parametrize("status_code", [401, 429, 500])
+def test_provider_error_is_bounded(monkeypatch, status_code):
+    monkeypatch.setattr(secrets, "read_setting", lambda name: "fixture-key")
+
+    def transport(method, url, **kwargs):
+        return httpx.Response(status_code, json={"error": "sensitive provider text"})
+
+    result = classify_retrieval_need("synthetic state", enabled=True, transport=transport)
+    assert result.status == "provider_error"
+    assert result.label is None
+    assert result.probability is None
