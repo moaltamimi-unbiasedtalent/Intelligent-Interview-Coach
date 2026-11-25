@@ -1,0 +1,38 @@
+{
+  "cases": [
+    {"id": "retrieval-1", "use_case": "retrieval_need", "state": "What skills does a data analyst need?", "expected": "retrieval_needed"},
+    {"id": "retrieval-2", "use_case": "retrieval_need", "state": "What is the typical salary range for a nurse in Germany?", "expected": "retrieval_needed"},
+    {"id": "retrieval-3", "use_case": "retrieval_need", "state": "What responsibilities does a software engineer have?", "expected": "retrieval_needed"},
+    {"id": "retrieval-4", "use_case": "retrieval_need", "state": "How should I answer a behavioural interview question?", "expected": "retrieval_needed"},
+    {"id": "retrieval-5", "use_case": "retrieval_need", "state": "What qualifications are required for a regulated profession?", "expected": "retrieval_needed"},
+    {"id": "retrieval-6", "use_case": "retrieval_need", "state": "Hello, how are you?", "expected": "retrieval_not_needed"},
+    {"id": "retrieval-7", "use_case": "retrieval_need", "state": "Thank you for the guidance.", "expected": "retrieval_not_needed"},
+    {"id": "retrieval-8", "use_case": "retrieval_need", "state": "What can you help me with?", "expected": "retrieval_not_needed"},
+    {"id": "retrieval-9", "use_case": "retrieval_need", "state": "Please keep this answer brief.", "expected": "retrieval_not_needed"},
+    {"id": "retrieval-10", "use_case": "retrieval_need", "state": "You are welcome.", "expected": "retrieval_not_needed"},
+
+    {"id": "role-1", "use_case": "role_ambiguity", "state": "What does a Product Manager do?", "expected": "role_ambiguous"},
+    {"id": "role-2", "use_case": "role_ambiguity", "state": "What skills does a Manager need?", "expected": "role_ambiguous"},
+    {"id": "role-3", "use_case": "role_ambiguity", "state": "How much does a Developer earn?", "expected": "role_ambiguous"},
+    {"id": "role-4", "use_case": "role_ambiguity", "state": "What duties does a Registered Nurse perform?", "expected": "role_unambiguous"},
+    {"id": "role-5", "use_case": "role_ambiguity", "state": "What competencies does a Software Engineer need?", "expected": "role_unambiguous"},
+
+    {"id": "utterance-1", "use_case": "utterance_type", "state": "Hello!", "expected": "smalltalk"},
+    {"id": "utterance-2", "use_case": "utterance_type", "state": "Thank you for explaining that.", "expected": "smalltalk"},
+    {"id": "utterance-3", "use_case": "utterance_type", "state": "What can you help me with?", "expected": "smalltalk"},
+    {"id": "utterance-4", "use_case": "utterance_type", "state": "How should I prepare for a behavioural interview?", "expected": "candidate_question"},
+    {"id": "utterance-5", "use_case": "utterance_type", "state": "What skills are required for a finance analyst?", "expected": "candidate_question"},
+
+    {"id": "specialist-1", "use_case": "specialist_call", "state": "Analyse this job description and identify its role.", "context": {"role": "known", "evidence": "none", "coaching": false}, "expected": "specialist_needed"},
+    {"id": "specialist-2", "use_case": "specialist_call", "state": "Connect my approved evidence to the target role.", "context": {"role": "known", "evidence": "approved", "coaching": true}, "expected": "specialist_needed"},
+    {"id": "specialist-3", "use_case": "specialist_call", "state": "Prepare a coaching strategy for this interview.", "context": {"role": "known", "evidence": "none", "coaching": true}, "expected": "specialist_needed"},
+    {"id": "specialist-4", "use_case": "specialist_call", "state": "What can you help me with?", "context": {"role": "none", "evidence": "none", "coaching": false}, "expected": "specialist_not_needed"},
+    {"id": "specialist-5", "use_case": "specialist_call", "state": "I want general career advice.", "context": {"role": "none", "evidence": "none", "coaching": true}, "expected": "specialist_not_needed"},
+
+    {"id": "continue-1", "use_case": "continue_without_clarification", "state": "The target role and evidence are complete.", "context": {"role_ambiguous": false, "missing_required_input": false}, "expected": "continue_without_clarification"},
+    {"id": "continue-2", "use_case": "continue_without_clarification", "state": "The candidate is preparing for a clearly identified software engineering role.", "context": {"role_ambiguous": false, "missing_required_input": false}, "expected": "continue_without_clarification"},
+    {"id": "continue-3", "use_case": "continue_without_clarification", "state": "The request could refer to Product Manager or Project Manager.", "context": {"role_ambiguous": true, "missing_required_input": false}, "expected": "needs_clarification"},
+    {"id": "continue-4", "use_case": "continue_without_clarification", "state": "The target role is unknown and no job description is available.", "context": {"role_ambiguous": false, "missing_required_input": true}, "expected": "needs_clarification"},
+    {"id": "continue-5", "use_case": "continue_without_clarification", "state": "A concrete role is selected but required interview details are missing.", "context": {"role_ambiguous": false, "missing_required_input": true}, "expected": "needs_clarification"}
+  ]
+}

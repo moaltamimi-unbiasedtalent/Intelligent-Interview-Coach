@@ -59,6 +59,7 @@ documents are historical evidence and are labelled where they could be mistaken 
 | Deployment / operations | [operations_deployment.md](operations_deployment.md), [../deploy/](../deploy/) |
 | Testing and evaluators | [testing.md](testing.md); `scripts/eval_*.py` are CI/release gates (not candidate-facing evaluation) |
 | Capstone evidence | [capstone/](capstone/) |
+| V1M / JEV shadow research spike (offline-first, five bounded micro-decisions, not product routing) | [v1m_pilot.md](v1m_pilot.md), [v1m_shadow_research_brief.md](v1m_shadow_research_brief.md) |
 
 Historical (Sprint 1-4) material: `legacy_sprint3_*`, `sprint4_*`, `limitations.md`, `project_plan.md`
 and similar carry a banner or describe a dated state; do not treat them as current behaviour.
