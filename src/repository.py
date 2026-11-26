@@ -20,6 +20,7 @@ from src.memory import MemoryItem, normalize_role, normalize_summary
 from src.persistence import (
     Answer,
     Interview,
+    InterviewSession,
     PreparationMemory,
     Question,
     Report,
@@ -98,7 +99,7 @@ class InterviewRepository:
 
     def save_interview(
         self, user_id: int, payload: dict, source_session_id: str | None = None,
-        opportunity_id: int | None = None,
+        opportunity_id: int | None = None, *, require_runtime: bool = False,
     ) -> int:
         """Persist a completed interview for a user; returns its id.
 
@@ -114,6 +115,17 @@ class InterviewRepository:
         unchanged (always insert).
         """
         with self._session_factory() as session:
+            if require_runtime:
+                from src.interview.session_repository import begin_write_transaction, SessionConflictError
+
+                begin_write_transaction(session)
+                # Same lock order as coordinated deletion: runtime, then History.
+                runtime = session.scalar(select(InterviewSession).where(
+                    InterviewSession.session_id == source_session_id,
+                    InterviewSession.user_id == user_id,
+                ).with_for_update())
+                if runtime is None:
+                    raise SessionConflictError("The source interview no longer exists.")
             if source_session_id is not None:
                 existing = session.scalar(
                     select(Interview.id).where(
@@ -162,6 +174,10 @@ class InterviewRepository:
                 )
             session.add(interview)
             try:
+                session.flush()
+                from src.interview.report_generation import issue_generation
+
+                issue_generation(session, user_id, interview.id)
                 session.commit()
             except IntegrityError:
                 # A concurrent first save won the unique (user_id, source_session_id);
@@ -178,6 +194,27 @@ class InterviewRepository:
                         return existing
                 raise
             return interview.id
+
+    def save_interview_from_runtime(self, user_id: int, payload: dict, *, source_session_id: str,
+                                    opportunity_id: int | None = None) -> int:
+        """A stale runtime writer cannot recreate History after coordinated deletion."""
+        return self.save_interview(user_id, payload, source_session_id, opportunity_id, require_runtime=True)
+
+    @staticmethod
+    def deletion_target_in_transaction(session, user_id: int, interview_id: int, *, lock=False):
+        statement = select(Interview.id, Interview.source_session_id).where(
+            Interview.id == interview_id, Interview.user_id == user_id)
+        return session.execute(statement.with_for_update() if lock else statement).first()
+
+    def delete_interview_in_transaction(self, session, user_id: int, interview_id: int) -> None:
+        """Delete ORM children in the caller's transaction, without committing."""
+        row = self._owned(session, user_id, interview_id)
+        if row is None:
+            from src.interview.session_repository import SessionConflictError
+
+            raise SessionConflictError("This interview changed before deletion.")
+        session.delete(row)
+        session.flush()
 
     # -- reads (all user-scoped) ---------------------------------------------
 
@@ -228,25 +265,57 @@ class InterviewRepository:
             )
         )
 
-    def list_interviews(self, user_id: int, window: int | None = None) -> list[dict]:
+    def list_interviews(self, user_id: int, window: int | None = None, *, include_share_generation=False) -> list[dict]:
         """Return summary rows for a user's interviews, newest first (deterministic: ``created_at`` then ``id``). ``window`` limits ACCESS only."""
         with self._session_factory() as session:
+            from src.interview.session_repository import begin_write_transaction
+            from src.interview.report_generation import current_generation, issue_generation
+
+            if include_share_generation:
+                begin_write_transaction(session)
             stmt = select(Interview).options(selectinload(Interview.questions)).where(Interview.user_id == user_id)      # one extra query, not one per row
             if window is not None:
                 stmt = stmt.where(Interview.id.in_(self._eligible_ids(session, user_id, window) or [-1]))
-            rows = session.scalars(stmt.order_by(*self._latest_order())).all()
-            return [self._summary(interview) for interview in rows]
+            stmt = stmt.order_by(*self._latest_order())
+            rows = session.scalars(stmt.with_for_update() if include_share_generation else stmt).all()
+            output = []
+            for interview in rows:
+                if not include_share_generation:
+                    output.append(self._summary(interview))
+                    continue
+                generation = current_generation(session, user_id, interview.id)
+                if generation is None:
+                    generation = issue_generation(session, user_id, interview.id)
+                output.append({**self._summary(interview), "share_generation": generation})
+            if include_share_generation:
+                session.commit()
+            return output
 
-    def get_interview(self, user_id: int, interview_id: int, window: int | None = None) -> dict | None:
+    def get_interview(self, user_id: int, interview_id: int, window: int | None = None, *, include_share_generation=False) -> dict | None:
         """Return one interview in full, or None if not owned by this user. With a ``window`` an OWNED interview outside it raises
         ``HistoryRestricted`` (the caller is the owner, so this discloses nothing about anyone else); a foreign or missing id is still None."""
         with self._session_factory() as session:
-            interview = self._owned(session, user_id, interview_id)
+            from src.interview.session_repository import begin_write_transaction
+            from src.interview.report_generation import current_generation, issue_generation
+
+            if include_share_generation:
+                begin_write_transaction(session)
+                interview = session.scalar(select(Interview).where(
+                    Interview.id == interview_id, Interview.user_id == user_id).with_for_update())
+            else:
+                interview = self._owned(session, user_id, interview_id)
             if interview is None:
                 return None
             if window is not None and interview.id not in (self._eligible_ids(session, user_id, window) or []):
                 raise HistoryRestricted(interview_id)
-            return self._detail(interview)
+            if not include_share_generation:
+                return self._detail(interview)
+            generation = current_generation(session, user_id, interview_id)
+            if generation is None:
+                generation = issue_generation(session, user_id, interview_id)
+            result = {**self._detail(interview), "share_generation": generation}
+            session.commit()
+            return result
 
     def delete_interview(self, user_id: int, interview_id: int) -> bool:
         """Delete one interview if owned by the user; returns True on success."""

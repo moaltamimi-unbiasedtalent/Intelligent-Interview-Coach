@@ -32,6 +32,7 @@ class AgentRunRequest:
     # against an allow-list; it only sets the TONE of Mo's coaching prose and never changes
     # factuality, evidence, scoring, grounding or safety. None/invalid/balanced → no directive.
     coaching_style: str | None = None
+    opportunity_id: int | None = None
 
 
 @dataclass
@@ -98,3 +99,4 @@ class AgentRunResult:
     # prompt, the response-language directive when one was added, and the prompts of the tools the
     # run executed. Identifiers and body hashes only, never prompt text; not part of the API schema.
     prompt_versions: dict[str, dict[str, str]] = field(default_factory=dict)
+    opportunity_id: int | None = None

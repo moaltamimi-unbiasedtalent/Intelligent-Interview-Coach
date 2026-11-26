@@ -16,6 +16,7 @@ from src.locales import AppLocale
 
 class AgentRunRequest(BaseModel):
     goal: str = Field(min_length=1, max_length=4000)
+    opportunity_id: int | None = Field(default=None, ge=1, strict=True)
     target_role: str | None = Field(default=None, max_length=200)
     job_description: str | None = Field(default=None, max_length=12000)
     candidate_background: str | None = Field(default=None, max_length=12000)
@@ -69,6 +70,7 @@ class PendingActionResponse(BaseModel):
 
 
 class AgentRunResponse(BaseModel):
+    opportunity_id: int | None = None
     run_id: str
     status: str
     response: str

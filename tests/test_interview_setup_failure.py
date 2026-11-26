@@ -96,37 +96,43 @@ def test_nonprofit_executive_succeeds_with_working_provider(store):
     assert body["state"] != "ERROR"
 
 
-def test_strategy_failure_surfaces_safe_error_not_error_transition(store):
+def test_strategy_failure_holds_setup_without_leaking_the_provider_error(store):
     with _client(store, _StrategyFailsDomain()) as c:
         r = c.post("/api/v1/interviews", json=NONPROFIT, headers=ALICE)
-    assert r.status_code == 503, r.text
+    assert r.status_code == 409, r.text
     err = r.json()["error"]
-    assert err["code"] == "service_unavailable"
-    # The ORIGINAL safe cause is shown, never the masking illegal-transition error.
-    assert err["message"] == "The interview service is temporarily unavailable."
+    assert err["code"] == "practice_setup_outcome_uncertain"
+    assert "Please contact support" in err["message"]
+    assert "temporarily unavailable" not in err["message"]
     assert "Cannot add a question" not in err["message"]
 
 
 def test_question_failure_surfaces_safe_error(store):
     with _client(store, _QuestionFailsDomain()) as c:
         r = c.post("/api/v1/interviews", json=NONPROFIT, headers=ALICE)
-    assert r.status_code == 503, r.text
+    assert r.status_code == 409, r.text
     err = r.json()["error"]
-    assert err["message"] == "Question generation is temporarily unavailable."
+    assert err["code"] == "practice_setup_outcome_uncertain"
+    assert "Question generation is temporarily unavailable" not in err["message"]
     assert "Cannot add a question" not in err["message"]
 
 
-def test_failed_setup_leaves_a_resumable_session_for_idempotent_retry(store):
-    # A failed create with an idempotency key must not orphan an ERROR session; a retry
-    # (same key) once the provider recovers resumes cleanly and starts the interview.
-    key = {"Idempotency-Key": "agent-handoff:run_np1", **ALICE}
+def test_uncertain_setup_keeps_its_key_and_refuses_regeneration_after_recovery(store):
+    # The sealed historical test retried a generic provider error. That error does
+    # not prove non-dispatch, so recovery now requires reconciliation of this attempt.
+    key = {"Idempotency-Key": "practice-retry-np1", **ALICE}
     with _client(store, _StrategyFailsDomain()) as c:
         r1 = c.post("/api/v1/interviews", json=NONPROFIT, headers=key)
-    assert r1.status_code == 503, r1.text
+    assert r1.status_code == 409, r1.text
 
     with _client(store, _OkDomain()) as c:
         r2 = c.post("/api/v1/interviews", json=NONPROFIT, headers=key)
-    assert r2.status_code == 200, r2.text
-    body = r2.json()
-    assert body["current_question"] is not None
-    assert body["state"] != "ERROR"
+    assert r2.status_code == 409, r2.text
+    assert r2.json()["error"]["code"] == "practice_setup_outcome_uncertain"
+    from sqlalchemy import select
+    from src.persistence import InterviewSession
+
+    with store._session_factory() as db:
+        rows = db.scalars(select(InterviewSession)).all()
+        assert len(rows) == 1 and rows[0].idempotency_key == key["Idempotency-Key"]
+        assert rows[0].active_operation.endswith(":hold")

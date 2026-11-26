@@ -15,6 +15,27 @@ function jsonResponse(body: unknown, init: ResponseInit & { requestId?: string }
 afterEach(() => vi.unstubAllGlobals());
 
 describe("API client", () => {
+  it("puts the selected report generation in the consent body, never in fetch options", async () => {
+    mockFetch(() => jsonResponse({ share_id: 1, status: "active" }));
+    const controller = new AbortController();
+    await api.shares.create(7, "interview_report", "9", true, {
+      expectedReportGeneration: "1".repeat(32), signal: controller.signal,
+    });
+    const [, options] = vi.mocked(fetch).mock.calls[0];
+    expect(JSON.parse(options!.body as string)).toEqual({ workspace_id: 7, resource_type: "interview_report",
+      resource_id: "9", consent: true, expected_report_generation: "1".repeat(32) });
+    expect(options).not.toHaveProperty("expectedReportGeneration");
+    expect(options!.signal).toBe(controller.signal);
+  });
+
+  it("keeps ordinary story sharing body unchanged", async () => {
+    mockFetch(() => jsonResponse({ share_id: 1, status: "active" }));
+    await api.shares.create(7, "story", "5", true);
+    expect(JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string)).toEqual({
+      workspace_id: 7, resource_type: "story", resource_id: "5", consent: true,
+    });
+  });
+
   it("returns a typed health response on success", async () => {
     mockFetch(() =>
       jsonResponse({ status: "ok", service: "intelligent-interview-coach", version: "0.1.0" }),

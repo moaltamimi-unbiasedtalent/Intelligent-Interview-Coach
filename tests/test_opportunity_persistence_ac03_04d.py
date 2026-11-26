@@ -6,17 +6,20 @@ Offline evidence only: a temp SQLite FILE database (so a second app instance is 
 
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 
 os.environ.setdefault("DOCUMENT_STORAGE_DIR", tempfile.mkdtemp(prefix="ask4mo_ac03_docs_"))
 
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event, Lock
 
 import httpx
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func, select
 
 from scripts.e2e import journey_fakes as F
 from src.api import dependencies as deps
@@ -97,6 +100,221 @@ def _start(c, ck, opp):
     if opp.get("job_description_document_id"):
         cfg["job_description_document_id"] = opp["job_description_document_id"]
     return c.post(f"{API}/interviews", json={"configuration": cfg, "opportunity_id": opp["id"]}, cookies=ck)
+
+
+def _install_agent(client, repo, checkpoint):
+    from src.application.agent_service import AgentApplicationService
+    from src.privacy.preparation import PreparationRunIndex
+
+    model = F.ScriptedAgentModel()
+    service = AgentApplicationService(
+        model_factory=lambda: model, career_service=F.NoRetrievalCareerService(),
+        checkpoint_url=f"sqlite:///{checkpoint}", run_index=PreparationRunIndex(repo.session_factory),
+    )
+    client.app.state.resources["agent_service"] = service
+    return model
+
+
+@pytest.mark.parametrize("start_path", ["run", "run/stream"])
+def test_mo_binds_only_the_owned_opportunity_and_restores_it_after_restart(tmp_path, start_path):
+    db = tmp_path / "linked.db"
+    checkpoint = tmp_path / "agent_checkpoints.sqlite"
+    c, repo, _ = _boot(db)
+    model = _install_agent(c, repo, checkpoint)
+    owner, _ = _user(c, "linked-owner@example.com")
+    other, _ = _user(c, "linked-other@example.com")
+    first = _opp(c, owner, "Other role")
+    selected = _opp(c, owner, "Senior Product Manager")
+    foreign = _opp(c, other, "Private role")
+    deleted = _opp(c, owner, "Deleted role")
+    assert c.delete(f"{API}/opportunities/{deleted['id']}", cookies=owner).status_code == 200
+    body = {"goal": F.LINKED_HANDOFF_GOAL, "target_role": selected["target_role"]}
+    for invalid in (foreign["id"], deleted["id"], 9999):
+        refused = c.post(f"{API}/agent/{start_path}", json={**body, "opportunity_id": invalid}, cookies=owner)
+        assert refused.status_code == 404
+    assert model.calls == 0
+    assert c.get(f"{API}/agent/runs", cookies=owner).json()["runs"] == []
+    started = c.post(f"{API}/agent/{start_path}", json={**body, "opportunity_id": selected["id"]}, cookies=owner)
+    assert started.status_code == 200, started.text
+    if start_path == "run/stream":
+        events = [json.loads(line[6:]) for line in started.text.splitlines() if line.startswith("data: ")]
+        run_id = next(event["run_id"] for event in events if event.get("run_id"))
+    else:
+        run_id = started.json()["run_id"]
+        assert started.json()["opportunity_id"] == selected["id"]
+    c.__exit__(None, None, None)
+
+    c, repo, fake = _boot(db)
+    model = _install_agent(c, repo, checkpoint)
+    restored = c.get(f"{API}/agent/runs/{run_id}?opportunity={first['id']}", cookies=owner)
+    assert restored.status_code == 200
+    run = restored.json()
+    assert run["opportunity_id"] == selected["id"]
+    assert run["pending_action"]["type"] == "approve_practice_handoff"
+    assert c.get(f"{API}/agent/runs/{run_id}", cookies=other).status_code == 404
+    headers = {"Idempotency-Key": f"agent-handoff:{run_id}"}
+    pending = {
+        "preparation_context": run["preparation_context"], "opportunity_id": first["id"],
+        "industry_or_sector": "Software", "career_level": "senior",
+    }
+    assert c.post(f"{API}/interviews", json=pending, headers=headers, cookies=owner).status_code == 409
+    assert c.post(f"{API}/interviews", json=pending, headers=headers, cookies=other).status_code == 404
+    assert not fake.calls and model.calls == 0
+    approved = c.post(
+        f"{API}/agent/runs/{run_id}/resume",
+        json={"action_id": run["pending_action"]["action_id"], "decision": "approve"}, cookies=owner,
+    )
+    assert approved.status_code == 200, approved.text
+    run = approved.json()
+    assert run["handoff_approved"] and run["opportunity_id"] == selected["id"]
+    assert c.post(f"{API}/interviews", json=pending, headers=headers, cookies=owner).status_code == 409
+    assert not fake.calls
+    handoff = {"preparation_context": {**run["preparation_context"], "target_role": "Substituted role"},
+               "industry_or_sector": "Software", "career_level": "senior", "number_of_questions": 1}
+    created = c.post(f"{API}/interviews", json=handoff, headers=headers, cookies=owner)
+    assert created.status_code == 200, created.text
+    assert created.json()["target_role"] == selected["target_role"]
+    sid = created.json()["session_id"]
+    assert fake.calls == ["InterviewStrategy", "InterviewQuestion"]
+    c.__exit__(None, None, None)
+
+    c, repo, fake = _boot(db)
+    model = _install_agent(c, repo, checkpoint)
+    reload_body = {"preparation_context": run["preparation_context"], "opportunity_id": selected["id"]}
+    retry = c.post(f"{API}/interviews", json=reload_body, headers=headers, cookies=owner)
+    assert retry.status_code == 200 and retry.json() == created.json()
+    assert not fake.calls and model.calls == 0
+    assert c.post(f"{API}/interviews/{sid}/answers", json={"answer": "I compared two roadmap options."}, cookies=owner).status_code == 200
+    assert c.post(f"{API}/interviews/{sid}/next-question", cookies=owner).json()["state"] == "INTERVIEW_COMPLETE"
+    report = c.post(f"{API}/interviews/{sid}/report", cookies=owner).json()
+    assert report["saved_report_id"]
+    assert c.post(f"{API}/interviews/{sid}/report", cookies=owner).json()["saved_report_id"] == report["saved_report_id"]
+    assert c.get(f"{API}/opportunities/{selected['id']}", cookies=owner).json()["interview_ids"] == [report["saved_report_id"]]
+    assert c.get(f"{API}/opportunities/{first['id']}", cookies=owner).json()["interview_count"] == 0
+    history = c.get(f"{API}/history/interviews", cookies=owner).json()["interviews"]
+    assert [row["id"] for row in history] == [report["saved_report_id"]]
+    assert c.get(f"{API}/progress", cookies=owner).json()["interviews_completed"] == 1
+    c.__exit__(None, None, None)
+
+
+def _approved_handoff(client, cookies, opportunity_id=None):
+    started = client.post(f"{API}/agent/run", json={
+        "goal": F.LINKED_HANDOFF_GOAL, "target_role": "Senior Product Manager", "opportunity_id": opportunity_id,
+    }, cookies=cookies)
+    assert started.status_code == 200, started.text
+    run = started.json()
+    approved = client.post(f"{API}/agent/runs/{run['run_id']}/resume", json={
+        "action_id": run["pending_action"]["action_id"], "decision": "approve",
+    }, cookies=cookies)
+    assert approved.status_code == 200 and approved.json()["handoff_approved"]
+    return {"Idempotency-Key": f"agent-handoff:{run['run_id']}"}
+
+
+@pytest.mark.parametrize("linked", [True, False])
+def test_handoff_refuses_a_preexisting_wrong_link_without_rewriting_it(tmp_path, linked):
+    c, repo, fake = _boot(tmp_path / "preexisting.db")
+    _install_agent(c, repo, tmp_path / "agent_checkpoints.sqlite")
+    owner, _ = _user(c, "preexisting@example.com")
+    wrong = _opp(c, owner, "Other role")["id"]
+    selected = _opp(c, owner, "Senior Product Manager")["id"] if linked else None
+    headers = _approved_handoff(c, owner, selected)
+    with repo.session_factory() as db:
+        from src.persistence import User
+
+        user_id = db.scalar(select(User.id).where(User.email == "preexisting@example.com"))
+    store = c.app.dependency_overrides[deps.get_session_store]()
+    existing_id, created = store.create_or_get(user_id, headers["Idempotency-Key"], opportunity_id=wrong)
+    assert created
+    refused = c.post(f"{API}/interviews", json={
+        "industry_or_sector": "Software", "career_level": "senior",
+    }, headers=headers, cookies=owner)
+    assert refused.status_code == 409 and not fake.calls
+    assert store.find_idempotent_session(user_id, headers["Idempotency-Key"]) == existing_id
+    assert store.opportunity_id_for(existing_id, user_id) == wrong
+    assert store.load_state(existing_id, user_id).data.questions == []
+    c.__exit__(None, None, None)
+
+
+def test_handoff_retry_after_another_create_releases_its_lease_does_not_dispatch(tmp_path, monkeypatch):
+    from src.persistence import InterviewSession
+
+    c, repo, fake = _boot(tmp_path / "concurrent.db")
+    _install_agent(c, repo, tmp_path / "agent_checkpoints.sqlite")
+    owner, _ = _user(c, "concurrent@example.com")
+    selected = _opp(c, owner, "Senior Product Manager")["id"]
+    headers = _approved_handoff(c, owner, selected)
+    store = c.app.dependency_overrides[deps.get_session_store]()
+    claim_lease = store._claim_lease
+    first_at_claim, second_at_claim, first_finished = Event(), Event(), Event()
+    lock = Lock()
+    claims = 0
+
+    def ordered_claim(session_id, user_id, operation):
+        nonlocal claims
+        assert operation == "create"
+        with lock:
+            claims += 1
+            first = claims == 1
+        if first:
+            first_at_claim.set()
+            assert second_at_claim.wait(10)
+        else:
+            second_at_claim.set()
+            assert first_finished.wait(10)
+        return claim_lease(session_id, user_id, operation)
+
+    def create():
+        return c.post(f"{API}/interviews", json={
+            "industry_or_sector": "Software", "career_level": "senior",
+        }, headers=headers, cookies=owner)
+
+    def first_create():
+        try:
+            return create()
+        finally:
+            first_finished.set()
+
+    monkeypatch.setattr(store, "_claim_lease", ordered_claim)
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(first_create)
+        assert first_at_claim.wait(10)
+        second = pool.submit(create)
+        one, two = first.result(timeout=20), second.result(timeout=20)
+    assert claims == 2
+    assert one.status_code == two.status_code == 200
+    assert one.json() == two.json()
+    assert fake.calls == ["InterviewStrategy", "InterviewQuestion"]
+    with repo.session_factory() as db:
+        assert db.scalar(select(func.count()).select_from(InterviewSession)) == 1
+        row = db.get(InterviewSession, one.json()["session_id"])
+        assert row.opportunity_id == selected and row.active_operation is None
+    c.__exit__(None, None, None)
+
+
+def test_deleting_the_opportunity_after_mo_approval_does_not_start_unlinked_practice(tmp_path):
+    c, repo, fake = _boot(tmp_path / "deleted-after-approval.db")
+    _install_agent(c, repo, tmp_path / "agent_checkpoints.sqlite")
+    owner, _ = _user(c, "deleted-after-approval@example.com")
+    selected = _opp(c, owner, "Senior Product Manager")
+    run = c.post(f"{API}/agent/run", json={
+        "goal": F.LINKED_HANDOFF_GOAL, "target_role": selected["target_role"], "opportunity_id": selected["id"],
+    }, cookies=owner).json()
+    run_id = run["run_id"]
+    approved = c.post(f"{API}/agent/runs/{run_id}/resume", json={
+        "action_id": run["pending_action"]["action_id"], "decision": "approve",
+    }, cookies=owner).json()
+    assert approved["handoff_approved"]
+    assert c.delete(f"{API}/opportunities/{selected['id']}", cookies=owner).status_code == 200
+    restored = c.get(f"{API}/agent/runs/{run_id}", cookies=owner).json()
+    assert restored["opportunity_id"] == selected["id"]
+    refused = c.post(f"{API}/interviews", json={
+        "preparation_context": restored["preparation_context"], "opportunity_id": restored["opportunity_id"],
+        "industry_or_sector": "Software", "career_level": "senior",
+    }, headers={"Idempotency-Key": f"agent-handoff:{run_id}"}, cookies=owner)
+    assert refused.status_code == 404
+    assert not fake.prompts
+    assert c.get(f"{API}/interviews", cookies=owner).json()["sessions"] == []
+    c.__exit__(None, None, None)
 
 
 # ------------------------------------------------------------------------------------------------------------- chosen Opportunity supplies the correct context

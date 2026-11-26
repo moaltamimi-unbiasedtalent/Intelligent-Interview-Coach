@@ -141,12 +141,12 @@ def test_keyless_start_interview_is_not_configured_with_fixed_copy_and_no_provid
     assert "session_id" not in r.json() and c.get(f"{API}/history/interviews", cookies=ck).json()["interviews"] == []
 
 
-def test_a_passing_provider_outage_is_a_different_code_from_not_configured():
+def test_a_provider_outage_has_an_uncertainty_code_distinct_from_not_configured():
     app, _repo, fake, _store = _stack("provider_down")
     c, ck = _user(app)
     r = c.post(f"{API}/interviews", json=CREATE, cookies=ck)
-    assert r.status_code == 503 and r.json()["error"]["code"] == "ai_provider_unavailable"
-    assert r.json()["error"]["message"] == constants.AI_FAILURE_MESSAGES["ai_provider_unavailable"]
+    assert r.status_code == 409 and r.json()["error"]["code"] == "practice_setup_outcome_uncertain"
+    assert "Please contact support" in r.json()["error"]["message"]
     assert fake.calls == ["InterviewStrategy"]                                    # one provider call: nothing retried silently
     assert constants.AI_FAILURE_MESSAGES["ai_provider_unavailable"] != constants.AI_FAILURE_MESSAGES["ai_not_configured"]
 
@@ -159,28 +159,34 @@ def test_a_healthy_stack_still_starts_the_interview():
     assert fake.calls == ["InterviewStrategy", "InterviewQuestion"]
 
 
-def test_a_failed_start_leaves_nothing_resumable_and_a_retry_starts_exactly_one_setup():
+def test_an_uncertain_start_is_not_resumable_and_cannot_dispatch_again_after_recovery():
     app, _repo, fake, _store = _stack("provider_down")
     c, ck = _user(app)
     headers = {"Idempotency-Key": "practice-setup:attempt-1"}
     for _ in range(3):                                                               # three user-initiated presses of Start, same attempt key, provider down
-        assert c.post(f"{API}/interviews", json=CREATE, cookies=ck, headers=headers).status_code == 503
+        refused = c.post(f"{API}/interviews", json=CREATE, cookies=ck, headers=headers)
+        assert refused.status_code == 409 and refused.json()["error"]["code"] == "practice_setup_outcome_uncertain"
     assert c.get(f"{API}/interviews", cookies=ck).json()["sessions"] == [], "a failed start must not leave an empty 'in progress' interview behind"
-    assert fake.calls == ["InterviewStrategy"] * 3                                    # exactly one provider call per press: nothing retried automatically
-    fake.variant = "healthy"                                                          # the provider recovers; the same key now starts ONE interview
+    assert fake.calls == ["InterviewStrategy"]
+    fake.variant = "healthy"
     ok = c.post(f"{API}/interviews", json=CREATE, cookies=ck, headers=headers)
-    assert ok.status_code == 200 and ok.json()["state"] == "AWAITING_ANSWER"
-    assert [s["state"] for s in c.get(f"{API}/interviews", cookies=ck).json()["sessions"]] == ["AWAITING_ANSWER"]
-    again = c.post(f"{API}/interviews", json=CREATE, cookies=ck, headers=headers)      # a repeat of the SUCCESSFUL create returns the same session, never a second
-    assert again.json()["session_id"] == ok.json()["session_id"]
-    assert len(c.get(f"{API}/interviews", cookies=ck).json()["sessions"]) == 1
+    assert ok.status_code == 409 and ok.json()["error"]["code"] == "practice_setup_outcome_uncertain"
+    assert c.get(f"{API}/interviews", cookies=ck).json()["sessions"] == []
+    assert fake.calls == ["InterviewStrategy"]
+    from src.persistence import InterviewSession
+
+    with _store._session_factory() as db:
+        rows = db.scalars(select(InterviewSession)).all()
+        assert len(rows) == 1 and rows[0].idempotency_key == headers["Idempotency-Key"]
+        assert rows[0].active_operation.endswith(":hold")
 
 
 def test_a_failed_start_without_a_key_also_leaves_nothing_behind():
     app, _repo, _fake, _store = _stack("keyless")
     c, ck = _user(app)
     for _ in range(2):
-        assert c.post(f"{API}/interviews", json=CREATE, cookies=ck).status_code == 503
+        response = c.post(f"{API}/interviews", json=CREATE, cookies=ck)
+        assert response.status_code == 503 and response.json()["error"]["code"] == "ai_not_configured"
     assert c.get(f"{API}/interviews", cookies=ck).json()["sessions"] == []
 
 
@@ -211,11 +217,11 @@ def test_a_provider_failure_is_recorded_as_one_bounded_event_without_secrets(mon
             return list(s.scalars(select(OperationalMetricEvent).where(OperationalMetricEvent.event_type == "provider_call",
                                                                         OperationalMetricEvent.error_category == "ai_provider_unavailable")).all())
 
-    assert c.post(f"{API}/interviews", json=CREATE, cookies=ck).status_code == 503      # warm-up: the sink is installed lazily by the first provider-backed request
+    assert c.post(f"{API}/interviews", json=CREATE, cookies=ck).status_code == 409
     before = len(provider_events())
     with caplog.at_level(logging.DEBUG):
         r = c.post(f"{API}/interviews", json={"configuration": {**CREATE["configuration"], "candidate_background": "PRIVATE-BACKGROUND-MARKER"}}, cookies=ck)
-    assert r.status_code == 503
+    assert r.status_code == 409 and r.json()["error"]["code"] == "practice_setup_outcome_uncertain"
     rows = provider_events()
     assert len(rows) - before == 1                                                # one failure, one event (the one provider call was not retried)
     row = rows[-1]
@@ -365,7 +371,7 @@ def test_no_api_response_contains_key_material_when_a_key_is_configured(monkeypa
         assert c.post(f"{API}/interviews", json=CREATE, cookies=ck).status_code == 200
         fake.variant = "provider_down"
         failed = c.post(f"{API}/interviews", json=CREATE, cookies=ck)
-        assert failed.status_code == 503 and CANARY not in failed.text
+        assert failed.status_code == 409 and failed.json()["error"]["code"] == "practice_setup_outcome_uncertain" and CANARY not in failed.text
     assert seen >= 40, "the sweep must cover the real route surface"
     assert CANARY not in " ".join(rec.getMessage() for rec in caplog.records)
 
@@ -382,7 +388,8 @@ def test_a_provider_error_carrying_a_key_never_reaches_the_candidate(monkeypatch
     monkeypatch.setattr(fake, "create_chat_completion", leaking)
     c, ck = _user(app, "leak@example.com")
     r = c.post(f"{API}/interviews", json=CREATE, cookies=ck)
-    assert r.status_code == 503 and CANARY not in r.text and "upstream" not in r.text and "Bearer" not in r.text
+    assert r.status_code == 409 and r.json()["error"]["code"] == "practice_setup_outcome_uncertain"
+    assert CANARY not in r.text and "upstream" not in r.text and "Bearer" not in r.text
 
 
 # ------------------------------------------------------------------------------------------------------------- AC-18: owner-scoped run list

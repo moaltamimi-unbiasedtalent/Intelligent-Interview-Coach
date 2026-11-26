@@ -155,7 +155,7 @@ def test_get_after_store_recreation(db_url):
 
 def test_idempotent_create_survives_restart(db_url):
     repo = _FakeRepo()
-    hdr = {**ALICE, "Idempotency-Key": "agent-handoff:run-42"}
+    hdr = {**ALICE, "Idempotency-Key": "practice-restart-42"}
     store_a = _store_over(db_url)
     with _client(store_a, repo) as c:
         sid1 = c.post("/api/v1/interviews", json=CONFIG, headers=hdr).json()["session_id"]

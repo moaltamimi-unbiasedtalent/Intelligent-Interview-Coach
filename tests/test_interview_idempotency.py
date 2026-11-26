@@ -107,7 +107,7 @@ def test_no_key_creates_two_sessions(ctx):
 
 def test_same_key_returns_same_session_without_regenerating(ctx):
     app, domain = ctx
-    hdr = {**ALICE, "Idempotency-Key": "agent-handoff:run_1"}
+    hdr = {**ALICE, "Idempotency-Key": "practice-retry-1"}
     with TestClient(app) as c:
         r1 = c.post("/api/v1/interviews", json=PREP, headers=hdr).json()
         r2 = c.post("/api/v1/interviews", json=PREP, headers=hdr).json()
@@ -127,7 +127,7 @@ def test_different_key_creates_different_session(ctx):
 
 def test_same_key_different_users_are_isolated(ctx):
     app, _ = ctx
-    hdr_key = "agent-handoff:run_1"
+    hdr_key = "practice-retry-1"
     with TestClient(app) as c:
         a = c.post("/api/v1/interviews", json=PREP, headers={**ALICE, "Idempotency-Key": hdr_key}).json()["session_id"]
         b = c.post("/api/v1/interviews", json=PREP, headers={**BOB, "Idempotency-Key": hdr_key}).json()["session_id"]

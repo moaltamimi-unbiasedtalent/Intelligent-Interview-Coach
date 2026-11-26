@@ -352,8 +352,10 @@ def test_k9_candidate_deletion_removes_candidate_data_keeps_anonymised_audit_and
         s.add(AIUsageFact(usage_key="agent:w11-k9", user_id=cand["uid"], workflow="agent", operation="run", model_calls=1, cost_source="unavailable",
                           token_coverage="unknown", cost_coverage="unknown"))
         s.commit()
-    audit_before = w.sf().__enter__().execute(text("SELECT count(*) FROM audit_events WHERE actor_user_id=:u"), {"u": cand["uid"]}).scalar()
-    assert audit_before > 0 and _db_contains(w, SENT["answer"]) and _files_contain(K9_DOC)
+    with w.sf() as s:
+        audit_before = {row["id"]: dict(row) for row in s.execute(text("SELECT * FROM audit_events WHERE actor_user_id=:u"), {"u": cand["uid"]}).mappings()}
+        unrelated_audit = {row["id"]: dict(row) for row in s.execute(text("SELECT * FROM audit_events WHERE actor_user_id IS NOT NULL AND actor_user_id!=:u"), {"u": cand["uid"]}).mappings()}
+    assert audit_before and _db_contains(w, SENT["answer"]) and _files_contain(K9_DOC)
     r = w.c.post(f"{API}/auth/account/delete", cookies=cand["ck"])
     assert r.status_code == 200, r.text                                                        # the audit append-only trigger does not block deletion
     assert "instantly erased" not in r.text.lower() and "all backups" not in r.text.lower()   # no overclaim about backups
@@ -363,7 +365,11 @@ def test_k9_candidate_deletion_removes_candidate_data_keeps_anonymised_audit_and
                            ("support_tickets", "owner_user_id"), ("ai_usage_facts", "user_id")):
             assert s.execute(text(f"SELECT count(*) FROM {table} WHERE {col}=:u"), {"u": cand["uid"]}).scalar() == 0, table
         assert s.execute(text("SELECT count(*) FROM audit_events WHERE actor_user_id=:u"), {"u": cand["uid"]}).scalar() == 0
-        assert s.execute(text("SELECT count(*) FROM audit_events WHERE actor_user_id IS NULL AND event_type LIKE 'account.%'")).scalar() >= audit_before   # evidence survives, anonymised
+        retained = {row["id"]: dict(row) for row in s.execute(text("SELECT * FROM audit_events")).mappings()}
+        for identity, event in audit_before.items():
+            assert retained[identity] == {**event, "actor_user_id": None}
+        for identity, event in unrelated_audit.items():
+            assert retained[identity] == event
     assert not _files_contain(K9_DOC)                                                          # the deleted candidate's private file is purged
     for needle in (*SENT.values(), K9_DOC, "W11-K9-TICKET-BODY"):
         assert not _db_contains(w, needle), needle                                             # no row in ANY table still holds the candidate's content
@@ -392,11 +398,11 @@ def test_k10_workspace_membership_shares_and_admin_metadata_stay_scoped(w):
     assert w.post("/workspaces/invitations/accept", b["ck"], {"token": _invite_token(w.mail)}).status_code in (200, 201)
     assert w.get(f"/workspaces/{wid}", c3[1]).status_code in (403, 404)                       # a non-member cannot read the workspace (IDOR)
     assert w.post(f"/workspaces/{wid}/members/{a['uid']}/remove", b["ck"]).status_code == 403   # a member cannot remove the owner
-    sh = w.post("/shares", b["ck"], {"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(b["iid"])})
+    sh = w.post("/shares", b["ck"], {"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(b["iid"]), "expected_report_generation": w.get(f"/history/interviews/{b['iid']}", b["ck"]).json()["interview"]["share_generation"]})
     assert sh.status_code in (200, 201), sh.text
     assert w.get(f"/shares/resource/interview_report/{b['iid']}", a["ck"]).status_code == 200  # the owner may view what the member shared
     assert w.get(f"/shares/resource/interview_report/{b['iid']}", c3[1]).status_code in (403, 404)
-    assert w.post("/shares", c3[1], {"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(a["iid"])}).status_code in (403, 404)
+    assert w.post("/shares", c3[1], {"workspace_id": wid, "consent": True, "resource_type": "interview_report", "resource_id": str(a["iid"]), "expected_report_generation": w.get(f"/history/interviews/{a['iid']}", a["ck"]).json()["interview"]["share_generation"]}).status_code in (403, 404)
     for role in ("platform_admin", "support_operator"):                                        # Admin workspace metadata is not content access
         det = w.get(f"/admin/workspaces/{wid}", w.ck(role))
         assert det.status_code == 200 and not [x for x in SENT.values() if x in det.text], role
@@ -545,7 +551,7 @@ def test_ah_cross_user_and_cross_plane_identifier_misuse_leaks_and_mutates_nothi
     assert w.get(f"/documents/{b['doc']}", a["ck"]).status_code in (403, 404)
     assert w.c.delete(f"{API}/documents/{b['doc']}", cookies=a["ck"]).status_code in (403, 404)
     assert w.c.delete(f"{API}/memory/{b['mem']}", cookies=a["ck"]).status_code in (403, 404)
-    assert w.post("/shares", a["ck"], {"workspace_id": 1, "consent": True, "resource_type": "interview_report", "resource_id": str(b["iid"])}).status_code in (400, 403, 404, 422)
+    assert w.post("/shares", a["ck"], {"workspace_id": 1, "consent": True, "resource_type": "interview_report", "resource_id": str(b["iid"]), "expected_report_generation": w.get(f"/history/interviews/{b['iid']}", b["ck"]).json()["interview"]["share_generation"]}).status_code in (400, 403, 404, 422)
     assert w.get(f"/opportunities/{b['opp']}", b["ck"]).json() == before["opp"] and w.get(f"/documents/{b['doc']}", b["ck"]).status_code == 200   # B's data intact
     # Admin personas: lacking permission, or holding only metadata permission
     assert denied(w.get("/admin/support/tickets", w.ck("billing_admin"))) and denied(w.get("/admin/privacy/requests", w.ck("support_operator")))

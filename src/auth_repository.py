@@ -747,6 +747,24 @@ class AuditRepository:
     def __init__(self, session_factory: sessionmaker) -> None:
         self._session_factory = session_factory
 
+    @property
+    def session_factory(self):
+        return self._session_factory
+
+    @staticmethod
+    def record_interview_deletion_in_transaction(session, *, actor_user_id: int, interview_id: int, attempt_id: str):
+        """Authoritative metadata-only audit, committed with the deletion itself.
+
+        This event has no post-commit alert observer. Failure rolls back all effects.
+        """
+        if len(attempt_id) != 32 or any(char not in "0123456789abcdef" for char in attempt_id):
+            raise ValueError("Invalid deletion attempt identity.")
+        event = AuditEvent(event_type="interview.deleted", result="success", request_id=attempt_id,
+                           actor_user_id=actor_user_id, target_type="interview", target_id=str(interview_id))
+        session.add(event)
+        session.flush()
+        return event.id
+
     def record(
         self,
         *,

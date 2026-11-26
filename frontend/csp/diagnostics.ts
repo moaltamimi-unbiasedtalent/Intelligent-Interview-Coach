@@ -5,7 +5,21 @@ export const DIAGNOSTIC_LIMIT = 100;
 const stages = new Set(["sign_in_document", "original_bootstrap_refusal", "sign_in_form", "authenticated_account", "/history", "/opportunities", "nonce_rotation_and_spoof_refusal", "negative_injection", "logout_request", "logout_redirect_and_revocation", "complete"]);
 const routes = new Set(["/sign-in", "/account", "/history", "/opportunities", "/api/v1/auth/login", "/api/v1/auth/me", "/api/v1/auth/logout", "/api/v1/history/interviews", "/api/v1/opportunities", "/api/v1/health"]);
 const resources = new Set(["document", "stylesheet", "image", "media", "font", "script", "xhr", "fetch", "other", "websocket", "manifest", "texttrack", "eventsource"]);
-const networkCodes = new Set(["ERR_ABORTED", "ERR_CONNECTION_REFUSED", "ERR_NAME_NOT_RESOLVED", "ERR_CERT_AUTHORITY_INVALID", "ERR_FAILED", "ERR_CONNECTION_RESET", "ERR_TIMED_OUT", "ERR_HTTP2_PROTOCOL_ERROR", "ERR_INCOMPLETE_CHUNKED_ENCODING", "ERR_CONNECTION_CLOSED", "ERR_CONTENT_DECODING_FAILED", "ERR_CONTENT_LENGTH_MISMATCH", "ERR_EMPTY_RESPONSE", "ERR_INVALID_RESPONSE"]);
+const networkFailures: Readonly<Record<string, string>> = {
+  ERR_ABORTED: "aborted", ERR_BLOCKED_BY_CSP: "csp_blocked", ERR_BLOCKED_BY_CLIENT: "client_blocked",
+  ERR_BLOCKED_BY_RESPONSE: "response_blocked", ERR_BLOCKED_BY_ORB: "response_blocked",
+  ERR_CONNECTION_REFUSED: "connection", ERR_CONNECTION_RESET: "connection", ERR_CONNECTION_CLOSED: "connection",
+  ERR_NAME_NOT_RESOLVED: "dns", ERR_CERT_AUTHORITY_INVALID: "tls", ERR_SSL_PROTOCOL_ERROR: "tls",
+  ERR_TIMED_OUT: "timeout", ERR_HTTP2_PROTOCOL_ERROR: "http_protocol", ERR_INCOMPLETE_CHUNKED_ENCODING: "http_protocol",
+  ERR_CONTENT_DECODING_FAILED: "encoding", ERR_CONTENT_LENGTH_MISMATCH: "encoding",
+  ERR_EMPTY_RESPONSE: "response", ERR_INVALID_RESPONSE: "response", ERR_HTTP_RESPONSE_CODE_FAILURE: "response",
+  ERR_NETWORK_CHANGED: "network_changed", ERR_FAILED: "unspecified",
+};
+const pageErrorCategories: Readonly<Record<string, string>> = {
+  Error: "generic", TypeError: "type", ReferenceError: "reference", SyntaxError: "syntax", RangeError: "range",
+  URIError: "uri", EvalError: "eval", ChunkLoadError: "chunk_load", NetworkError: "network",
+  AbortError: "aborted", SecurityError: "security",
+};
 type Kind = "console" | "page_error" | "request_failed" | "http_error" | "external_request" | "asset_response" | "login_request" | "login_response";
 type Fields = Record<string, string | number | boolean>;
 type Event = Fields & { event_id: string; group_id: string; kind: Kind; stage: string; elapsed_ms: number };
@@ -49,7 +63,34 @@ export async function observeBaselineOperation<T>(target: Record<string, unknown
 
 export function safePageErrorKind(error: unknown): string {
   if (!(error instanceof Error)) return "unknown";
-  return ["Error", "TypeError", "ReferenceError", "SyntaxError", "RangeError"].includes(error.name) ? error.name : "other";
+  const name = error.name;
+  return typeof name === "string" && name.length <= 64 && Object.hasOwn(pageErrorCategories, name) ? name : "other";
+}
+
+/** Exact codes only: a recognizable prefix must never export its private suffix. */
+export function safeRequestFailure(raw?: string) {
+  const code = typeof raw === "string" && raw.length <= 128 ? raw.match(/^(?:net::)?(ERR_[A-Z0-9_]+)$/)?.[1] : undefined;
+  return code && Object.hasOwn(networkFailures, code)
+    ? { failure: code, failure_category: networkFailures[code] }
+    : { failure: "redacted", failure_category: "unknown" };
+}
+
+/** Retain header categories, never raw headers, MIME parameters or encoding text. */
+export function safeAssetHeaders(contentType?: string, contentEncoding?: string) {
+  const mimeTypes: Readonly<Record<string, string>> = {
+    "application/javascript": "javascript", "text/javascript": "javascript", "application/x-javascript": "javascript",
+    "application/ecmascript": "javascript", "text/ecmascript": "javascript", "text/html": "html",
+    "application/json": "json", "text/plain": "plain_text", "application/octet-stream": "binary",
+  };
+  const mime = typeof contentType === "string" && contentType.length <= 1024 ? contentType.split(";", 1)[0].trim().toLowerCase() : "";
+  const mime_category = !contentType ? "missing" : Object.hasOwn(mimeTypes, mime) ? mimeTypes[mime] : "other";
+  const encodings = typeof contentEncoding === "string" && contentEncoding.length <= 128
+    ? contentEncoding.toLowerCase().split(",").map(value => value.trim()) : [];
+  const known = new Set(["identity", "gzip", "br", "deflate", "zstd"]);
+  const encoding_category = !contentEncoding ? "missing"
+    : encodings.length >= 1 && encodings.length <= 4 && encodings.every(value => known.has(value))
+      ? encodings.length === 1 ? encodings[0] : "multiple" : "other";
+  return { mime_category, encoding_category };
 }
 
 /** Run inside the page: export only a bounded allowlisted CSP-violation projection. */
@@ -123,23 +164,27 @@ export class BrowserDiagnostics {
     this.add("console", stage, { type: "error", bucket, ...consoleClassification(text), ...this.source(location.url), line: integer(location.lineNumber), column: integer(location.columnNumber) }, text);
   }
 
-  pageError(stage: unknown, error?: unknown) { this.add("page_error", stage, { text: "[redacted page error]", error_kind: safePageErrorKind(error) }); }
+  pageError(stage: unknown, error?: unknown) {
+    const kind = safePageErrorKind(error);
+    this.add("page_error", stage, { text: "[redacted page error]", error_kind: kind,
+      error_category: Object.hasOwn(pageErrorCategories, kind) ? pageErrorCategories[kind] : "unknown" });
+  }
 
   request(kind: "request_failed" | "http_error" | "external_request", request: { url: string; method: string; resourceType: string; error?: string; status?: number }, stage: unknown) {
     const fields: Fields = { ...this.source(request.url), method: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"].includes(request.method) ? request.method : "other", resource_type: resources.has(request.resourceType) ? request.resourceType : "other" };
     if (kind === "request_failed") {
-      const code = request.error?.match(/^(?:net::)?(ERR_[A-Z0-9_]+)$/)?.[1];
-      fields.failure = code && networkCodes.has(code) ? code : "redacted";
+      Object.assign(fields, safeRequestFailure(request.error));
     }
     if (kind === "http_error") fields.status = Number.isInteger(request.status) && request.status! >= 400 && request.status! <= 599 ? request.status! : -1;
     this.add(kind, stage, fields);
   }
 
-  assetResponse(request: { url: string; resourceType: string; status: number }, stage: unknown) {
+  assetResponse(request: { url: string; resourceType: string; status: number; contentType?: string; contentEncoding?: string }, stage: unknown) {
     const source = safeSource(request.url);
     if (source.origin !== "app" || source.path !== "next_static_asset" || request.resourceType !== "script") return;
     const status = Number.isInteger(request.status) && request.status >= 100 && request.status <= 599 ? request.status : -1;
-    this.add("asset_response", stage, { ...this.source(request.url), resource_type: "script", status });
+    this.add("asset_response", stage, { ...this.source(request.url), resource_type: "script", status,
+      ...safeAssetHeaders(request.contentType, request.contentEncoding) });
   }
 
   loginRequest(raw: string | null, contentType: string, stage: unknown) {

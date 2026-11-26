@@ -7,12 +7,18 @@ verified candidate release. Only a synthetic PostgreSQL/auth fixture is seeded.
 
 from __future__ import annotations
 import argparse
+import errno
 import hashlib
+import http.client
 import ipaddress
 import json
 import os
 from pathlib import Path
+import re
 import secrets
+import selectors
+import socket
+import ssl
 import subprocess
 import sys
 import time
@@ -29,6 +35,376 @@ PG = "postgres:16@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2c
 CADDY = (
     "caddy:2@sha256:04913b1da43339a40ad1ea87827d70a576ac5aa6cf674c6e24fdca675887533a"
 )
+EDGE_ORIGINS = (
+    ("app.staging.example.com", "/sign-in", "web"),
+    ("api.staging.example.com", "/api/v1/health", "api"),
+)
+READINESS_ATTEMPTS = 45
+READINESS_SECONDS = 90
+PRIVATE_NETWORKS = tuple(ipaddress.ip_network(cidr) for cidr in
+                         ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"))
+EDGE_FAILURES = frozenset({"edge_tls_unavailable", "edge_http_unavailable",
+                           "edge_route_mismatch", "edge_not_stable",
+                           "edge_deadline_exceeded", "edge_deadline_guard_unavailable"})
+
+
+class EdgeDeadlineExceeded(TimeoutError):
+    pass
+
+
+def remaining(deadline, cap=2):
+    seconds = deadline - time.monotonic()
+    if seconds <= 0:
+        raise EdgeDeadlineExceeded("edge_deadline_exceeded")
+    return min(cap, seconds)
+
+
+def edge_failure(error):
+    # Only authored classifications may cross the diagnostic boundary.
+    if isinstance(error, EdgeDeadlineExceeded):
+        return "edge_deadline_exceeded"
+    return str(error) if type(error) is ValueError and str(error) in EDGE_FAILURES else "edge_route_mismatch"
+
+
+def private_edge_address(address):
+    try:
+        ip = ipaddress.ip_address(address)
+        return ip.version == 4 and any(ip in network for network in PRIVATE_NETWORKS)
+    except ValueError:
+        return False
+
+
+# The probe never owns process signal state. Each wait and each progress step
+# consumes the same absolute budget; readiness does not renew it.
+HEADER_LIMIT = 16 * 1024
+CHUNK_METADATA_LIMIT = 16 * 1024
+API_BODY_LIMIT = 4096
+HTML_BODY_LIMIT = 256 * 1024
+WIRE_LIMIT = 1024 * 1024
+BIO_LIMIT = 64 * 1024
+
+
+class _EdgeTransport:
+    """One raw descriptor; SSLObject and PollSelector own no network descriptor.
+
+    Allocate the Python socket *object* before initializing its descriptor. The
+    lifetime guards in edge_probe are established before __init__ can acquire an
+    OS resource, including the C-call return / Python assignment interruption gap.
+    """
+
+    def __init__(self, context, hostname, deadline):
+        self.raw = socket.socket.__new__(socket.socket)
+        self.raw._io_refs, self.raw._closed = 0, True
+        self.deadline = deadline
+        self.incoming, self.outgoing = ssl.MemoryBIO(), ssl.MemoryBIO()
+        self.tls = context.wrap_bio(self.incoming, self.outgoing,
+                                    server_side=False, server_hostname=hostname)
+        self.wire = 0
+        self.clean_eof = False
+
+    def check(self):
+        remaining(self.deadline)
+        require(self.incoming.pending <= BIO_LIMIT and self.outgoing.pending <= BIO_LIMIT,
+                "edge_http_unavailable")
+
+    def close(self):
+        # Idempotent, local-only close. No TLS shutdown, makefile, FD duplication,
+        # worker, pool, finalizer or network-dependent cleanup.
+        self.raw.close()
+
+    def wait(self, events):
+        self.check()
+        with selectors.PollSelector() as poll:
+            poll.register(self.raw, events)
+            ready = poll.select(remaining(self.deadline))
+        self.check()
+        if not ready:
+            raise EdgeDeadlineExceeded("edge_deadline_exceeded")
+
+    def connect(self, address):
+        self.check()
+        socket.socket.__init__(self.raw, socket.AF_INET, socket.SOCK_STREAM)
+        self.check()
+        self.raw.setblocking(False)
+        self.check()
+        code = self.raw.connect_ex((address, 443))
+        self.check()
+        if code in (errno.EINPROGRESS, errno.EWOULDBLOCK, errno.EALREADY, errno.EINTR):
+            self.wait(selectors.EVENT_WRITE)
+            code = self.raw.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+            self.check()
+        require(code == 0, "edge_http_unavailable")
+
+    def flush(self):
+        self.check()
+        while self.outgoing.pending:
+            data = self.outgoing.read(min(self.outgoing.pending, 16384))
+            self.check()
+            view = memoryview(data)
+            while view:
+                self.check()
+                require(self.wire + len(view) <= WIRE_LIMIT, "edge_http_unavailable")
+                try:
+                    sent = self.raw.send(view)
+                except (BlockingIOError, InterruptedError):
+                    self.wait(selectors.EVENT_WRITE)
+                    continue
+                self.check()
+                require(0 < sent <= len(view), "edge_http_unavailable")
+                self.wire += sent
+                view = view[sent:]
+
+    def receive(self):
+        self.check()
+        # One extra byte is not read beyond either resource bound.
+        capacity = min(16384, BIO_LIMIT - self.incoming.pending, WIRE_LIMIT - self.wire)
+        require(capacity > 0, "edge_http_unavailable")
+        while True:
+            try:
+                data = self.raw.recv(capacity)
+                break
+            except (BlockingIOError, InterruptedError):
+                self.wait(selectors.EVENT_READ)
+        self.check()
+        if not data:
+            self.incoming.write_eof()
+        else:
+            self.wire += len(data)
+            self.incoming.write(data)
+        self.check()
+        return bool(data)
+
+    def operate(self, operation):
+        # A WANT_WRITE without pending output cannot advance. Likewise a peer
+        # EOF cannot be supplied repeatedly. Neither case may busy-spin.
+        while True:
+            self.check()
+            try:
+                value = operation()
+            except ssl.SSLWantWriteError:
+                require(self.outgoing.pending > 0, "edge_http_unavailable")
+                self.flush()
+            except ssl.SSLWantReadError:
+                self.flush()
+                require(not self.incoming.eof, "edge_http_unavailable")
+                self.receive()
+            else:
+                self.check()
+                self.flush()
+                return value
+
+    def request(self, path, hostname):
+        self.operate(self.tls.do_handshake)
+        require(self.tls.selected_alpn_protocol() in (None, "http/1.1"), "edge_tls_unavailable")
+        data = (f"GET {path} HTTP/1.1\r\nHost: {hostname}\r\n"
+                "Connection: close\r\nAccept-Encoding: identity\r\n\r\n").encode("ascii")
+        while data:
+            sent = self.operate(lambda: self.tls.write(data))
+            require(0 < sent <= len(data), "edge_http_unavailable")
+            data = data[sent:]
+
+    def read(self, size):
+        try:
+            data = self.operate(lambda: self.tls.read(min(size, 16384)))
+        except ssl.SSLZeroReturnError:
+            data = b""
+        if not data:
+            # Only SSLObject's authenticated close_notify is EOF. A raw socket
+            # loss raises SSLEOFError, including for close-delimited HTTP.
+            self.clean_eof = True
+        return data
+
+
+    def finish_response(self):
+        """Prove one complete response, not just its declared HTTP body.
+
+        The fixed request asks the peer to close. A one-byte TLS read must reach
+        authenticated close_notify without returning plaintext; then the raw
+        transport must reach EOF without any further encrypted bytes. Neither a
+        quiet poll nor a parser boundary establishes completion. All steps keep
+        the original deadline and existing BIO/wire limits. No TLS shutdown is
+        initiated and cleanup remains local-only.
+        """
+        self.check()
+        require(self.read(1) == b"", "edge_http_unavailable")
+        self.check()
+        require(self.clean_eof and self.tls.pending() == 0 and self.incoming.pending == 0,
+                "edge_http_unavailable")
+        if not self.incoming.eof:
+            require(not self.receive(), "edge_http_unavailable")
+        self.check()
+        require(self.incoming.eof and self.incoming.pending == 0 and self.outgoing.pending == 0,
+                "edge_http_unavailable")
+
+
+class _ProbeInput:
+    """Small bounded plaintext adapter; makefile returns this, never a socket FD."""
+
+    def __init__(self, transport):
+        self.transport, self.buffer = transport, bytearray()
+        self.headers = True
+        self.header_bytes = 0
+        self.first_line = True
+
+    def makefile(self, mode):
+        require(mode == "rb", "edge_http_unavailable")
+        return self
+
+    def flush(self):
+        pass  # Read-only adapter; IOBase.close calls flush.
+
+    def close(self):
+        pass  # HTTPResponse must not own or delay raw descriptor closure.
+
+    def read(self, size=-1):
+        require(size >= 0, "edge_http_unavailable")
+        self.transport.check()
+        while len(self.buffer) < size:
+            data = self.transport.read(min(16384, size - len(self.buffer)))
+            if not data:
+                break
+            self.buffer.extend(data)
+        data = bytes(self.buffer[:size])
+        del self.buffer[:size]
+        self.transport.check()
+        return data
+
+    def readline(self, size=-1):
+        limit = min(size if size >= 0 else HEADER_LIMIT + 1, HEADER_LIMIT + 1)
+        line = bytearray()
+        while len(line) < limit:
+            char = self.read(1)
+            if not char:
+                break
+            require(not self.headers or self.header_bytes + len(line) + 1 <= HEADER_LIMIT,
+                    "edge_http_unavailable")
+            line.extend(char)
+            if char == b"\n":
+                break
+        require(line.endswith(b"\r\n"), "edge_http_unavailable")
+        if self.headers:
+            self.header_bytes += len(line)
+            require(self.header_bytes <= HEADER_LIMIT, "edge_http_unavailable")
+            if self.first_line:
+                require(re.fullmatch(rb"HTTP/1\.[01] 200 [\x20-\x7e]*\r\n", line) is not None,
+                        "edge_http_unavailable")
+                self.first_line = False
+            elif line == b"\r\n":
+                self.headers = False
+            else:
+                require(re.fullmatch(rb"[!#$%&'*+.^_`|~0-9A-Za-z-]+:[\x20-\x7e\t]*\r\n", line) is not None,
+                        "edge_http_unavailable")
+        return bytes(line)
+
+
+class _ProbeResponse(http.client.HTTPResponse):
+    """Restrict stdlib's permissive chunk parsing; no new HTTP connection stack."""
+
+    def __init__(self, source):
+        super().__init__(source)
+        self.chunk_metadata = 0
+
+    def _chunk_line(self):
+        line = self.fp.readline(CHUNK_METADATA_LIMIT - self.chunk_metadata + 1)
+        self.chunk_metadata += len(line)
+        require(self.chunk_metadata <= CHUNK_METADATA_LIMIT, "edge_http_unavailable")
+        return line
+
+    def _read_next_chunk_size(self):
+        line = self._chunk_line()
+        require(re.fullmatch(rb"[0-9A-Fa-f]+\r\n", line) is not None, "edge_http_unavailable")
+        # Refuse huge integers before conversion as well as oversized bodies.
+        require(len(line) <= 10, "edge_http_unavailable")
+        return int(line[:-2], 16)
+
+    def _read_and_discard_trailer(self):
+        require(self._chunk_line() == b"\r\n", "edge_http_unavailable")
+
+    def _get_chunk_left(self):
+        # Python 3.11 otherwise discards two bytes without checking CRLF.
+        if self.chunk_left == 0:
+            self.chunk_metadata += 2
+            require(self.chunk_metadata <= CHUNK_METADATA_LIMIT, "edge_http_unavailable")
+            require(self._safe_read(2) == b"\r\n", "edge_http_unavailable")
+            self.chunk_left = None
+        return super()._get_chunk_left()
+
+
+def _probe_response(transport, role):
+    source = _ProbeInput(transport)
+    response = _ProbeResponse(source)
+    try:
+        response.begin()
+        transport.check()
+        require(response.status == 200 and response.version in (10, 11), "edge_http_unavailable")
+        lengths = response.headers.get_all("Content-Length", [])
+        codings = response.headers.get_all("Transfer-Encoding", [])
+        require(len(lengths) <= 1 and len(codings) <= 1 and not (lengths and codings),
+                "edge_http_unavailable")
+        require(not lengths or re.fullmatch(r"[0-9]+", lengths[0]) is not None, "edge_http_unavailable")
+        require(not codings or (response.version == 11 and codings[0].lower() == "chunked"),
+                "edge_http_unavailable")
+        require(response.headers.get_all("Content-Encoding", []) in ([], ["identity"]), "edge_http_unavailable")
+        require(not response.headers.get_all("Upgrade") and not response.headers.get_all("Trailer"),
+                "edge_http_unavailable")
+        limit = API_BODY_LIMIT if role == "api" else HTML_BODY_LIMIT
+        expected = int(lengths[0]) if lengths else None
+        require(expected is None or expected <= limit, "edge_http_unavailable")
+        body = bytearray()
+        while True:
+            transport.check()
+            part = response.read(min(16384, limit + 1 - len(body)))
+            transport.check()
+            if not part:
+                break
+            body.extend(part)
+            require(len(body) <= limit, "edge_http_unavailable")
+        require(expected is None or len(body) == expected, "edge_http_unavailable")
+        require(expected is not None or response.chunked or transport.clean_eof, "edge_http_unavailable")
+        require(not source.buffer, "edge_http_unavailable")
+        transport.finish_response()
+        transport.check()
+        mime = response.getheader("Content-Type", "").split(";", 1)[0].lower()
+        if role == "web":
+            valid = mime == "text/html" and b"<!doctype html" in body[:4096].lower()
+        else:
+            valid = (mime == "application/json" and isinstance(value := json.loads(body), dict)
+                     and value.get("status") == "ok")
+        return "ready" if valid else "edge_route_mismatch"
+    finally:
+        response.close()
+
+
+def edge_probe(address, context, hostname, path, role, *, deadline=None):
+    """One pinned verified HTTPS request, no signals, DNS, proxy or retry."""
+    require((hostname, path, role) in EDGE_ORIGINS, "edge_route_mismatch")
+    require(private_edge_address(address), "edge_route_mismatch")
+    require(context.check_hostname and context.verify_mode == ssl.CERT_REQUIRED, "edge_tls_unavailable")
+    deadline = min(deadline, time.monotonic() + 2) if deadline is not None else time.monotonic() + 2
+    try:
+        remaining(deadline)
+        transport = _EdgeTransport(context, hostname, deadline)
+        # Both lifetime guards precede descriptor acquisition. A single interrupt
+        # before/during the first close completes via the already active outer
+        # guard; at the outer close the first close has already completed. These
+        # are local resource guards, with no signal state or cancellation deferral.
+        try:
+            try:
+                transport.connect(address)
+                transport.request(path, hostname)
+                return _probe_response(transport, role)
+            finally:
+                transport.close()
+        finally:
+            transport.close()
+    except EdgeDeadlineExceeded:
+        return "edge_deadline_exceeded"
+    except ssl.SSLCertVerificationError as exc:
+        return "edge_route_mismatch" if getattr(exc, "verify_code", None) == 62 else "edge_tls_unavailable"
+    except ssl.SSLError:
+        return "edge_tls_unavailable"
+    except (OSError, http.client.HTTPException, ValueError, TypeError, OverflowError):
+        return "edge_http_unavailable"
 
 
 def safe_runner_value(value):
@@ -88,6 +464,9 @@ class Check:
         self.out = Path(args.out).resolve()
         self.created = False
         self.owns_output = False
+        self._phase_deadlines = {}
+        self._phase_ready = {}
+        self._browser_attempted = set()
         self.summary = {
             "source_sha": args.sha,
             "baseline_sha": BASE,
@@ -341,14 +720,16 @@ class Check:
             resolved["networks"]["default"]["internal"], "internal_network_required"
         )
 
-    def lifecycle_snapshot(self, label):
+    def lifecycle_snapshot(self, label, *, deadline=None):
         # Optional diagnostics only: never retain inspect output, IDs, logs or errors.
         snapshot = {"label": label, "services": {}}
         for role in ("api", "web", "caddy"):
             evidence = {"available": False}
             try:
-                cid = self.compose("ps", "-q", role, timeout=8).stdout.decode().strip()
-                info = json.loads(run(["docker", "inspect", cid], timeout=8).stdout)[0]
+                cid = self.compose("ps", "-q", role, timeout=8 if deadline is None else remaining(deadline, 8)).stdout.decode().strip()
+                info = json.loads(run(["docker", "inspect", cid], timeout=8 if deadline is None else remaining(deadline, 8)).stdout)[0]
+                if deadline is not None:
+                    remaining(deadline)
                 state = info.get("State", {})
                 status = state.get("Status")
                 health = (state.get("Health") or {}).get("Status", "none")
@@ -357,58 +738,215 @@ class Check:
                     "status": status if status in {"created", "running", "restarting", "exited", "dead", "paused"} else "unknown",
                     "health": health if health in {"starting", "healthy", "unhealthy", "none"} else "unknown",
                 }
+            except EdgeDeadlineExceeded:
+                raise
             except (ValueError, KeyError, IndexError, TypeError, OSError, subprocess.SubprocessError):
                 pass
             snapshot["services"][role] = evidence
         self.summary.setdefault("lifecycle_diagnostics", []).append(snapshot)
 
-    def ready(self):
-        # Poll from the actual Caddy container on its own private network.
-        for _ in range(90):
-            p = self.compose(
-                "exec",
-                "-T",
-                "api",
-                "curl",
-                "-fsS",
-                "http://localhost:8000/api/v1/health",
-                timeout=8,
-                check=False,
-            )
-            w = self.compose(
-                "exec",
-                "-T",
-                "web",
-                "curl",
-                "-fsS",
-                "http://localhost:3000/sign-in",
-                timeout=8,
-                check=False,
-            )
-            if p.returncode == w.returncode == 0:
-                return
-            time.sleep(1)
-        raise ValueError("auth_topology_not_live")
+    def edge_binding(self, *, deadline=None):
+        """Authenticate the owned running edge and its one internal network.
+
+        Identities are used only in memory for stability checks, never diagnostics.
+        """
+        deadline = time.monotonic() + 8 if deadline is None else deadline
+        cid = self.compose("ps", "-q", "caddy", timeout=remaining(deadline)).stdout.decode().strip()
+        require(bool(cid) and len(cid.split()) == 1, "edge_http_unavailable")
+        info = json.loads(run(["docker", "inspect", cid], timeout=remaining(deadline)).stdout)[0]
+        labels = info["Config"]["Labels"]
+        require(labels.get(LABEL) == self.token
+                and labels.get("com.docker.compose.project") == self.project,
+                "edge_route_mismatch")
+        require(info["State"]["Status"] == "running", "edge_http_unavailable")
+        networks = list(info["NetworkSettings"]["Networks"].values())
+        require(len(networks) == 1, "edge_route_mismatch")
+        address, network = networks[0]["IPAddress"], networks[0]["NetworkID"]
+        require(private_edge_address(address), "edge_route_mismatch")
+        actual = json.loads(run(["docker", "network", "inspect", network], timeout=remaining(deadline)).stdout)[0]
+        require(actual["Internal"] is True and actual["Labels"].get(LABEL) == self.token,
+                "edge_route_mismatch")
+        remaining(deadline)
+        return cid, network, address
+
+    def edge_context(self, *, deadline=None):
+        # Read only the disposable public CA, in memory. No private key, retained
+        # certificate, system trust changes, public CA/DNS or TLS bypass is needed.
+        deadline = time.monotonic() + 2 if deadline is None else deadline
+        ca = self.compose("exec", "-T", "caddy", "cat",
+                          "/data/caddy/pki/authorities/local/root.crt", timeout=remaining(deadline)).stdout
+        require(isinstance(ca, bytes) and 0 < len(ca) <= 16384, "edge_tls_unavailable")
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        context.set_alpn_protocols(["http/1.1"])
+        context.load_verify_locations(cadata=ca.decode("ascii"))
+        remaining(deadline)
+        return context, hashlib.sha256(ca).digest()
+
+    def loopback_ready(self, role, *, deadline=None):
+        deadline = time.monotonic() + 6 if deadline is None else deadline
+        path = {"api": "http://localhost:8000/api/v1/health",
+                "web": "http://localhost:3000/sign-in"}[role]
+        response = self.compose("exec", "-T", role, "curl", "-fsS", "--max-time",
+                                str(remaining(deadline)), path,
+                                timeout=remaining(deadline), check=False)
+        cid = self.compose("ps", "-q", role, timeout=remaining(deadline)).stdout.decode().strip()
+        state = json.loads(run(["docker", "inspect", cid], timeout=remaining(deadline)).stdout)[0]["State"]
+        remaining(deadline)
+        health = (state.get("Health") or {}).get("Status", "none")
+        return response.returncode == 0 and state.get("Status") == "running" and health in {"healthy", "none"}
+
+    def observe_endpoint(self, binding, evidence):
+        previous = getattr(self, "_observed_endpoint", None)
+        evidence["endpoint_changed"] |= previous is not None and previous != binding
+        self._observed_endpoint = binding  # Private identity is never serialized.
+
+    def edge_round(self, evidence, *, deadline):
+        """Both browser-facing routes, bounded responses, stable edge identity."""
+        remaining(deadline)
+        binding = self.edge_binding(deadline=deadline)
+        self.observe_endpoint(binding, evidence)
+        try:
+            remaining(deadline)
+            context, ca_identity = self.edge_context(deadline=deadline)
+        except EdgeDeadlineExceeded:
+            return None, None, "edge_deadline_exceeded"
+        except (OSError, ValueError, ssl.SSLError, subprocess.SubprocessError):
+            return None, None, "edge_tls_unavailable"
+        for hostname, path, role in EDGE_ORIGINS:
+            remaining(deadline)
+            result = edge_probe(binding[2], context, hostname, path, role, deadline=deadline)
+            require(result in EDGE_FAILURES or result == "ready", "edge_route_mismatch")
+            evidence["edge_" + role + "_ready"] = result == "ready"
+            if result != "ready":
+                return None, None, result
+            remaining(deadline)
+            observed = self.edge_binding(deadline=deadline)
+            self.observe_endpoint(observed, evidence)
+            if observed != binding:
+                evidence["endpoint_changed"] = True
+                return None, None, "edge_not_stable"
+        remaining(deadline)
+        return binding + (ca_identity,), context, "ready"
+
+    def ready(self, phase="before"):
+        # Internal HTTP health alone is insufficient. Require two complete HTTPS
+        # observations across a polling interval before the one browser attempt.
+        require(phase in {"before", "after"}, "invalid_browser_phase")
+        require(phase not in self._phase_deadlines, "edge_not_stable")
+        self.summary["phase"] = "edge_readiness_" + phase
+        self._ready_edge = None
+        self._observed_endpoint = None
+        start = time.monotonic()
+        deadline = start + READINESS_SECONDS
+        self._phase_deadlines[phase] = deadline
+        evidence = {"phase": phase, "attempts": 0, "elapsed_ms": 0, "api_loopback_ready": False,
+                    "web_loopback_ready": False, "edge_web_ready": False,
+                    "edge_api_ready": False, "endpoint_changed": False,
+                    "stable_observations": 0, "last_failure": "edge_http_unavailable"}
+        self.summary.setdefault("edge_readiness", []).append(evidence)
+        previous = None
+        last_qualified = None
+        for attempt in range(READINESS_ATTEMPTS):
+            if time.monotonic() >= deadline:
+                evidence["last_failure"] = "edge_deadline_exceeded"
+                break
+            evidence.update(attempts=attempt + 1, api_loopback_ready=False,
+                            web_loopback_ready=False, edge_web_ready=False, edge_api_ready=False)
+            try:
+                for role in ("api", "web"):
+                    evidence[role + "_loopback_ready"] = self.loopback_ready(role, deadline=deadline)
+                if all(evidence[role + "_loopback_ready"] for role in ("api", "web")):
+                    binding, _, category = self.edge_round(evidence, deadline=deadline)
+                else:
+                    binding, category = None, "edge_http_unavailable"
+                if binding is not None and category == "ready":
+                    evidence["endpoint_changed"] |= last_qualified is not None and last_qualified != binding
+                    last_qualified = binding
+                    if previous == binding:
+                        evidence["stable_observations"] += 1
+                    else:
+                        evidence["endpoint_changed"] |= previous is not None
+                        evidence["stable_observations"] = 1
+                    previous = binding
+                    category = "edge_not_stable"
+                    if evidence["stable_observations"] >= 2 and time.monotonic() - start < READINESS_SECONDS:
+                        self._ready_edge = binding
+                        self._phase_ready[phase] = binding
+                        evidence.update(last_failure="none", elapsed_ms=self.readiness_elapsed(start))
+                        return
+                else:
+                    previous = None
+                    evidence["stable_observations"] = 0
+            except (ValueError, KeyError, IndexError, TypeError, AttributeError, OSError, subprocess.SubprocessError) as exc:
+                previous = None
+                category = edge_failure(exc)
+                evidence["stable_observations"] = 0
+            evidence.update(last_failure=category, elapsed_ms=self.readiness_elapsed(start))
+            if category == "edge_deadline_guard_unavailable":
+                break
+            if time.monotonic() >= deadline:
+                evidence["last_failure"] = "edge_deadline_exceeded"
+                break
+            if attempt + 1 < READINESS_ATTEMPTS:
+                try:
+                    time.sleep(remaining(deadline, 1))
+                except EdgeDeadlineExceeded:
+                    evidence["last_failure"] = "edge_deadline_exceeded"
+                    break
+        if time.monotonic() >= deadline:
+            evidence["last_failure"] = "edge_deadline_exceeded"
+        evidence["elapsed_ms"] = self.readiness_elapsed(start)
+        raise ValueError(evidence["last_failure"])
+
+    @staticmethod
+    def readiness_elapsed(start):
+        return min(120000, max(0, int((time.monotonic() - start) * 1000)))
+
+    def phase_deadline(self, phase):
+        require(phase in self._phase_deadlines and phase in self._phase_ready, "edge_not_stable")
+        deadline = self._phase_deadlines[phase]
+        remaining(deadline)
+        return deadline
+
+    def browser_edge(self, phase):
+        # No retry at handoff: an address change or loss of edge readiness is a
+        # qualification failure, not permission to repoll or relaunch Chromium.
+        evidence = {"phase": phase, "edge_web_ready": False, "edge_api_ready": False,
+                    "endpoint_changed": False, "last_failure": "edge_not_stable"}
+        self.summary.setdefault("browser_edge_handoffs", []).append(evidence)
+        try:
+            deadline = self.phase_deadline(phase)
+            expected = self._phase_ready[phase]
+            binding, _, category = self.edge_round(evidence, deadline=deadline)
+            remaining(deadline)
+        except (ValueError, KeyError, IndexError, TypeError, AttributeError, OSError, subprocess.SubprocessError) as exc:
+            evidence["last_failure"] = edge_failure(exc)
+            raise ValueError(evidence["last_failure"]) from None
+        evidence["last_failure"] = category
+        require(category == "ready", category)
+        if binding != expected:
+            evidence.update(last_failure="edge_not_stable", endpoint_changed=True)
+            raise ValueError("edge_not_stable")
+        evidence["last_failure"] = "none"
+        return binding[2]
 
     def browser(self, phase):
+        require(phase in {"before", "after"}, "invalid_browser_phase")
+        require(phase not in self._browser_attempted, "edge_not_stable")
         self.summary["phase"] = "browser_" + phase
-        cid = self.compose("ps", "-q", "caddy").stdout.decode().strip()
-        info = json.loads(run(["docker", "inspect", cid]).stdout)[0]
-        addresses = [
-            v["IPAddress"] for v in info["NetworkSettings"]["Networks"].values()
-        ]
-        require(
-            len(addresses) == 1 and ipaddress.ip_address(addresses[0]).is_private,
-            "private_edge_address_required",
-        )
+        address = self.browser_edge(phase)
         env = dict(
             os.environ,
             CSP_PHASE=phase,
-            CSP_EDGE_IP=addresses[0],
+            CSP_EDGE_IP=address,
             CSP_CREDENTIALS=str(self.out / "private/credentials.json"),
             CSP_PRIVATE_RESULTS=str(self.out / "private/browser-results"),
             CSP_BROWSER_SUMMARY=str(self.out / f"browser-{phase}.json"),
         )
+        # Last check after handoff and environment preparation: successful
+        # probes cannot authorize a process launch after the original deadline.
+        remaining(self.phase_deadline(phase))
+        self._browser_attempted.add(phase)
         result = run(
             [
                 "npm",
@@ -433,19 +971,38 @@ class Check:
             if summary.exists()
             else {"passed": False, "stage": "browser_process_before_test"}
         )
-        return result.returncode == 0 and self.summary[phase].get("passed") is True
+        # Project only the fixed diagnostic category; never copy an error string.
+        events = self.summary[phase].get("diagnostics", {}).get("events", [])
+        failures = [e for e in events if isinstance(e, dict) and e.get("kind") == "request_failed"]
+        passed = result.returncode == 0 and self.summary[phase].get("passed") is True
+        if not passed:
+            self.summary[phase + "_transport"] = (
+                "browser_network_changed" if any(e.get("failure_category") == "network_changed" for e in failures)
+                else "browser_transport_unknown"
+            )
+        # Observe any network replacement during the one browser process. Never
+        # retry navigation or relaunch it; even a passing browser cannot mask drift.
+        try:
+            stable = self.edge_binding() == self._phase_ready[phase][:3]
+        except (ValueError, KeyError, IndexError, TypeError, AttributeError, OSError, subprocess.SubprocessError):
+            stable = False
+        self.summary[phase + "_edge_stable_after_browser"] = stable
+        require(stable, "edge_not_stable")
+        return passed
 
     def execute(self):
         self.summary["phase"] = "start_disposable_auth_topology"
         self.created = True
         self.compose("up", "-d", "caddy", timeout=180)
         self.lifecycle_snapshot("baseline_started")
-        self.ready()
-        self.lifecycle_snapshot("baseline_ready")
+        self.ready("before")
+        self.lifecycle_snapshot("baseline_ready", deadline=self.phase_deadline("before"))
         self.summary["phase"] = "seed_synthetic_invited_account"
         credentials = self.compose(
-            "exec", "-T", "api", "python", "/fixture/seed.py"
+            "exec", "-T", "api", "python", "/fixture/seed.py",
+            timeout=remaining(self.phase_deadline("before"), 180)
         ).stdout
+        remaining(self.phase_deadline("before"))
         account = json.loads(credentials)
         path = self.out / "private/credentials.json"
         path.write_text(json.dumps(account))
@@ -457,8 +1014,8 @@ class Check:
         self.write_profile()
         self.compose("up", "-d", "--force-recreate", "web", "caddy")
         self.lifecycle_snapshot("hardened_started")
-        self.ready()
-        self.lifecycle_snapshot("hardened_ready")
+        self.ready("after")
+        self.lifecycle_snapshot("hardened_ready", deadline=self.phase_deadline("after"))
         after_passed = self.browser("after")
         require(
             before_passed and after_passed, "before_after_browser_qualification_failed"

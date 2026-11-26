@@ -40,6 +40,7 @@ export function resourceTypeKey(resourceType: string): string {
 export interface ShareableItem {
   id: string;
   label: string;
+  generation?: string;
 }
 
 /** The caller's OWN items of one shareable type, for the share picker. Reports: completed interviews only. */
@@ -57,5 +58,6 @@ export async function loadShareableItems(
   const r = await api.history.list();
   return r.interviews
     .filter((i) => i.status === undefined || i.status === null || i.status === "completed")
-    .map((i) => ({ id: String(i.id), label: `${String(i.target_role ?? "")} #${String(i.id)}`.trim() }));
+    .map((i) => ({ id: String(i.id), label: `${String(i.target_role ?? "")} #${String(i.id)}`.trim(),
+      generation: typeof i.share_generation === "string" && /^[0-9a-f]{32}$/.test(i.share_generation) ? i.share_generation : undefined }));
 }

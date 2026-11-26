@@ -77,14 +77,23 @@ class _Mail:
 
 
 class _ReportOwner:
-    """alice(1) owns 'r1'; bob(2) owns 'r2'."""
-    OWN = {("r1", 1), ("r2", 2)}
+    """Real owner-scoped completed reports in the evaluator's isolated database."""
+    def __init__(self, sf):
+        from src.repository import InterviewRepository
+        self.repo = InterviewRepository(sf)
+        self.ids = {uid: str(self.repo.save_interview(uid, {
+            "configuration": {"target_role": "Synthetic role"}, "status": "completed",
+            "report": {"report": {"summary": "Synthetic evaluator report"}},
+        })) for uid in (1, 2)}
 
     def verify(self, rid, uid):
-        return (rid, uid) in self.OWN
+        return self.repo.get_interview(uid, int(rid)) is not None
 
     def load(self, rid, uid):
-        return {"report_id": rid} if (rid, uid) in self.OWN else None
+        return self.repo.get_interview(uid, int(rid))
+
+    def generation(self, uid):
+        return self.repo.get_interview(uid, int(self.ids[uid]), include_share_generation=True)["share_generation"]
 
 
 def _harness():
@@ -101,11 +110,11 @@ def _harness():
     repo = WorkspaceRepository(sf)
     mail = _Mail()
     ws = WorkspaceService(workspaces=repo, accounts=_Accounts(sf), audit=None, email=mail)
-    ro = _ReportOwner()
+    ro = _ReportOwner(sf)
     share = SharingService(workspaces=repo, audit=None,
                           owner_verifiers={"interview_report": ro.verify},
                           owner_loaders={"interview_report": ro.load})
-    return repo, ws, share, mail
+    return repo, ws, share, mail, ro
 
 
 def _accept(ws, mail, uid):
@@ -115,7 +124,9 @@ def _accept(ws, mail, uid):
 
 def evaluate() -> dict:
     m: dict = {}
-    repo, ws, share, mail = _harness()
+    repo, ws, share, mail, reports = _harness()
+    r1, r2 = reports.ids[1], reports.ids[2]
+    g1, g2 = reports.generation(1), reports.generation(2)
     xf = OwnershipTransferService(workspaces=repo, transfers=OwnershipTransferRepository(repo.session_factory), accounts=ws._accounts, email=mail)  # noqa: SLF001
 
     # alice creates WS-A, invites+adds bob.
@@ -169,12 +180,12 @@ def evaluate() -> dict:
 
     # --- sharing ---
     # explicit_share_required + private_by_default — with no share, bob cannot view r1.
-    m["private_by_default"] = 1 if share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") is None else 0
+    m["private_by_default"] = 1 if share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) is None else 0
     m["explicit_share_required"] = m["private_by_default"]
 
     # share_owner_validation — alice cannot share bob's r2.
     try:
-        share.share(user_id=1, workspace_id=a, resource_type="interview_report", resource_id="r2", consent=True)
+        share.share(user_id=1, workspace_id=a, resource_type="interview_report", resource_id=r2, expected_report_generation=g2, consent=True)
         m["share_owner_validation"] = 0
     except SharingPermissionError:
         m["share_owner_validation"] = 1
@@ -182,30 +193,31 @@ def evaluate() -> dict:
     # share_workspace_validation — alice cannot share into a workspace she's not in.
     other = ws.create_workspace(user_id=4, name="Carol WS")["id"]  # carol's workspace
     try:
-        share.share(user_id=1, workspace_id=other, resource_type="interview_report", resource_id="r1", consent=True)
+        share.share(user_id=1, workspace_id=other, resource_type="interview_report", resource_id=r1, expected_report_generation=g1, consent=True)
         m["share_workspace_validation"] = 0
     except SharingPermissionError:
         m["share_workspace_validation"] = 1
 
     # valid share → bob can view; mallory (non-member) cannot.
-    grant = share.share(user_id=1, workspace_id=a, resource_type="interview_report", resource_id="r1", consent=True)
-    can_bob = share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") == 1
-    can_mallory = share.can_view(user_id=3, resource_type="interview_report", resource_id="r1")
+    grant = share.share(user_id=1, workspace_id=a, resource_type="interview_report", resource_id=r1, expected_report_generation=g1, consent=True)
+    can_bob = share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) == 1
+    can_mallory = share.can_view(user_id=3, resource_type="interview_report", resource_id=r1)
     m["cross_workspace_isolation"] = 1 if (can_bob and can_mallory is None) else 0
 
     # share_revocation — after revoke, bob loses access immediately.
     share.revoke(user_id=1, share_id=grant["share_id"])
     try:
-        share.resolve_shared_resource(user_id=2, resource_type="interview_report", resource_id="r1")
+        share.resolve_shared_resource(user_id=2, resource_type="interview_report", resource_id=r1)
         m["share_revocation"] = 0
     except SharingNotFoundError:
         m["share_revocation"] = 1
 
     # deleted_resource_invalidation — re-share, then delete source → grants invalidated.
-    share.share(user_id=1, workspace_id=a, resource_type="interview_report", resource_id="r1", consent=True)
-    share.invalidate_on_delete(owner_user_id=1, resource_type="interview_report", resource_id="r1")
+    share.share(user_id=1, workspace_id=a, resource_type="interview_report", resource_id=r1, expected_report_generation=g1, consent=True)
+    assert reports.repo.delete_interview(1, int(r1))
+    share.invalidate_on_delete(owner_user_id=1, resource_type="interview_report", resource_id=r1)
     m["deleted_resource_invalidation"] = 1 if share.can_view(
-        user_id=2, resource_type="interview_report", resource_id="r1") is None else 0
+        user_id=2, resource_type="interview_report", resource_id=r1) is None else 0
 
     # admin_not_data_superuser — the admin account-metadata projection contains NO
     # candidate-private content keys.
@@ -246,7 +258,9 @@ def _raises(fn, *exc) -> bool:
 def _evaluate_04b() -> dict:
     """04B gates: lifecycle, roles, invitations, consent, immediate revocation, deletion, isolation, admin metadata only."""
     m: dict = {}
-    repo, ws, share, mail = _harness()
+    repo, ws, share, mail, reports = _harness()
+    r1, r2 = reports.ids[1], reports.ids[2]
+    g1, g2 = reports.generation(1), reports.generation(2)
     xf = OwnershipTransferService(workspaces=repo, transfers=OwnershipTransferRepository(repo.session_factory), accounts=ws._accounts, email=mail)  # noqa: SLF001
 
     def token():
@@ -345,16 +359,16 @@ def _evaluate_04b() -> dict:
 
     # consent_required: a share without the explicit acknowledgement creates nothing.
     before = len(repo.list_shares_by_owner(1))
-    no_consent = _raises(lambda: share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id="r1"), ValidationError)
+    no_consent = _raises(lambda: share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id=r1, expected_report_generation=g1), ValidationError)
     m["consent_required"] = 1 if (no_consent and len(repo.list_shares_by_owner(1)) == before) else 0
 
     # removal_revokes_member_shares and removed_member_loses_read: bob shares r2, then is removed.
-    share.share(user_id=2, workspace_id=w, resource_type="interview_report", resource_id="r2", consent=True)
-    readable = share.can_view(user_id=1, resource_type="interview_report", resource_id="r2") == 2
+    share.share(user_id=2, workspace_id=w, resource_type="interview_report", resource_id=r2, expected_report_generation=g2, consent=True)
+    readable = share.can_view(user_id=1, resource_type="interview_report", resource_id=r2) == 2
     ws.remove_member(user_id=1, workspace_id=w, target_user_id=2)
     m["removal_revokes_member_shares"] = 1 if (readable and not repo.list_shares_by_owner(2)) else 0
-    share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id="r1", consent=True)
-    m["removed_member_loses_read"] = 1 if share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") is None else 0
+    share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id=r1, expected_report_generation=g1, consent=True)
+    m["removed_member_loses_read"] = 1 if share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) is None else 0
 
     # member_list_hides_addresses: a plain member sees labels, never another member's address, nor pending invitations.
     ws.invite(user_id=1, workspace_id=w, email="bob@x.com")
@@ -365,25 +379,25 @@ def _evaluate_04b() -> dict:
                                             and "pending_invitations" not in detail) else 0
 
     # owner_departure_cuts_shares: when the sharer stops being a member, readers lose access at once.
-    can_before = share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") == 1
+    can_before = share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) == 1
     repo.set_membership_status(workspace_id=w, user_id=1, status="removed")      # stands in for any path that ends the sharer's membership
-    cut = share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") is None
+    cut = share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) is None
     repo.set_membership_status(workspace_id=w, user_id=1, status="active")
     m["owner_departure_cuts_shares"] = 1 if (can_before and cut) else 0
 
     # archive: shares revoked atomically, new shares refused, restore never revives a revoked grant.
-    still = share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") == 1
+    still = share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) == 1
     ws.archive_workspace(user_id=1, workspace_id=w)
-    gone = share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") is None
+    gone = share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) is None
     m["archived_share_refused"] = 1 if _raises(
-        lambda: share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id="r1", consent=True),
+        lambda: share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id=r1, expected_report_generation=g1, consent=True),
         ConflictError) else 0
     ws.restore_workspace(user_id=1, workspace_id=w)
     m["archive_revokes_and_restore_does_not_revive"] = 1 if (
-        still and gone and share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") is None) else 0
+        still and gone and share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) is None) else 0
 
     # workspace_delete_revokes_all: typed confirmation required; every grant, membership and invitation row disappears.
-    share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id="r1", consent=True)
+    share.share(user_id=1, workspace_id=w, resource_type="interview_report", resource_id=r1, expected_report_generation=g1, consent=True)
     wrong = _raises(lambda: ws.delete_workspace(user_id=1, workspace_id=w, confirm_name="nope"), ValidationError)
     ws.delete_workspace(user_id=1, workspace_id=w, confirm_name="Team")
     from src.persistence import ShareGrant, WorkspaceInvitation
@@ -391,7 +405,7 @@ def _evaluate_04b() -> dict:
         leftovers = sum(int(sess.scalar(select(func.count()).select_from(model).where(model.workspace_id == w)) or 0)
                         for model in (ShareGrant, WorkspaceMembership, WorkspaceInvitation))
     m["workspace_delete_revokes_all"] = 1 if (
-        wrong and leftovers == 0 and share.can_view(user_id=2, resource_type="interview_report", resource_id="r1") is None
+        wrong and leftovers == 0 and share.can_view(user_id=2, resource_type="interview_report", resource_id=r1) is None
         and _raises(lambda: ws.get_workspace_detail(user_id=2, workspace_id=w), WorkspaceNotFoundError)) else 0
 
     # admin_enrolment_guard: an operator cannot enrol a platform-staff account (that would expose shared content).

@@ -55,7 +55,7 @@ class SharingService:
             pass
 
     def share(self, *, user_id: int, workspace_id: int, resource_type: str,
-              resource_id: str, consent: bool = False) -> dict:
+              resource_id: str, consent: bool = False, expected_report_generation: str | None = None) -> dict:
         """Create a VIEW share of an OWNED, allow-listed resource into a member workspace.
 
         ``consent`` is the explicit acknowledgement that EVERY current and future active member of that workspace can read this one
@@ -68,6 +68,19 @@ class SharingService:
         rid = (resource_id or "").strip()
         if not rid:
             raise ValidationError("A resource id is required.")
+        if resource_type == "interview_report":
+            try:
+                report_id = int(rid)
+            except (TypeError, ValueError):
+                raise SharingPermissionError("You can only share a resource you own.") from None
+            if not 0 < report_id <= 2**63 - 1:
+                raise SharingPermissionError("You can only share a resource you own.")
+            # Grant, loader and deletion must name the same report, including
+            # inputs such as "004" that otherwise leave an unrevoked alias.
+            rid = str(report_id)
+            if (not isinstance(expected_report_generation, str) or len(expected_report_generation) != 32
+                    or any(c not in "0123456789abcdef" for c in expected_report_generation)):
+                raise ConflictError("Reload and select the report again before sharing.")
         # The caller must be an ACTIVE member of the target workspace.
         if self._ws.member_role(workspace_id, user_id) is None:
             raise SharingPermissionError("You are not a member of this workspace.")
@@ -76,11 +89,31 @@ class SharingService:
             raise ConflictError("This workspace is archived. Restore it before sharing.")
         # The caller must OWN the resource (owner-verified; deny if unverifiable).
         verifier = self._verifiers.get(resource_type)
-        if verifier is None or not _safe_bool(verifier, rid, user_id):
+        if verifier is None:
             raise SharingPermissionError("You can only share a resource you own.")
-        share_id = self._ws.create_share(
-            owner_user_id=user_id, workspace_id=workspace_id, resource_type=resource_type,
-            resource_id=rid, permission=SHARE_PERMISSION_VIEW)
+        if resource_type == "interview_report":
+            # The same report stays locked from the first owner/entitlement
+            # verification through the grant commit, even if SQLite reuses ids.
+            from src.workspace_repository import ReportGenerationConflict
+
+            try:
+                with self._ws.report_share_transaction(
+                    owner_user_id=user_id, resource_id=rid, expected_report_generation=expected_report_generation,
+                ) as transaction:
+                    if transaction is None or not _safe_bool(verifier, rid, user_id):
+                        raise SharingPermissionError("You can only share a resource you own.")
+                    share_id = self._ws.create_share(
+                        owner_user_id=user_id, workspace_id=workspace_id, resource_type=resource_type,
+                        resource_id=rid, permission=SHARE_PERMISSION_VIEW, report_transaction=transaction,
+                        expected_report_generation=expected_report_generation)
+            except ReportGenerationConflict:
+                raise ConflictError("The selected report changed. Reload and select it again before sharing.") from None
+        else:
+            if not _safe_bool(verifier, rid, user_id):
+                raise SharingPermissionError("You can only share a resource you own.")
+            share_id = self._ws.create_share(
+                owner_user_id=user_id, workspace_id=workspace_id, resource_type=resource_type,
+                resource_id=rid, permission=SHARE_PERMISSION_VIEW)
         if share_id is None:                     # the workspace or the membership changed under us
             raise ConflictError("This workspace is no longer available for sharing.")
         self._audit_event("share.created", user_id, workspace_id,
@@ -152,6 +185,14 @@ class SharingService:
         return self._ws.invalidate_shares_for_resource(
             owner_user_id=owner_user_id, resource_type=resource_type,
             resource_id=(resource_id or "").strip())
+
+    @property
+    def session_factory(self):
+        return self._ws.session_factory
+
+    def invalidate_in_transaction(self, session, *, owner_user_id: int, resource_id: str) -> int:
+        return self._ws.invalidate_shares_in_transaction(
+            session, owner_user_id=owner_user_id, resource_type="interview_report", resource_id=resource_id)
 
 
 def _safe_bool(fn, *args) -> bool:

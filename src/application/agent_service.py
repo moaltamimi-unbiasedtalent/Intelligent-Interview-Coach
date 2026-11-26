@@ -436,6 +436,7 @@ class AgentApplicationService:
         initial = {
             "run_id": run_id,
             "user_id": request.user_id,
+            "opportunity_id": request.opportunity_id,
             "goal": request.goal,
             "target_role": request.target_role,
             "job_description": request.job_description,
@@ -799,6 +800,7 @@ def _to_result(run_id: str, state: dict, request_id: str | None, *, awaiting: bo
             conversation[-1]["content"] = response
     return AgentRunResult(
         run_id=run_id,
+        opportunity_id=state.get("opportunity_id"),
         status=status,
         response="" if awaiting else response,
         events=list(state.get("events", []) or []),

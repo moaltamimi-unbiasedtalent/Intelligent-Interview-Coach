@@ -750,9 +750,13 @@ export const api = {
     mine: (opts?: RequestOptions) => request<{ shares: ShareGrantOut[] }>("GET", "/shares/mine", opts),
     withMe: (opts?: RequestOptions) => request<{ shares: ShareGrantOut[] }>("GET", "/shares/with-me", opts),
     // `consent: true` is the explicit acknowledgement that every member of the workspace can view the item.
-    create: (workspaceId: number, resourceType: string, resourceId: string, consent: boolean, opts?: RequestOptions) =>
-      request<{ share_id: number; status: string }>("POST", "/shares", {
-        body: { workspace_id: workspaceId, resource_type: resourceType, resource_id: resourceId, consent }, ...opts }),
+    create: (workspaceId: number, resourceType: string, resourceId: string, consent: boolean,
+      opts?: RequestOptions & { expectedReportGeneration?: string }) => {
+      const { expectedReportGeneration, ...requestOptions } = opts ?? {};
+      return request<{ share_id: number; status: string }>("POST", "/shares", {
+        body: { workspace_id: workspaceId, resource_type: resourceType, resource_id: resourceId, consent,
+          ...(expectedReportGeneration ? { expected_report_generation: expectedReportGeneration } : {}) }, ...requestOptions });
+    },
     revoke: (shareId: number, opts?: RequestOptions) =>
       request<{ status: string }>("DELETE", `/shares/${shareId}`, opts),
     view: (resourceType: string, resourceId: string, opts?: RequestOptions) =>

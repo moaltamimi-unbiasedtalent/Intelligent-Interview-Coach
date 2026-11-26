@@ -91,7 +91,16 @@ class World:
             return str(iv.id)
 
     def share(self, who, wid, rtype, rid, consent=True):
-        return self.post(who, "/shares", {"workspace_id": wid, "resource_type": rtype, "resource_id": rid, "consent": consent})
+        body = {"workspace_id": wid, "resource_type": rtype, "resource_id": rid, "consent": consent}
+        if rtype == "interview_report":
+            # Select as the real resource owner; foreign-caller tests still prove ownership refusal.
+            with self.repo.session_factory() as db:
+                row = db.get(P.Interview, int(rid))
+                owner = next((name for name, user in self.u.items() if row and user["uid"] == row.user_id), None)
+            selected = self.get(owner, f"/history/interviews/{rid}") if owner else None
+            body["expected_report_generation"] = (selected.json()["interview"]["share_generation"]
+                if selected is not None and selected.status_code == 200 else "0" * 32)
+        return self.post(who, "/shares", body)
 
 
 def build_team(w: "World"):
